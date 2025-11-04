@@ -65,6 +65,21 @@ const pipelineGenerators = {
     },
 
     fuzzySearch: (indexField, searchTerm) => [
+        // Using regular text search instead of Atlas Search (compatible with free tier M0)
+        // This searches across all text fields in the document
+        {
+            $match: {
+                $or: [
+                    { fullName: { $regex: searchTerm, $options: 'i' } },
+                    { displayName: { $regex: searchTerm, $options: 'i' } },
+                    { phone: { $regex: searchTerm, $options: 'i' } },
+                    { mobilePhone: { $regex: searchTerm, $options: 'i' } },
+                    { fleetId: { $regex: searchTerm, $options: 'i' } }
+                ]
+            }
+        }
+        
+        /* Original Atlas Search - requires paid tier
         {
             $search: {
                 "index": indexField,
@@ -77,6 +92,7 @@ const pipelineGenerators = {
                 }
             }
         }
+        */
     ],
 
     matchUuid: (uuid) => [

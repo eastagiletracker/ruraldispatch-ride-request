@@ -14,7 +14,19 @@ async function getDatabaseConnectionAsync(dbUri)
     async function getCollectionAsync(collectionName) {
         const db = client.db();
         const collection = db.collection(collectionName);
+        
+        // Create unique index for uuid
         await collection.createIndex({ uuid: 1 }, { unique: true });
+        
+        // Create text indexes for search functionality (compatible with free tier)
+        if (collectionName === 'users') {
+            await collection.createIndex({ fullName: 'text', phone: 'text' });
+        } else if (collectionName === 'service-providers') {
+            await collection.createIndex({ fullName: 'text', mobilePhone: 'text' });
+        } else if (collectionName === 'vehicles') {
+            await collection.createIndex({ displayName: 'text', fleetId: 'text' });
+        }
+        
         return collection;
     }
 
@@ -22,6 +34,11 @@ async function getDatabaseConnectionAsync(dbUri)
 }
 
 async function configSearchIndex(collection, indexName) {
+    // Skip search index creation for free tier (M0) - use regular text indexes instead
+    console.log(`Skipping Atlas Search index "${indexName}" (using regular text indexes instead)`);
+    return;
+    
+    /* Original code - requires paid MongoDB Atlas tier
     let index;
     do {
         const indexes = await collection.listSearchIndexes().toArray();
@@ -49,6 +66,7 @@ async function configSearchIndex(collection, indexName) {
         const indexes = await collection.listSearchIndexes().toArray();
         index = indexes.find(index => index.name === indexName);
     }
+    */
 }
 
 function delay(ms)
