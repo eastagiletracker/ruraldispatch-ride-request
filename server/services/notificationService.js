@@ -25,11 +25,24 @@ class NotificationService {
         throw new Error(`Invalid phone number format: ${to}`);
       }
 
-      const result = await this.twilioClient.messages.create({
+      // Prepare message options
+      const messageOptions = {
         body: message,
         from: this.fromNumber,
         to: to
-      });
+      };
+
+      // Add status callback if webhook URL is configured
+      const statusCallbackUrl = process.env.TWILIO_WEBHOOK_URL 
+        ? process.env.TWILIO_WEBHOOK_URL.replace('/webhook', '/status')
+        : null;
+
+      if (statusCallbackUrl && !statusCallbackUrl.includes('localhost')) {
+        messageOptions.statusCallback = statusCallbackUrl;
+        console.log(`Status callback set to: ${statusCallbackUrl}`);
+      }
+
+      const result = await this.twilioClient.messages.create(messageOptions);
 
       console.log(`SMS sent successfully to ${to}. SID: ${result.sid}`);
 
