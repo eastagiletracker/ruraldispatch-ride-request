@@ -13,7 +13,10 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: false, // Disable CSP in production to avoid blocking assets
+  crossOriginEmbedderPolicy: false
+}));
 app.use(morgan('combined'));
 app.use(cors());
 app.use(express.json());
@@ -42,16 +45,19 @@ async function init()
     res.json({ status: 'OK', message: 'Server is running' });
   });
 
-  // Serve static files from React app in production
-  if (process.env.NODE_ENV === 'production') {
-    app.use(express.static(path.join(__dirname, '../client/dist')));
-    
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(__dirname, '../client/dist/index.html'));
-    });
-  }
+  // Serve static files from React app
+  const staticPath = path.join(__dirname, '../client/dist');
+  console.log('NODE_ENV:', process.env.NODE_ENV);
+  console.log('Serving static files from:', staticPath);
+  
+  app.use(express.static(staticPath));
+  
+  // Catch-all route to serve React app - must be last!
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(staticPath, 'index.html'));
+  });
 
-// Error handling middleware
+  // Error handling middleware
   app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).json({ message: 'Something went wrong!' });
@@ -59,5 +65,6 @@ async function init()
 
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
+    console.log(`Environment: ${process.env.NODE_ENV}`);
   });
 }
