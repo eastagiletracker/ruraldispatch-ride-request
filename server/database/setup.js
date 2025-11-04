@@ -4,7 +4,12 @@ const { MongoClient } = require('mongodb');
 async function getDatabaseConnectionAsync(dbUri)
 {
     // Should these share a client or should there be multiple clients?
-    const client = await new MongoClient(dbUri).connect();
+    const client = await new MongoClient(dbUri, {
+        tls: true,
+        tlsAllowInvalidCertificates: false,
+        serverSelectionTimeoutMS: 30000,
+        socketTimeoutMS: 45000,
+    }).connect();
 
     async function getCollectionAsync(collectionName) {
         const db = client.db();
