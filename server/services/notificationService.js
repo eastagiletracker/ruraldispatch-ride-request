@@ -10,6 +10,7 @@ class NotificationService {
   constructor() {
     this.twilioClient = twilioConfig.client;
     this.fromNumber = twilioConfig.phoneNumber;
+    this.messagingServiceSid = twilioConfig.messagingServiceSid;
   }
 
   /**
@@ -28,9 +29,17 @@ class NotificationService {
       // Prepare message options
       const messageOptions = {
         body: message,
-        from: this.fromNumber,
         to: to
       };
+
+      // Use Messaging Service if configured, otherwise use phone number
+      if (this.messagingServiceSid) {
+        messageOptions.messagingServiceSid = this.messagingServiceSid;
+        console.log(`Using Messaging Service: ${this.messagingServiceSid}`);
+      } else {
+        messageOptions.from = this.fromNumber;
+        console.log(`Using phone number: ${this.fromNumber}`);
+      }
 
       // Add status callback if webhook URL is configured
       const statusCallbackUrl = process.env.TWILIO_WEBHOOK_URL 
