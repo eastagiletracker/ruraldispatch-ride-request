@@ -1,0 +1,206 @@
+# Deployment Guide
+
+This application can be deployed using either Railway or Render. Choose the platform that best suits your needs.
+
+## Option 1: Deploy to Railway (Recommended for simplicity)
+
+Railway offers the easiest deployment with automatic environment detection.
+
+### Setup Steps:
+
+1. **Create Railway Account**
+   - Go to [railway.app](https://railway.app)
+   - Sign up with GitHub
+
+2. **Create New Project**
+   - Click "New Project"
+   - Select "Deploy from GitHub repo"
+   - Choose your repository
+
+3. **Add MongoDB Database**
+   - In your Railway project, click "New"
+   - Select "Database" → "Add MongoDB"
+   - Railway will automatically set the `MONGODB_URI` environment variable
+
+4. **Set Environment Variables**
+   - Go to your service → Variables
+   - Add the following:
+     ```
+     NODE_ENV=production
+     JWT_SECRET=your-super-secret-jwt-key-change-this
+     TWILIO_ACCOUNT_SID=your-twilio-sid
+     TWILIO_AUTH_TOKEN=your-twilio-token
+     TWILIO_PHONE_NUMBER=your-twilio-number
+     ```
+
+5. **Configure GitHub Actions (Optional)**
+   - Get your Railway token: Settings → Tokens → Create Token
+   - Add to GitHub Secrets:
+     - `RAILWAY_TOKEN`: Your Railway token
+     - `RAILWAY_SERVICE_NAME`: Your service name (optional)
+
+6. **Deploy**
+   - Railway auto-deploys on push to main
+   - Or use GitHub Actions workflow: `.github/workflows/deploy-railway.yml`
+
+### Railway CLI (Alternative)
+
+```bash
+# Install Railway CLI
+npm install -g @railway/cli
+
+# Login
+railway login
+
+# Link to project
+railway link
+
+# Deploy
+railway up
+```
+
+---
+
+## Option 2: Deploy to Render
+
+Render provides excellent free tier options and good PostgreSQL support.
+
+### Setup Steps:
+
+1. **Create Render Account**
+   - Go to [render.com](https://render.com)
+   - Sign up with GitHub
+
+2. **Create Web Service**
+   - Click "New +" → "Web Service"
+   - Connect your GitHub repository
+   - Configure:
+     - **Name**: ride-request-app
+     - **Environment**: Node
+     - **Build Command**: `npm run install-all && npm run build`
+     - **Start Command**: `npm start`
+     - **Plan**: Free (or paid for better performance)
+
+3. **Add MongoDB Database**
+   - Option A: Use Render's MongoDB (if available)
+   - Option B: Use MongoDB Atlas:
+     - Go to [mongodb.com/cloud/atlas](https://www.mongodb.com/cloud/atlas)
+     - Create free cluster
+     - Get connection string
+
+4. **Set Environment Variables**
+   - In Render dashboard → Environment
+   - Add:
+     ```
+     NODE_ENV=production
+     MONGODB_URI=your-mongodb-connection-string
+     JWT_SECRET=your-super-secret-jwt-key-change-this
+     TWILIO_ACCOUNT_SID=your-twilio-sid
+     TWILIO_AUTH_TOKEN=your-twilio-token
+     TWILIO_PHONE_NUMBER=your-twilio-number
+     ```
+
+5. **Configure GitHub Actions (Optional)**
+   - Get Deploy Hook URL: Settings → Deploy Hook
+   - Add to GitHub Secrets:
+     - `RENDER_DEPLOY_HOOK_URL`: Your deploy hook URL
+
+6. **Deploy**
+   - Render auto-deploys on push to main
+   - Or manually trigger from dashboard
+   - Or use GitHub Actions: `.github/workflows/deploy-render.yml`
+
+---
+
+## Environment Variables Reference
+
+Required for both platforms:
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `NODE_ENV` | Application environment | `production` |
+| `MONGODB_URI` | MongoDB connection string | `mongodb+srv://user:pass@cluster.mongodb.net/db` |
+| `JWT_SECRET` | Secret key for JWT tokens | Generate with: `openssl rand -base64 32` |
+| `TWILIO_ACCOUNT_SID` | Twilio Account SID | From Twilio dashboard |
+| `TWILIO_AUTH_TOKEN` | Twilio Auth Token | From Twilio dashboard |
+| `TWILIO_PHONE_NUMBER` | Twilio Phone Number | Format: `+1234567890` |
+| `PORT` | Server port (auto-set on most platforms) | `5000` |
+
+---
+
+## GitHub Secrets Setup
+
+For automated deployments via GitHub Actions:
+
+1. Go to your GitHub repository
+2. Settings → Secrets and variables → Actions
+3. Click "New repository secret"
+4. Add the appropriate secrets based on your platform choice
+
+### For Railway:
+- `RAILWAY_TOKEN`
+
+### For Render:
+- `RENDER_DEPLOY_HOOK_URL`
+
+---
+
+## Local Development
+
+```bash
+# Install dependencies
+npm run install-all
+
+# Set up environment variables
+cp .env.example .env
+# Edit .env with your local values
+
+# Run development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Run production server
+npm start
+```
+
+---
+
+## Troubleshooting
+
+### Railway Issues:
+- Check build logs in Railway dashboard
+- Ensure all environment variables are set
+- Verify MongoDB connection string
+
+### Render Issues:
+- Check deploy logs
+- Free tier services sleep after 15 min of inactivity (first request may be slow)
+- Ensure start command matches your package.json
+
+### Database Connection:
+- Whitelist all IPs (0.0.0.0/0) in MongoDB Atlas for production
+- Verify connection string format
+- Check database user permissions
+
+---
+
+## Recommendations
+
+**Choose Railway if:**
+- You want the simplest setup
+- You need quick deployments
+- You're okay with usage-based pricing after free tier
+
+**Choose Render if:**
+- You want a generous free tier
+- You need persistent storage
+- You prefer predictable pricing
+
+Both platforms offer:
+- ✅ Automatic HTTPS
+- ✅ Custom domains
+- ✅ Auto-deploy from GitHub
+- ✅ Environment variable management
+- ✅ Easy scaling options

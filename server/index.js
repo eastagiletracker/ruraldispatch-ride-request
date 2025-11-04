@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const path = require('path');
 
 require('dotenv').config({ path: '../.env' });
 
@@ -40,6 +41,15 @@ async function init()
   app.get('/health', (req, res) => {
     res.json({ status: 'OK', message: 'Server is running' });
   });
+
+  // Serve static files from React app in production
+  if (process.env.NODE_ENV === 'production') {
+    app.use(express.static(path.join(__dirname, '../client/dist')));
+    
+    app.get('*', (req, res) => {
+      res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+    });
+  }
 
 // Error handling middleware
   app.use((err, req, res, next) => {
