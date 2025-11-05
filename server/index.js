@@ -17,7 +17,10 @@ app.use(helmet({
   contentSecurityPolicy: false, // Disable CSP in production to avoid blocking assets
   crossOriginEmbedderPolicy: false
 }));
-app.use(morgan('combined'));
+// Only log HTTP requests in production
+if (process.env.NODE_ENV === 'production') {
+  app.use(morgan('combined'));
+}
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

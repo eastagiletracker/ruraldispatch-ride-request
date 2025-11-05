@@ -1,79 +1,33 @@
-const twilioConfig = require('../config/twilio');
+const SMSProviderManager = require('./smsProviders/SMSProviderManager');
 const rideStatuses = require('../constants/rideStatuses');
 const { RIDE_REQUEST_STATUSES } = require('../constants/rideRequestStatuses');
 
 /**
  * Notification Service
- * Handles SMS notifications via Twilio for ride lifecycle events
+ * Handles SMS notifications via multiple providers (Vonage primary, Twilio fallback)
  */
 class NotificationService {
   constructor() {
-    this.twilioClient = twilioConfig.client;
-    this.fromNumber = twilioConfig.phoneNumber;
-    this.messagingServiceSid = twilioConfig.messagingServiceSid;
+    this.smsProvider = new SMSProviderManager();
   }
 
   /**
    * Send SMS notification
+   * Uses SMS Provider Manager with automatic fallback
    * @param {string} to - Recipient phone number
    * @param {string} message - SMS message body
-   * @returns {Promise<object>} Twilio message object
+   * @returns {Promise<object>} SMS result object
    */
   async sendSMS(to, message) {
-    try {
-      // Validate phone number format
-      if (!to || !to.match(/^\+?[1-9]\d{1,14}$/)) {
-        throw new Error(`Invalid phone number format: ${to}`);
-      }
+    return await this.smsProvider.sendSMS(to, message);
+  }
 
-      // Prepare message options
-      const messageOptions = {
-        body: message,
-        to: to
-      };
-
-      // Use Messaging Service if configured, otherwise use phone number
-      if (this.messagingServiceSid) {
-        messageOptions.messagingServiceSid = this.messagingServiceSid;
-        console.log(`Using Messaging Service: ${this.messagingServiceSid}`);
-      } else {
-        messageOptions.from = this.fromNumber;
-        console.log(`Using phone number: ${this.fromNumber}`);
-      }
-
-      // Add status callback if webhook URL is configured
-      const statusCallbackUrl = process.env.TWILIO_WEBHOOK_URL 
-        ? process.env.TWILIO_WEBHOOK_URL.replace('/webhook', '/status')
-        : null;
-
-      if (statusCallbackUrl && !statusCallbackUrl.includes('localhost')) {
-        messageOptions.statusCallback = statusCallbackUrl;
-        console.log(`Status callback set to: ${statusCallbackUrl}`);
-      }
-
-      const result = await this.twilioClient.messages.create(messageOptions);
-
-      console.log(`SMS sent successfully to ${to}. SID: ${result.sid}`);
-
-      return {
-        success: true,
-        messageSid: result.sid,
-        to: to,
-        body: message,
-        status: result.status,
-        timestamp: new Date()
-      };
-    } catch (error) {
-      console.error(`Failed to send SMS to ${to}:`, error.message);
-
-      return {
-        success: false,
-        error: error.message,
-        to: to,
-        body: message,
-        timestamp: new Date()
-      };
-    }
+  /**
+   * Get SMS provider status
+   * @returns {object} Provider configuration status
+   */
+  getProviderStatus() {
+    return this.smsProvider.getStatus();
   }
 
   /**
@@ -146,7 +100,12 @@ Time: ${new Date(ride.pickupRequestedTime).toLocaleString()}
 Dropoff: ${ride.dropOffAddress}
 Check the dashboard for details.`;
 
-    return await this.sendSMS(driver.mobilePhone || driver.phone, message);
+    const driverPhone = driver.mobilePhone || driver.phone;
+    console.log('📱 Sending driver notification to:', driverPhone);
+    console.log('   Driver object has mobilePhone?', !!driver.mobilePhone);
+    console.log('   Driver object has phone?', !!driver.phone);
+
+    return await this.sendSMS(driverPhone, message);
   }
 
   /**
@@ -177,20 +136,32 @@ Check the dashboard for details.`;
           userData.rider && userData.driver) {
         console.log('  ✅ Condition passed! Sending SMS...');
 
-        const riderNotif = await this.notifyRideAccepted(
-          ride,
-          userData.rider,
-          userData.driver,
-          userData.vehicle  // Optional - will show "TBD" if not found
-        );
-        notifications.push({ type: 'rider_accepted', ...riderNotif });
+        try {
+          console.log('📨 Sending rider notification...');
+          const riderNotif = await this.notifyRideAccepted(
+            ride,
+            userData.rider,
+            userData.driver,
+            userData.vehicle  // Optional - will show "TBD" if not found
+          );
+          notifications.push({ type: 'rider_accepted', ...riderNotif });
+          console.log('✅ Rider notification result:', riderNotif.success ? 'SUCCESS' : 'FAILED');
+        } catch (error) {
+          console.error('❌ Error sending rider notification:', error.message);
+        }
 
-        const driverNotif = await this.notifyDriverAssigned(
-          ride,
-          userData.driver,
-          userData.rider
-        );
-        notifications.push({ type: 'driver_assigned', ...driverNotif });
+        try {
+          console.log('📨 Sending driver notification...');
+          const driverNotif = await this.notifyDriverAssigned(
+            ride,
+            userData.driver,
+            userData.rider
+          );
+          notifications.push({ type: 'driver_assigned', ...driverNotif });
+          console.log('✅ Driver notification result:', driverNotif.success ? 'SUCCESS' : 'FAILED');
+        } catch (error) {
+          console.error('❌ Error sending driver notification:', error.message);
+        }
       }
 
       // When ride starts (RIDE_STARTED)
