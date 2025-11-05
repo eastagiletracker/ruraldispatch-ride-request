@@ -79,6 +79,18 @@ async function getSpecifiedFieldsOfCollection(collection, fields)
     return await collection.aggregate(pipeline).toArray();
 }
 
+async function updateUserSMSConsent(collection, phone, consentData) {
+    const result = await collection.updateOne(
+        { phone: phone },
+        { 
+            $set: { 
+                smsConsent: consentData 
+            } 
+        }
+    );
+    return result;
+}
+
 module.exports = {
     getCollection,
     add,
@@ -90,5 +102,6 @@ module.exports = {
     getRideRequestsWithUserAndProviderData,
     getByUuidString,
     getSpecifiedFieldsOfDocument,
-    getSpecifiedFieldsOfCollection
+    getSpecifiedFieldsOfCollection,
+    updateUserSMSConsent
 };

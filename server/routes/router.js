@@ -129,6 +129,31 @@ function createRouter(api)
         res.json(await api.addUser(req.body));
     });
 
+    router.post(`/users/sms-consent`, async (req, res) => {
+        try {
+            const { phoneNumber, consentGiven, timestamp, ipAddress } = req.body;
+            
+            // Find user by phone and update consent
+            const result = await api.updateUserSMSConsent(phoneNumber, {
+                given: consentGiven,
+                timestamp: timestamp || new Date().toISOString(),
+                ipAddress: ipAddress || req.ip
+            });
+
+            res.json({ 
+                success: true, 
+                message: 'SMS consent updated successfully',
+                result 
+            });
+        } catch (error) {
+            console.error('Error updating SMS consent:', error);
+            res.status(500).json({ 
+                success: false, 
+                message: 'Failed to update SMS consent' 
+            });
+        }
+    });
+
     router.get(`/users/fields/:fields`, async (req, res) => {
         res.json(await api.getSpecifiedFieldsOfUsers(req.params.fields.split(',')));
     });

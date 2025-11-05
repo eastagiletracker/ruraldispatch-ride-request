@@ -66,6 +66,20 @@ const userSchema = new mongoose.Schema({
         required: false,
         enum: ['yes', 'no', 'prefer not to say']
     },
+    smsConsent: {
+        given: {
+            type: Boolean,
+            default: false
+        },
+        timestamp: {
+            type: Date,
+            required: false
+        },
+        ipAddress: {
+            type: String,
+            required: false
+        }
+    },
 }, {
   timestamps: true
 });

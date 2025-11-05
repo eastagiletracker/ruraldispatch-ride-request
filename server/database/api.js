@@ -37,6 +37,7 @@ async function generateApi()
         getUsers: async() => await database.getCollection(userCollection),
         getSpecifiedFieldsOfUsers: async(fields) => await database.getSpecifiedFieldsOfDocument(userCollection, fields),
         addUser: async(user) => await database.add(userCollection, user),
+        updateUserSMSConsent: async(phone, consentData) => await database.updateUserSMSConsent(userCollection, phone, consentData),
         getProvider: async(uuid) => await database.getByUuidString(providerCollection, uuid),
         getProviders: async() => await database.getCollection(providerCollection),
         addProvider: async(provider) => await database.add(providerCollection, provider),

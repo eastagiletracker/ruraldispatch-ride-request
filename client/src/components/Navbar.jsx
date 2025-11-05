@@ -9,7 +9,7 @@ const Navbar = () => {
           {/* Logo/App Name */}
           <Link to="/" className="flex items-center">
             <span className="text-xl font-bold text-primary-600">
-              Ride Request MVP
+              Rural Dispatch
             </span>
           </Link>
 
