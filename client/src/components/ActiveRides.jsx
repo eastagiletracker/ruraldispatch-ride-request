@@ -1,80 +1,143 @@
 import { useEffect, useState } from 'react';
-import {fetchCollection} from "../utils/database";
+import { fetchCollection } from "../utils/database";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from "@/components/ui/card";
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
+import { Separator } from "@/components/ui/separator";
+import { UserPlus, Car } from "lucide-react";
 
-export default function ActiveRides({callbackFn}) {
-
-    const [ride, setRides] = useState([]);
+export default function ActiveRides({ callbackFn }) {
+    const [rideRequests, setRideRequests] = useState([]);
     const [users, setUsers] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     const getRideRequests = async () => {
-        console.log('Fetching ride requests...');
-        const rideRequests = await fetchCollection("riderequests");
-        console.log('Ride requests:', rideRequests);
-        if (rideRequests) {
-            const sortedRideRequests = rideRequests.sort((a, b) => {
-                // Sort by pickup requested time (soonest first)
-                const timeA = new Date(a.pickupRequestedTime || 0);
-                const timeB = new Date(b.pickupRequestedTime || 0);
-                return timeA.getTime() - timeB.getTime();
-            });
-            setRideRequests(sortedRideRequests);
+        try {
+            console.log('Fetching ride requests...');
+            const rideRequests = await fetchCollection("riderequests");
+            console.log('Ride requests:', rideRequests);
+            if (rideRequests) {
+                const sortedRideRequests = rideRequests.sort((a, b) => {
+                    // Sort by pickup requested time (soonest first)
+                    const timeA = new Date(a.pickupRequestedTime || 0);
+                    const timeB = new Date(b.pickupRequestedTime || 0);
+                    return timeA.getTime() - timeB.getTime();
+                });
+                setRideRequests(sortedRideRequests);
+            }
+        } catch (error) {
+            console.error('Error fetching ride requests:', error);
+        } finally {
+            setLoading(false);
         }
-    }
+    };
 
-    const getUsers= async () => {
-        const users = await fetchCollection("users");
-        setUsers(users);
-    }
+    const getUsers = async () => {
+        try {
+            const users = await fetchCollection("users");
+            setUsers(users);
+        } catch (error) {
+            console.error('Error fetching users:', error);
+        }
+    };
 
     useEffect(() => {
-
         getRideRequests();
         getUsers();
         const interval = setInterval(async () => {
             getRideRequests();
             getUsers();
         }, 5000);
-        
+
         return () => clearInterval(interval);
     }, []);
 
     return (
-        <div className='bg-white rounded-lg p-4 shadow-md w-full'>
-        <h1 className='text-xl font-bold'>Ride Requests</h1>
-        <hr className='my-2 border-gray-300' />
-        <div className='flex flex-col gap-4'>
-            <table>
-                <thead>
-                    <tr>
-                        <th className='text-left'>Rider</th>
-                        <th className='text-left'>Pickup Location</th>
-                        <th className='text-left'>Dropoff Location</th>
-                        <th className='text-left'>Requested Pickup Time</th>
-                        <th className='text-left'>Driver</th>
-                        <th className='text-left'>Vehicle</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {rideRequests.map((rideRequest) => (
-                        <tr key={rideRequest.uuid}>
-                            <td className='text-left'>{users.find(user => user.uuid === rideRequest.serviceUserUuid)?.fullName}</td>
-                            <td className='text-left'>{rideRequest.pickupAddress}</td>
-                            <td className='text-left'>{rideRequest.dropOffAddress}</td>
-                            <td className='text-left'>{rideRequest.pickupRequestedTime ? 
-                                new Date(rideRequest.pickupRequestedTime).toLocaleString() : 
-                                'No pickup time set'
-                            }</td>
-                            <td className='text-left'>
-                                <button onClick={()=>callbackFn(rideRequest.uuid)}>Assign driver</button>
-                            </td>
-                            <td className='text-left'>
-                                <button>Assign vehicle</button>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-            </div>
-        </div>
+        <Card className="w-full">
+            <CardHeader>
+                <CardTitle>Ride Requests</CardTitle>
+                <CardDescription>
+                    Active ride requests awaiting driver assignment
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                {loading ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                        Loading ride requests...
+                    </div>
+                ) : rideRequests.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                        No active ride requests
+                    </div>
+                ) : (
+                    <div className="rounded-md border">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Rider</TableHead>
+                                    <TableHead>Pickup Location</TableHead>
+                                    <TableHead>Dropoff Location</TableHead>
+                                    <TableHead>Requested Pickup Time</TableHead>
+                                    <TableHead>Driver</TableHead>
+                                    <TableHead>Vehicle</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {rideRequests.map((rideRequest) => {
+                                    const rider = users.find(user => user.uuid === rideRequest.serviceUserUuid);
+                                    return (
+                                        <TableRow key={rideRequest.uuid}>
+                                            <TableCell className="font-medium">
+                                                {rider?.fullName || 'Unknown Rider'}
+                                            </TableCell>
+                                            <TableCell>{rideRequest.pickupAddress}</TableCell>
+                                            <TableCell>{rideRequest.dropOffAddress}</TableCell>
+                                            <TableCell>
+                                                {rideRequest.pickupRequestedTime
+                                                    ? new Date(rideRequest.pickupRequestedTime).toLocaleString()
+                                                    : 'No pickup time set'}
+                                            </TableCell>
+                                            <TableCell>
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() => callbackFn(rideRequest.uuid)}
+                                                >
+                                                    <UserPlus className="h-4 w-4 mr-2" />
+                                                    Assign Driver
+                                                </Button>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                >
+                                                    <Car className="h-4 w-4 mr-2" />
+                                                    Assign Vehicle
+                                                </Button>
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })}
+                            </TableBody>
+                        </Table>
+                    </div>
+                )}
+            </CardContent>
+        </Card>
     );
 }

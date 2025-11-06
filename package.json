@@ -1,6 +1,6 @@
 {
   "name": "ride-request-app",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "A modern ride request application with client and server",
   "main": "server/index.js",
   "engines": {

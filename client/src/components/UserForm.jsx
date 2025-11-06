@@ -1,5 +1,13 @@
 import { useState } from 'react';
 import {createDocument} from "../utils/database";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
 
 // Generate a random UUID
 const generateUUID = () => {
@@ -32,10 +40,11 @@ export default function UserForm({ setShowBaseForm, setShowUserForm }) {
     });
 
     const [errors, setErrors] = useState({});
+    const [submitting, setSubmitting] = useState(false);
 
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
-        
+
         if (name.includes('.')) {
             const [parent, child] = name.split('.');
             setFormData(prev => ({
@@ -63,12 +72,34 @@ export default function UserForm({ setShowBaseForm, setShowUserForm }) {
                 [name]: value
             }));
         }
+
+        // Clear error when user starts typing
+        if (errors[name]) {
+            setErrors(prev => ({
+                ...prev,
+                [name]: ''
+            }));
+        }
+    };
+
+    const handleSelectChange = (name, value) => {
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+
+        // Clear error when user selects
+        if (errors[name]) {
+            setErrors(prev => ({
+                ...prev,
+                [name]: ''
+            }));
+        }
     };
 
     const validateForm = () => {
         const newErrors = {};
 
-        if (!formData.uuid.trim()) newErrors.uuid = 'UUID is required';
         if (!formData.fullName.trim()) newErrors.fullName = 'Full name is required';
         if (!formData.phone.trim()) newErrors.phone = 'Phone number is required';
         if (!formData.dob.trim()) newErrors.dob = 'Date of birth is required';
@@ -84,308 +115,397 @@ export default function UserForm({ setShowBaseForm, setShowUserForm }) {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         if (!validateForm()) {
+            toast.error('Please fill in all required fields');
             return;
         }
 
-        const success = await createDocument("users", formData);
-        if (success) {
-            alert('User created successfully!');
-            setFormData({
-                uuid: generateUUID(),
-                fullName: '',
-                phone: '',
-                dob: '',
-                race: '',
-                maritalStatus: '',
-                residence: { current: '', last: '' },
-                income: { current: '', last: '' },
-                serviceUserRole: [],
-                veteranStatus: '',
-                disabilityStatus: ''
-            });
-            setErrors({});
-        }
+        setSubmitting(true);
+        try {
+            const response = await createDocument("users", formData);
 
+            if (response.ok) {
+                toast.success('User created successfully!', {
+                    description: `${formData.fullName} has been added to the system.`
+                });
+
+                // Reset form
+                setFormData({
+                    uuid: generateUUID(),
+                    fullName: '',
+                    phone: '',
+                    dob: '',
+                    race: '',
+                    maritalStatus: '',
+                    residence: { current: '', last: '' },
+                    income: { current: '', last: '' },
+                    serviceUserRole: [],
+                    veteranStatus: '',
+                    disabilityStatus: ''
+                });
+                setErrors({});
+            } else {
+                const errorData = await response.json();
+                toast.error('Failed to create user', {
+                    description: errorData.message || 'Please try again.'
+                });
+            }
+        } catch (error) {
+            console.error('Error submitting form:', error);
+            toast.error('Error submitting form', {
+                description: 'Please try again or contact support.'
+            });
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const handleReset = () => {
+        setFormData({
+            uuid: generateUUID(),
+            fullName: '',
+            phone: '',
+            dob: '',
+            race: '',
+            maritalStatus: '',
+            residence: { current: '', last: '' },
+            income: { current: '', last: '' },
+            serviceUserRole: [],
+            veteranStatus: '',
+            disabilityStatus: ''
+        });
+        setErrors({});
     };
 
     return (
-        <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-md">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">User Registration Form</h2>
-            
-            <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Basic Information */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            UUID (Auto-generated)
-                        </label>
-                        <input
-                            type="text"
+        <Card className="max-w-4xl mx-auto">
+            <CardHeader>
+                <CardTitle>User Registration Form</CardTitle>
+                <CardDescription>
+                    Fill in the information to create a new user
+                </CardDescription>
+            </CardHeader>
+
+            <CardContent>
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* UUID Field */}
+                    <div className="space-y-2">
+                        <Label htmlFor="uuid">
+                            User UUID (Auto-generated)
+                        </Label>
+                        <Input
+                            id="uuid"
                             name="uuid"
                             value={formData.uuid}
                             readOnly
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-600 cursor-not-allowed"
+                            disabled
+                            className="bg-muted cursor-not-allowed"
                         />
-                        <p className="text-xs text-gray-500 mt-1">This UUID is automatically generated</p>
+                        <p className="text-xs text-muted-foreground">This UUID is automatically generated</p>
                     </div>
 
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Full Name *
-                        </label>
-                        <input
-                            type="text"
-                            name="fullName"
-                            value={formData.fullName}
-                            onChange={handleInputChange}
-                            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 ${
-                                errors.fullName ? 'border-red-500' : 'border-gray-300'
-                            }`}
-                            placeholder="Enter full name"
-                        />
-                        {errors.fullName && <p className="text-red-500 text-sm mt-1">{errors.fullName}</p>}
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Phone Number *
-                        </label>
-                        <input
-                            type="tel"
-                            name="phone"
-                            value={formData.phone}
-                            onChange={handleInputChange}
-                            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 ${
-                                errors.phone ? 'border-red-500' : 'border-gray-300'
-                            }`}
-                            placeholder="Enter phone number"
-                        />
-                        {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Date of Birth *
-                        </label>
-                        <input
-                            type="date"
-                            name="dob"
-                            value={formData.dob}
-                            onChange={handleInputChange}
-                            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 ${
-                                errors.dob ? 'border-red-500' : 'border-gray-300'
-                            }`}
-                        />
-                        {errors.dob && <p className="text-red-500 text-sm mt-1">{errors.dob}</p>}
-                    </div>
-                </div>
-
-                {/* Demographics */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Race *
-                        </label>
-                        <select
-                            name="race"
-                            value={formData.race}
-                            onChange={handleInputChange}
-                            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 ${
-                                errors.race ? 'border-red-500' : 'border-gray-300'
-                            }`}
-                        >
-                            <option value="">Select race</option>
-                            <option value="black">Black</option>
-                            <option value="white">White</option>
-                            <option value="asian">Asian</option>
-                            <option value="latino">Latino</option>
-                            <option value="native american">Native American</option>
-                            <option value="other">Other</option>
-                            <option value="prefer not to say">Prefer not to say</option>
-                        </select>
-                        {errors.race && <p className="text-red-500 text-sm mt-1">{errors.race}</p>}
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Marital Status *
-                        </label>
-                        <select
-                            name="maritalStatus"
-                            value={formData.maritalStatus}
-                            onChange={handleInputChange}
-                            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 ${
-                                errors.maritalStatus ? 'border-red-500' : 'border-gray-300'
-                            }`}
-                        >
-                            <option value="">Select marital status</option>
-                            <option value="single">Single</option>
-                            <option value="married">Married</option>
-                            <option value="divorced">Divorced</option>
-                            <option value="widowed">Widowed</option>
-                            <option value="separated">Separated</option>
-                            <option value="other">Other</option>
-                            <option value="prefer not to say">Prefer not to say</option>
-                        </select>
-                        {errors.maritalStatus && <p className="text-red-500 text-sm mt-1">{errors.maritalStatus}</p>}
-                    </div>
-                </div>
-
-                {/* Residence Information */}
-                <div className="space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-800">Residence Information</h3>
+                    {/* Basic Information */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Current Residence
-                            </label>
-                            <input
-                                type="text"
-                                name="residence.current"
-                                value={formData.residence.current}
+                        <div className="space-y-2">
+                            <Label htmlFor="fullName">
+                                Full Name <span className="text-destructive">*</span>
+                            </Label>
+                            <Input
+                                id="fullName"
+                                name="fullName"
+                                value={formData.fullName}
                                 onChange={handleInputChange}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                                placeholder="Enter current residence (optional)"
+                                placeholder="Enter full name"
+                                className={errors.fullName ? 'border-destructive' : ''}
                             />
+                            {errors.fullName && (
+                                <p className="text-sm text-destructive">{errors.fullName}</p>
+                            )}
                         </div>
 
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Last Residence *
-                            </label>
-                            <input
-                                type="text"
-                                name="residence.last"
-                                value={formData.residence.last}
+                        <div className="space-y-2">
+                            <Label htmlFor="phone">
+                                Phone Number <span className="text-destructive">*</span>
+                            </Label>
+                            <Input
+                                id="phone"
+                                name="phone"
+                                type="tel"
+                                value={formData.phone}
                                 onChange={handleInputChange}
-                                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 ${
-                                    errors.residenceLast ? 'border-red-500' : 'border-gray-300'
-                                }`}
-                                placeholder="Enter last residence"
+                                placeholder="Enter phone number"
+                                className={errors.phone ? 'border-destructive' : ''}
                             />
-                            {errors.residenceLast && <p className="text-red-500 text-sm mt-1">{errors.residenceLast}</p>}
+                            {errors.phone && (
+                                <p className="text-sm text-destructive">{errors.phone}</p>
+                            )}
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="dob">
+                                Date of Birth <span className="text-destructive">*</span>
+                            </Label>
+                            <Input
+                                id="dob"
+                                name="dob"
+                                type="date"
+                                value={formData.dob}
+                                onChange={handleInputChange}
+                                className={errors.dob ? 'border-destructive' : ''}
+                            />
+                            {errors.dob && (
+                                <p className="text-sm text-destructive">{errors.dob}</p>
+                            )}
                         </div>
                     </div>
-                </div>
 
-                {/* Income Information */}
-                <div className="space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-800">Income Information</h3>
+                    <Separator />
+
+                    {/* Demographics */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Current Income
-                            </label>
-                            <input
-                                type="text"
-                                name="income.current"
-                                value={formData.income.current}
-                                onChange={handleInputChange}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                                placeholder="Enter current income (optional)"
-                            />
+                        <div className="space-y-2">
+                            <Label htmlFor="race">
+                                Race <span className="text-destructive">*</span>
+                            </Label>
+                            <Select
+                                value={formData.race}
+                                onValueChange={(value) => handleSelectChange('race', value)}
+                            >
+                                <SelectTrigger className={errors.race ? 'border-destructive' : ''}>
+                                    <SelectValue placeholder="Select race" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="black">Black</SelectItem>
+                                    <SelectItem value="white">White</SelectItem>
+                                    <SelectItem value="asian">Asian</SelectItem>
+                                    <SelectItem value="latino">Latino</SelectItem>
+                                    <SelectItem value="native american">Native American</SelectItem>
+                                    <SelectItem value="other">Other</SelectItem>
+                                    <SelectItem value="prefer not to say">Prefer not to say</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            {errors.race && (
+                                <p className="text-sm text-destructive">{errors.race}</p>
+                            )}
                         </div>
 
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Last Income *
-                            </label>
-                            <input
-                                type="text"
-                                name="income.last"
-                                value={formData.income.last}
-                                onChange={handleInputChange}
-                                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 ${
-                                    errors.incomeLast ? 'border-red-500' : 'border-gray-300'
-                                }`}
-                                placeholder="Enter last income"
-                            />
-                            {errors.incomeLast && <p className="text-red-500 text-sm mt-1">{errors.incomeLast}</p>}
+                        <div className="space-y-2">
+                            <Label htmlFor="maritalStatus">
+                                Marital Status <span className="text-destructive">*</span>
+                            </Label>
+                            <Select
+                                value={formData.maritalStatus}
+                                onValueChange={(value) => handleSelectChange('maritalStatus', value)}
+                            >
+                                <SelectTrigger className={errors.maritalStatus ? 'border-destructive' : ''}>
+                                    <SelectValue placeholder="Select marital status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="single">Single</SelectItem>
+                                    <SelectItem value="married">Married</SelectItem>
+                                    <SelectItem value="divorced">Divorced</SelectItem>
+                                    <SelectItem value="widowed">Widowed</SelectItem>
+                                    <SelectItem value="separated">Separated</SelectItem>
+                                    <SelectItem value="other">Other</SelectItem>
+                                    <SelectItem value="prefer not to say">Prefer not to say</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            {errors.maritalStatus && (
+                                <p className="text-sm text-destructive">{errors.maritalStatus}</p>
+                            )}
                         </div>
                     </div>
-                </div>
 
-                {/* Service User Role */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Service User Role(s) * (Select all that apply)
-                    </label>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                        {['rider', 'caregiver', 'relative', 'guardian', 'case manager', 'other'].map((role) => (
-                            <label key={role} className="flex items-center space-x-2">
-                                <input
-                                    type="checkbox"
-                                    name="serviceUserRole"
-                                    value={role}
-                                    checked={formData.serviceUserRole.includes(role)}
+                    <Separator />
+
+                    {/* Residence Information */}
+                    <div className="space-y-4">
+                        <h3 className="text-lg font-semibold">Residence Information</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <Label htmlFor="residence.current">
+                                    Current Residence <span className="text-muted-foreground text-xs">(optional)</span>
+                                </Label>
+                                <Input
+                                    id="residence.current"
+                                    name="residence.current"
+                                    value={formData.residence.current}
                                     onChange={handleInputChange}
-                                    className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                                    placeholder="Enter current residence"
                                 />
-                                <span className="text-sm text-gray-700 capitalize">{role}</span>
-                            </label>
-                        ))}
-                    </div>
-                    {errors.serviceUserRole && <p className="text-red-500 text-sm mt-1">{errors.serviceUserRole}</p>}
-                </div>
+                            </div>
 
-                {/* Additional Information */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Veteran Status
-                        </label>
-                        <select
-                            name="veteranStatus"
-                            value={formData.veteranStatus}
-                            onChange={handleInputChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                        >
-                            <option value="">Select veteran status</option>
-                            <option value="veteran">Veteran</option>
-                            <option value="not veteran">Not Veteran</option>
-                            <option value="prefer not to say">Prefer not to say</option>
-                        </select>
+                            <div className="space-y-2">
+                                <Label htmlFor="residence.last">
+                                    Last Residence <span className="text-destructive">*</span>
+                                </Label>
+                                <Input
+                                    id="residence.last"
+                                    name="residence.last"
+                                    value={formData.residence.last}
+                                    onChange={handleInputChange}
+                                    placeholder="Enter last residence"
+                                    className={errors.residenceLast ? 'border-destructive' : ''}
+                                />
+                                {errors.residenceLast && (
+                                    <p className="text-sm text-destructive">{errors.residenceLast}</p>
+                                )}
+                            </div>
+                        </div>
                     </div>
 
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Disability Status
-                        </label>
-                        <select
-                            name="disabilityStatus"
-                            value={formData.disabilityStatus}
-                            onChange={handleInputChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                        >
-                            <option value="">Select disability status</option>
-                            <option value="yes">Yes</option>
-                            <option value="no">No</option>
-                            <option value="prefer not to say">Prefer not to say</option>
-                        </select>
-                    </div>
-                </div>
+                    <Separator />
 
-                {/* Submit Button */}
-                <div className='flex flex-row gap-4 w-full justify-between'>
-                    <button 
-                        onClick={() => {
-                            setShowBaseForm(true);
-                            setShowUserForm(false);
-                        }}
-                        className='bg-gray-300 hover:bg-gray-400 text-gray-800 py-2 px-6 rounded-md'>Cancel</button>
-                
-                    <div className="flex justify-end">
-                        <button
-                            type="submit"
-                            className="px-6 py-2 bg-primary-600 text-white font-medium rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors"
-                        >
-                            Create User
-                        </button>
+                    {/* Income Information */}
+                    <div className="space-y-4">
+                        <h3 className="text-lg font-semibold">Income Information</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <Label htmlFor="income.current">
+                                    Current Income <span className="text-muted-foreground text-xs">(optional)</span>
+                                </Label>
+                                <Input
+                                    id="income.current"
+                                    name="income.current"
+                                    value={formData.income.current}
+                                    onChange={handleInputChange}
+                                    placeholder="Enter current income"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="income.last">
+                                    Last Income <span className="text-destructive">*</span>
+                                </Label>
+                                <Input
+                                    id="income.last"
+                                    name="income.last"
+                                    value={formData.income.last}
+                                    onChange={handleInputChange}
+                                    placeholder="Enter last income"
+                                    className={errors.incomeLast ? 'border-destructive' : ''}
+                                />
+                                {errors.incomeLast && (
+                                    <p className="text-sm text-destructive">{errors.incomeLast}</p>
+                                )}
+                            </div>
+                        </div>
                     </div>
+
+                    <Separator />
+
+                    {/* Service User Role */}
+                    <div className="space-y-3">
+                        <Label>
+                            Service User Role(s) <span className="text-destructive">*</span>
+                        </Label>
+                        <p className="text-sm text-muted-foreground">Select all that apply</p>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                            {['rider', 'caregiver', 'relative', 'guardian', 'case manager', 'other'].map((role) => (
+                                <label key={role} className="flex items-center space-x-2 cursor-pointer">
+                                    <Checkbox
+                                        id={`role-${role}`}
+                                        name="serviceUserRole"
+                                        value={role}
+                                        checked={formData.serviceUserRole.includes(role)}
+                                        onCheckedChange={(checked) => {
+                                            handleInputChange({
+                                                target: {
+                                                    name: 'serviceUserRole',
+                                                    value: role,
+                                                    type: 'checkbox',
+                                                    checked
+                                                }
+                                            });
+                                        }}
+                                    />
+                                    <Label htmlFor={`role-${role}`} className="capitalize font-normal cursor-pointer">
+                                        {role}
+                                    </Label>
+                                </label>
+                            ))}
+                        </div>
+                        {errors.serviceUserRole && (
+                            <p className="text-sm text-destructive">{errors.serviceUserRole}</p>
+                        )}
+                    </div>
+
+                    <Separator />
+
+                    {/* Additional Information */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                            <Label htmlFor="veteranStatus">
+                                Veteran Status <span className="text-muted-foreground text-xs">(optional)</span>
+                            </Label>
+                            <Select
+                                value={formData.veteranStatus}
+                                onValueChange={(value) => handleSelectChange('veteranStatus', value)}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select veteran status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="veteran">Veteran</SelectItem>
+                                    <SelectItem value="not veteran">Not Veteran</SelectItem>
+                                    <SelectItem value="prefer not to say">Prefer not to say</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="disabilityStatus">
+                                Disability Status <span className="text-muted-foreground text-xs">(optional)</span>
+                            </Label>
+                            <Select
+                                value={formData.disabilityStatus}
+                                onValueChange={(value) => handleSelectChange('disabilityStatus', value)}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select disability status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="yes">Yes</SelectItem>
+                                    <SelectItem value="no">No</SelectItem>
+                                    <SelectItem value="prefer not to say">Prefer not to say</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+                </form>
+            </CardContent>
+
+            <CardFooter className="flex justify-between">
+                <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                        setShowBaseForm(true);
+                        setShowUserForm(false);
+                    }}
+                    disabled={submitting}
+                >
+                    Cancel
+                </Button>
+                <div className="flex gap-2">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleReset}
+                        disabled={submitting}
+                    >
+                        Reset Form
+                    </Button>
+                    <Button
+                        type="submit"
+                        onClick={handleSubmit}
+                        disabled={submitting}
+                    >
+                        {submitting ? 'Creating...' : 'Create User'}
+                    </Button>
                 </div>
-            </form>
-        </div>
+            </CardFooter>
+        </Card>
     );
 }

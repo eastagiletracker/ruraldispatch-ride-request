@@ -3,6 +3,9 @@ import UserForm from './UserForm';
 import UserSearch from './UserSearch';
 import RideRequestForm from './RideRequestForm';
 import {fetchFieldsOfDocument} from "../utils/database";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { UserPlus, Search } from "lucide-react";
 
 export default function RequestRide() {
     const [selectedUser, setSelectedUser] = useState(null);
@@ -19,46 +22,81 @@ export default function RequestRide() {
     }
 
     return (
-        <div className='flex flex-col gap-4 w-full justify-center items-center'>
+        <div className='flex flex-col gap-6 w-full justify-center items-center max-w-4xl mx-auto'>
             {showBaseForm && (
-            <div className='bg-white p-4 rounded-lg shadow-md flex flex-col gap-4'>
-                <div className='flex flex-col gap-1'>
-                    <h1 className='text-xl font-bold'>Add a User</h1>
-                    <h2 className='text-md'>Add a new user or find an existing user</h2>
-                    <button 
-                    onClick={() => {
-                        setShowBaseForm(false);
-                        setShowUserForm(true);
-                    }}
-                    className='bg-gray-300 hover:bg-gray-400 text-gray-800 p-2 rounded-md w-[50%]'>Add a User</button>
-                </div>
-                <h1 className='text-lg font-bold'>OR</h1>
-                <div className='flex flex-col gap-4'>
-                    <h1 className='text-xl font-bold'>Create Ride Request</h1>
-                    <h2 className='text-lg'>Find an existing user to start a Ride Request</h2>
-                    <UserSearch onUserSelect={handleUserSelect} />
-                </div>
-                {selectedUser && (
-                    <div className='flex flex-row gap-4 w-full '>
-                        <button 
-                        onClick={() => {
-                            setShowBaseForm(true);
-                            setShowRideRequestForm(false);
-                            setShowUserForm(false);
-                        }}
-                        className='bg-gray-300 hover:bg-gray-400 text-gray-800 p-2 text-md rounded-md w-[50%]'>Cancel</button>
-                        <button 
-                        onClick={() => {
-                            console.log('Request Ride button clicked');
-                            setShowRideRequestForm(true);
-                            setShowBaseForm(false);
-                            setShowUserForm(false);
-                            console.log('State updated - showRideRequestForm:', true);
-                        }}
-                        className='bg-blue-500 hover:bg-blue-600 text-white p-2 text-md rounded-md w-[50%]'>Request Ride</button>
-                    </div>
-                )}
-            </div>
+                <Card className="w-full">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <UserPlus className="h-5 w-5 text-primary" />
+                            Add a User
+                        </CardTitle>
+                        <CardDescription>
+                            Add a new user or find an existing user
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        <Button
+                            onClick={() => {
+                                setShowBaseForm(false);
+                                setShowUserForm(true);
+                            }}
+                            className="w-full md:w-auto"
+                        >
+                            <UserPlus className="h-4 w-4 mr-2" />
+                            Add a User
+                        </Button>
+
+                        <div className="relative">
+                            <div className="absolute inset-0 flex items-center">
+                                <span className="w-full border-t" />
+                            </div>
+                            <div className="relative flex justify-center text-xs uppercase">
+                                <span className="bg-background px-2 text-muted-foreground">OR</span>
+                            </div>
+                        </div>
+
+                        <div className='space-y-4'>
+                            <div>
+                                <h3 className='text-lg font-semibold flex items-center gap-2'>
+                                    <Search className="h-5 w-5 text-primary" />
+                                    Create Ride Request
+                                </h3>
+                                <p className='text-sm text-muted-foreground mt-1'>
+                                    Find an existing user to start a Ride Request
+                                </p>
+                            </div>
+                            <UserSearch onUserSelect={handleUserSelect} />
+                        </div>
+
+                        {selectedUser && (
+                            <div className='flex flex-col sm:flex-row gap-3 pt-4 border-t'>
+                                <Button
+                                    variant="outline"
+                                    onClick={() => {
+                                        setShowBaseForm(true);
+                                        setShowRideRequestForm(false);
+                                        setShowUserForm(false);
+                                    }}
+                                    className="flex-1"
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    onClick={() => {
+                                        console.log('Request Ride button clicked');
+                                        setShowRideRequestForm(true);
+                                        setShowBaseForm(false);
+                                        setShowUserForm(false);
+                                        console.log('State updated - showRideRequestForm:', true);
+                                    }}
+                                    className="flex-1"
+                                >
+                                    Request Ride
+                                </Button>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
             )}
             {showUserForm && <UserForm setShowBaseForm={setShowBaseForm} setShowUserForm={setShowUserForm} />}
             {showRideRequestForm && <RideRequestForm selectedUser={selectedUser} setShowRideRequestForm={setShowRideRequestForm} setShowBaseForm={setShowBaseForm} setShowUserForm={setShowUserForm} />}

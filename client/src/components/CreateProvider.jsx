@@ -1,5 +1,13 @@
 import { useState } from 'react';
-import {createDocument} from "../utils/database";
+import { createDocument } from "../utils/database";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle, CheckCircle2 } from "lucide-react";
+import { toast } from "sonner";
 
 const ORGANIZATIONS = ['EASTCONN', 'Generations Health'];
 
@@ -33,10 +41,12 @@ export default function CreateProvider() {
         organization: '',
         mobilePhone: '',
         serviceProviderRole: '',
+        specializations: '',
         faxPhone: ''
     });
 
     const [errors, setErrors] = useState({});
+    const [submitting, setSubmitting] = useState(false);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -44,8 +54,23 @@ export default function CreateProvider() {
             ...prev,
             [name]: value
         }));
-        
+
         // Clear error when user starts typing
+        if (errors[name]) {
+            setErrors(prev => ({
+                ...prev,
+                [name]: ''
+            }));
+        }
+    };
+
+    const handleSelectChange = (name, value) => {
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+
+        // Clear error when user selects
         if (errors[name]) {
             setErrors(prev => ({
                 ...prev,
@@ -83,16 +108,21 @@ export default function CreateProvider() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         if (!validateForm()) {
+            toast.error('Please fill in all required fields');
             return;
         }
 
+        setSubmitting(true);
         try {
             const response = await createDocument("providers", formData);
 
             if (response.ok) {
-                alert('Service provider created successfully!');
+                toast.success('Service provider created successfully!', {
+                    description: `${formData.fullName} has been added to the system.`
+                });
+
                 // Reset form
                 setFormData({
                     uuid: generateUUID(),
@@ -101,182 +131,224 @@ export default function CreateProvider() {
                     organization: '',
                     mobilePhone: '',
                     serviceProviderRole: '',
+                    specializations: '',
                     faxPhone: ''
                 });
                 setErrors({});
             } else {
                 const errorData = await response.json();
-                alert(`Error creating service provider: ${errorData.message}`);
+                toast.error('Failed to create service provider', {
+                    description: errorData.message || 'Please try again.'
+                });
             }
         } catch (error) {
             console.error('Error submitting form:', error);
-            alert('Error submitting form. Please try again.');
+            toast.error('Error submitting form', {
+                description: 'Please try again or contact support.'
+            });
+        } finally {
+            setSubmitting(false);
         }
     };
 
     return (
-        <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-md">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">Create Service Provider</h2>
-            <p className="text-gray-600 mb-6">Fill in the information to create a new service provider</p>
-            
-            <form onSubmit={handleSubmit} className="space-y-6">
-                {/* UUID Field */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Service Provider UUID (Auto-generated)
-                    </label>
-                    <input
-                        type="text"
-                        name="uuid"
-                        value={formData.uuid}
-                        readOnly
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-600 cursor-not-allowed"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">This UUID is automatically generated</p>
-                </div>
+        <Card className="max-w-4xl mx-auto">
+            <CardHeader>
+                <CardTitle>Create Service Provider</CardTitle>
+                <CardDescription>
+                    Fill in the information to create a new service provider
+                </CardDescription>
+            </CardHeader>
 
-                {/* Full Name */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Full Name *
-                    </label>
-                    <input
-                        type="text"
-                        name="fullName"
-                        value={formData.fullName}
-                        onChange={handleInputChange}
-                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 ${
-                            errors.fullName ? 'border-red-500' : 'border-gray-300'
-                        }`}
-                        placeholder="Enter full name"
-                    />
-                    {errors.fullName && <p className="text-red-500 text-sm mt-1">{errors.fullName}</p>}
-                </div>
-
-                {/* Title */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Title *
-                    </label>
-                    <input
-                        type="text"
-                        name="title"
-                        value={formData.title}
-                        onChange={handleInputChange}
-                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 ${
-                            errors.title ? 'border-red-500' : 'border-gray-300'
-                        }`}
-                        placeholder="Enter title"
-                    />
-                    {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
-                </div>
-
-                {/* Organization */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Organization *
-                    </label>
-                    <select
-                        name="organization"
-                        value={formData.organization}
-                        onChange={handleInputChange}
-                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 ${
-                            errors.organization ? 'border-red-500' : 'border-gray-300'
-                        }`}
-                    >
-                        <option value="">Select organization</option>
-                        {ORGANIZATIONS.map(org => (
-                            <option key={org} value={org}>{org}</option>
-                        ))}
-                    </select>
-                    {errors.organization && <p className="text-red-500 text-sm mt-1">{errors.organization}</p>}
-                </div>
-
-                {/* Mobile Phone */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Mobile Phone *
-                    </label>
-                    <input
-                        type="tel"
-                        name="mobilePhone"
-                        value={formData.mobilePhone}
-                        onChange={handleInputChange}
-                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 ${
-                            errors.mobilePhone ? 'border-red-500' : 'border-gray-300'
-                        }`}
-                        placeholder="Enter mobile phone number"
-                    />
-                    {errors.mobilePhone && <p className="text-red-500 text-sm mt-1">{errors.mobilePhone}</p>}
-                </div>
-
-                {/* Service Provider Role */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Service Provider Role *
-                    </label>
-                    <select
-                        name="serviceProviderRole"
-                        value={formData.serviceProviderRole}
-                        onChange={handleInputChange}
-                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 ${
-                            errors.serviceProviderRole ? 'border-red-500' : 'border-gray-300'
-                        }`}
-                    >
-                        <option value="">Select role</option>
-                        {SERVICE_PROVIDER_ROLES.map(role => (
-                            <option key={role} value={role}>{role}</option>
-                        ))}
-                    </select>
-                    {errors.serviceProviderRole && <p className="text-red-500 text-sm mt-1">{errors.serviceProviderRole}</p>}
-                </div>
-
-                {/* Specializations */}
-                {formData.serviceProviderRole === 'Staff' && (
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Specializations
-                        </label>
-                        <select
-                            name="specializations"
-                            value={formData.specializations}
-                            onChange={handleInputChange}
-                            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 ${
-                                errors.specializations ? 'border-red-500' : 'border-gray-300'
-                            }`}
-                        >
-                            <option value="">Select specialization</option>
-                            {SPECIALIZATIONS.map(specialization => (
-                                <option key={specialization} value={specialization}>{specialization}</option>
-                            ))}
-                        </select>
+            <CardContent>
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* UUID Field */}
+                    <div className="space-y-2">
+                        <Label htmlFor="uuid">
+                            Service Provider UUID (Auto-generated)
+                        </Label>
+                        <Input
+                            id="uuid"
+                            name="uuid"
+                            value={formData.uuid}
+                            readOnly
+                            disabled
+                            className="bg-muted cursor-not-allowed"
+                        />
+                        <p className="text-xs text-muted-foreground">This UUID is automatically generated</p>
                     </div>
-                )}
-                {/* Fax Phone */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Fax Phone
-                    </label>
-                    <input
-                        type="tel"
-                        name="faxPhone"
-                        value={formData.faxPhone}
-                        onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                        placeholder="Enter fax phone number (optional)"
-                    />
-                </div>
 
-                {/* Submit Button */}
-                <div className="flex justify-end space-x-4">
-                    <button
-                        type="submit"
-                        className="px-6 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
-                    >
-                        Create Service Provider
-                    </button>
-                </div>
-            </form>
-        </div>
+                    {/* Full Name */}
+                    <div className="space-y-2">
+                        <Label htmlFor="fullName">
+                            Full Name <span className="text-destructive">*</span>
+                        </Label>
+                        <Input
+                            id="fullName"
+                            name="fullName"
+                            value={formData.fullName}
+                            onChange={handleInputChange}
+                            placeholder="Enter full name"
+                            className={errors.fullName ? 'border-destructive' : ''}
+                        />
+                        {errors.fullName && (
+                            <p className="text-sm text-destructive">{errors.fullName}</p>
+                        )}
+                    </div>
+
+                    {/* Title */}
+                    <div className="space-y-2">
+                        <Label htmlFor="title">
+                            Title <span className="text-destructive">*</span>
+                        </Label>
+                        <Input
+                            id="title"
+                            name="title"
+                            value={formData.title}
+                            onChange={handleInputChange}
+                            placeholder="Enter title"
+                            className={errors.title ? 'border-destructive' : ''}
+                        />
+                        {errors.title && (
+                            <p className="text-sm text-destructive">{errors.title}</p>
+                        )}
+                    </div>
+
+                    {/* Organization */}
+                    <div className="space-y-2">
+                        <Label htmlFor="organization">
+                            Organization <span className="text-destructive">*</span>
+                        </Label>
+                        <Select
+                            value={formData.organization}
+                            onValueChange={(value) => handleSelectChange('organization', value)}
+                        >
+                            <SelectTrigger className={errors.organization ? 'border-destructive' : ''}>
+                                <SelectValue placeholder="Select organization" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {ORGANIZATIONS.map(org => (
+                                    <SelectItem key={org} value={org}>{org}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        {errors.organization && (
+                            <p className="text-sm text-destructive">{errors.organization}</p>
+                        )}
+                    </div>
+
+                    {/* Mobile Phone */}
+                    <div className="space-y-2">
+                        <Label htmlFor="mobilePhone">
+                            Mobile Phone <span className="text-destructive">*</span>
+                        </Label>
+                        <Input
+                            id="mobilePhone"
+                            name="mobilePhone"
+                            type="tel"
+                            value={formData.mobilePhone}
+                            onChange={handleInputChange}
+                            placeholder="Enter mobile phone number"
+                            className={errors.mobilePhone ? 'border-destructive' : ''}
+                        />
+                        {errors.mobilePhone && (
+                            <p className="text-sm text-destructive">{errors.mobilePhone}</p>
+                        )}
+                    </div>
+
+                    {/* Service Provider Role */}
+                    <div className="space-y-2">
+                        <Label htmlFor="serviceProviderRole">
+                            Service Provider Role <span className="text-destructive">*</span>
+                        </Label>
+                        <Select
+                            value={formData.serviceProviderRole}
+                            onValueChange={(value) => handleSelectChange('serviceProviderRole', value)}
+                        >
+                            <SelectTrigger className={errors.serviceProviderRole ? 'border-destructive' : ''}>
+                                <SelectValue placeholder="Select role" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {SERVICE_PROVIDER_ROLES.map(role => (
+                                    <SelectItem key={role} value={role}>{role}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        {errors.serviceProviderRole && (
+                            <p className="text-sm text-destructive">{errors.serviceProviderRole}</p>
+                        )}
+                    </div>
+
+                    {/* Specializations - Only show if Staff role selected */}
+                    {formData.serviceProviderRole === 'Staff' && (
+                        <div className="space-y-2">
+                            <Label htmlFor="specializations">
+                                Specializations
+                            </Label>
+                            <Select
+                                value={formData.specializations}
+                                onValueChange={(value) => handleSelectChange('specializations', value)}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select specialization" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {SPECIALIZATIONS.map(specialization => (
+                                        <SelectItem key={specialization} value={specialization}>
+                                            {specialization}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    )}
+
+                    {/* Fax Phone */}
+                    <div className="space-y-2">
+                        <Label htmlFor="faxPhone">
+                            Fax Phone <span className="text-muted-foreground text-xs">(optional)</span>
+                        </Label>
+                        <Input
+                            id="faxPhone"
+                            name="faxPhone"
+                            type="tel"
+                            value={formData.faxPhone}
+                            onChange={handleInputChange}
+                            placeholder="Enter fax phone number (optional)"
+                        />
+                    </div>
+                </form>
+            </CardContent>
+
+            <CardFooter className="flex justify-end space-x-4">
+                <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                        setFormData({
+                            uuid: generateUUID(),
+                            fullName: '',
+                            title: '',
+                            organization: '',
+                            mobilePhone: '',
+                            serviceProviderRole: '',
+                            specializations: '',
+                            faxPhone: ''
+                        });
+                        setErrors({});
+                    }}
+                    disabled={submitting}
+                >
+                    Reset Form
+                </Button>
+                <Button
+                    type="submit"
+                    onClick={handleSubmit}
+                    disabled={submitting}
+                >
+                    {submitting ? 'Creating...' : 'Create Service Provider'}
+                </Button>
+            </CardFooter>
+        </Card>
     );
 }

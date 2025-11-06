@@ -1,6 +1,7 @@
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
+import { Toaster } from '@/components/ui/sonner'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import ServiceProviderHome from './pages/ServiceProviderHome'
@@ -33,6 +34,7 @@ function AppRoutes() {
           </Routes>
         </main>
         <Footer />
+        <Toaster />
       </div>
     </Router>
   );
