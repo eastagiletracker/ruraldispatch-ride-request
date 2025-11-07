@@ -21,12 +21,12 @@ const serviceProviderSchema = new mongoose.Schema({
     required: true,
     enum: ['EASTCONN', 'Generations Health', 'other']
   },
-  phone: {
+  mobilePhone: {
     type: String,
     required: true,
     index: "text"
   },
-  role: {
+  serviceProviderRole: {
     type: String,
     required: true,
     enum: ['Transport Broker', 'Staff', 'Fleet Manager', 'Driver', 'Admin']
@@ -36,13 +36,13 @@ const serviceProviderSchema = new mongoose.Schema({
     enum: ['Caseworker', 'Nutritionist', 'Intake'],
     validate: {
       validator: function(specializations) {
-        // Only allow specializations if role is 'Staff'
-        if (this.role !== 'Staff' && specializations) {
+        // Only allow specializations if serviceProviderRole is 'Staff'
+        if (this.serviceProviderRole !== 'Staff' && specializations) {
           return false;
         }
         return true;
       },
-      message: 'Specializations can only be set when role is Staff'
+      message: 'Specializations can only be set when serviceProviderRole is Staff'
     }
   },
   faxPhone: {

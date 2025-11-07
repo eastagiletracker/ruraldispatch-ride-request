@@ -4,7 +4,7 @@ const TwilioProvider = require('./TwilioProvider');
 /**
  * SMS Provider Manager
  * Manages multiple SMS providers with fallback support
- * Primary: Vonage, Fallback: Twilio
+ * Primary: Twilio, Fallback: Vonage
  */
 class SMSProviderManager {
   constructor() {
@@ -16,12 +16,12 @@ class SMSProviderManager {
     this.twilioConfigured = this.twilioProvider.isConfigured();
 
     console.log('SMS Provider Configuration:');
-    console.log(`  Vonage: ${this.vonageConfigured ? 'Configured' : 'Not Configured'}`);
     console.log(`  Twilio: ${this.twilioConfigured ? 'Configured' : 'Not Configured'}`);
+    console.log(`  Vonage: ${this.vonageConfigured ? 'Configured' : 'Not Configured'}`);
 
     // Set primary and fallback providers
-    this.primaryProvider = this.vonageConfigured ? this.vonageProvider : null;
-    this.fallbackProvider = this.twilioConfigured ? this.twilioProvider : null;
+    this.primaryProvider = this.twilioConfigured ? this.twilioProvider : null;
+    this.fallbackProvider = this.vonageConfigured ? this.vonageProvider : null;
 
     if (this.primaryProvider) {
       console.log(`Primary SMS Provider: ${this.primaryProvider.getName()}`);
@@ -55,7 +55,7 @@ class SMSProviderManager {
       };
     }
 
-    // Try primary provider (Vonage)
+    // Try primary provider (Twilio)
     if (this.primaryProvider) {
       console.log(`Attempting to send SMS via ${this.primaryProvider.getName()} (primary)`);
       const result = await this.primaryProvider.sendSMS(to, message);
@@ -104,13 +104,13 @@ class SMSProviderManager {
    */
   getStatus() {
     return {
-      vonage: {
-        configured: this.vonageConfigured,
-        isPrimary: this.primaryProvider?.getName() === 'vonage'
-      },
       twilio: {
         configured: this.twilioConfigured,
-        isFallback: this.fallbackProvider?.getName() === 'twilio'
+        isPrimary: this.primaryProvider?.getName() === 'twilio'
+      },
+      vonage: {
+        configured: this.vonageConfigured,
+        isFallback: this.fallbackProvider?.getName() === 'vonage'
       }
     };
   }

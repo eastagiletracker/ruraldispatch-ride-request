@@ -40,13 +40,26 @@ class TwilioProvider {
       }
 
       // Add status callback if webhook URL is configured
-      const statusCallbackUrl = process.env.TWILIO_WEBHOOK_URL
-        ? process.env.TWILIO_WEBHOOK_URL.replace('/webhook', '/status')
-        : null;
+      // Note: For localhost development, use ngrok or similar tunnel service
+      // to receive status callbacks from Twilio
+      const statusCallbackUrl = process.env.TWILIO_STATUS_CALLBACK_URL ||
+        (process.env.TWILIO_WEBHOOK_URL
+          ? process.env.TWILIO_WEBHOOK_URL.replace('/webhook/twilio', '/status/twilio')
+                                           .replace('/webhook', '/status/twilio')
+          : null);
 
-      if (statusCallbackUrl && !statusCallbackUrl.includes('localhost')) {
-        messageOptions.statusCallback = statusCallbackUrl;
-        console.log(`Status callback set to: ${statusCallbackUrl}`);
+      if (statusCallbackUrl) {
+        // Only skip callback if explicitly disabled
+        const isCallbackDisabled = process.env.TWILIO_DISABLE_STATUS_CALLBACK === 'true';
+
+        if (!isCallbackDisabled) {
+          messageOptions.statusCallback = statusCallbackUrl;
+          console.log(`📊 Status callback set to: ${statusCallbackUrl}`);
+        } else {
+          console.log(`⚠️  Status callback disabled via TWILIO_DISABLE_STATUS_CALLBACK`);
+        }
+      } else {
+        console.log(`⚠️  No status callback URL configured - delivery status won't be tracked`);
       }
 
       const result = await this.client.messages.create(messageOptions);

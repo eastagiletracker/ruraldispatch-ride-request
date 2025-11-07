@@ -17,5 +17,15 @@ services:
         sync: false
       - key: TWILIO_PHONE_NUMBER
         sync: false
+      - key: TWILIO_MESSAGING_SERVICE_SID
+        sync: false
       - key: TWILIO_WEBHOOK_URL
+        sync: false
+      - key: VONAGE_API_KEY
+        sync: false
+      - key: VONAGE_API_SECRET
+        sync: false
+      - key: VONAGE_FROM_NUMBER
+        sync: false
+      - key: VONAGE_WEBHOOK_URL
         sync: false

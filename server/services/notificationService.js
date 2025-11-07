@@ -4,7 +4,7 @@ const { RIDE_REQUEST_STATUSES } = require('../constants/rideRequestStatuses');
 
 /**
  * Notification Service
- * Handles SMS notifications via multiple providers (Vonage primary, Twilio fallback)
+ * Handles SMS notifications via multiple providers (Twilio primary, Vonage fallback)
  */
 class NotificationService {
   constructor() {
@@ -101,9 +101,17 @@ Dropoff: ${ride.dropOffAddress}
 Check the dashboard for details.`;
 
     const driverPhone = driver.mobilePhone || driver.phone;
+
+    if (!driverPhone) {
+      console.error('❌ Driver has no phone number!', { driver });
+      return {
+        success: false,
+        error: 'Driver has no phone number configured',
+        timestamp: new Date()
+      };
+    }
+
     console.log('📱 Sending driver notification to:', driverPhone);
-    console.log('   Driver object has mobilePhone?', !!driver.mobilePhone);
-    console.log('   Driver object has phone?', !!driver.phone);
 
     return await this.sendSMS(driverPhone, message);
   }

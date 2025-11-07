@@ -45,9 +45,18 @@ function createRouter(api)
             }
 
             if (updatedRide.assignedVehicleUuid) {
-                // Search for vehicle - the API doesn't have a direct getVehicle method
-                const vehicleSearch = await api.fuzzyVehicleSearch(updatedRide.assignedVehicleUuid.toString());
-                userData.vehicle = vehicleSearch && vehicleSearch.length > 0 ? vehicleSearch[0] : null;
+                console.log('🚗 Looking up vehicle UUID:', updatedRide.assignedVehicleUuid);
+                try {
+                    userData.vehicle = await api.getVehicle(updatedRide.assignedVehicleUuid);
+                    if (userData.vehicle) {
+                        console.log('✅ Found vehicle:', userData.vehicle.displayName);
+                    } else {
+                        console.log('⚠️  Vehicle not found for UUID:', updatedRide.assignedVehicleUuid);
+                    }
+                } catch (error) {
+                    console.error('❌ Error fetching vehicle:', error.message);
+                    userData.vehicle = null;
+                }
             }
 
             // Trigger notifications based on status changes
@@ -56,9 +65,7 @@ function createRouter(api)
             console.log('New status:', updatedRide.rideRequestStatus);
             console.log('Rider:', userData.rider?.fullName, userData.rider?.phone);
             console.log('Driver:', userData.driver?.fullName);
-            console.log('Driver mobilePhone:', userData.driver?.mobilePhone);
-            console.log('Driver phone:', userData.driver?.phone);
-            console.log('Driver object keys:', userData.driver ? Object.keys(userData.driver) : 'No driver');
+            console.log('Driver contact:', userData.driver?.mobilePhone || userData.driver?.phone || 'No phone');
             console.log('Vehicle:', userData.vehicle?.displayName);
 
             const notifications = await notificationService.handleRideStatusChange(
@@ -236,21 +243,111 @@ function createRouter(api)
     // Twilio webhook for incoming SMS responses
     router.post(`/notifications/webhook/twilio`, async (req, res) => {
         try {
+            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            console.log('📨 INCOMING TWILIO SMS WEBHOOK RECEIVED');
+            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
             const { From, To, Body, MessageSid, SmsStatus } = req.body;
 
-            console.log('Incoming Twilio SMS webhook:', { From, To, Body, MessageSid });
+            console.log('📨 Parsed webhook data:', { From, To, Body, MessageSid });
+
+            const senderPhone = From;
+            console.log('🔍 Looking for active ride from sender:', senderPhone);
+
+            // Find active rides involving this phone number
+            const allRides = await api.getRideRequests();
+            console.log(`📋 Total rides in database: ${allRides.length}`);
+
+            // Filter all active rides involving this sender
+            const rideStatuses = require('../constants/rideStatuses');
+            const activeRides = allRides.filter(ride => {
+                // Check if ride is active (not complete)
+                const isActive = ride.rideStatus !== rideStatuses.RIDE_COMPLETE &&
+                                ride.rideStatus !== rideStatuses.ROUNDTRIP_COMPLETE;
+
+                if (!isActive) return false;
+
+                // Check if sender is the rider or driver
+                const isRider = ride.rider && ride.rider.length > 0 &&
+                               ride.rider[0].phone === senderPhone;
+                const isDriver = ride.driver && ride.driver.length > 0 &&
+                                (ride.driver[0].mobilePhone === senderPhone ||
+                                 ride.driver[0].phone === senderPhone);
+
+                return isRider || isDriver;
+            });
+
+            // Get the most recent active ride (highest UUID/timestamp)
+            const activeRide = activeRides.sort((a, b) => b.uuid - a.uuid)[0];
+
+            if (activeRides.length > 1) {
+                console.log(`⚠️  Found ${activeRides.length} active rides, using most recent: #${activeRide.uuid}`);
+            }
+
+            if (activeRide) {
+                console.log(`✅ Found active ride: #${activeRide.uuid}`);
+                console.log(`   Rider: ${activeRide.rider?.[0]?.fullName} (${activeRide.rider?.[0]?.phone})`);
+                console.log(`   Driver: ${activeRide.driver?.[0]?.fullName} (${activeRide.driver?.[0]?.mobilePhone || activeRide.driver?.[0]?.phone})`);
+            } else {
+                console.log('❌ No active ride found for this sender');
+            }
 
             // Generate unique notification ID
             const notificationUuid = Date.now();
 
+            // Determine sender role and recipient
+            let senderRole = 'unknown';
+            let recipientPhone = null;
+            let recipientName = null;
+
+            if (activeRide) {
+                const isRider = activeRide.rider && activeRide.rider.length > 0 &&
+                               activeRide.rider[0].phone === senderPhone;
+                const isDriver = activeRide.driver && activeRide.driver.length > 0 &&
+                                (activeRide.driver[0].mobilePhone === senderPhone ||
+                                 activeRide.driver[0].phone === senderPhone);
+
+                if (isRider) {
+                    senderRole = 'rider';
+                    // Forward to driver
+                    if (activeRide.driver && activeRide.driver.length > 0) {
+                        recipientPhone = activeRide.driver[0].mobilePhone || activeRide.driver[0].phone;
+                        recipientName = activeRide.driver[0].fullName;
+
+                        const senderName = activeRide.rider[0].fullName;
+                        const forwardMessage = `Message from ${senderName} (Rider):\n${Body}`;
+
+                        console.log(`📤 Forwarding rider message to driver: ${recipientPhone}`);
+                        const result = await notificationService.sendSMS(recipientPhone, forwardMessage);
+                        console.log(`✅ Forward result:`, result.success ? 'SUCCESS' : 'FAILED');
+                    }
+                } else if (isDriver) {
+                    senderRole = 'driver';
+                    // Forward to rider
+                    if (activeRide.rider && activeRide.rider.length > 0) {
+                        recipientPhone = activeRide.rider[0].phone;
+                        recipientName = activeRide.rider[0].fullName;
+
+                        const senderName = activeRide.driver[0].fullName;
+                        const forwardMessage = `Message from ${senderName} (Driver):\n${Body}`;
+
+                        console.log(`📤 Forwarding driver message to rider: ${recipientPhone}`);
+                        const result = await notificationService.sendSMS(recipientPhone, forwardMessage);
+                        console.log(`✅ Forward result:`, result.success ? 'SUCCESS' : 'FAILED');
+                    }
+                }
+            } else {
+                console.log('⚠️  No active ride found for sender:', senderPhone);
+            }
+
             // Create notification record for incoming message
             const notification = {
                 uuid: notificationUuid,
-                rideRequestUuid: 0, // Will need to be associated with a ride later
+                rideRequestUuid: activeRide ? parseInt(activeRide.uuid) : 0,
                 notificationType: 'incoming_sms',
                 direction: 'inbound',
                 recipientPhone: To,
-                recipientRole: 'dispatcher',
+                recipientRole: senderRole,
                 messageBody: Body,
                 twilioMessageSid: MessageSid,
                 twilioStatus: 'received',
@@ -261,12 +358,9 @@ function createRouter(api)
             // Save the incoming message
             await api.addNotification(notification);
 
-            // Respond to Twilio
+            // Respond to Twilio with empty response (don't auto-reply)
             res.type('text/xml');
-            res.send(`<?xml version="1.0" encoding="UTF-8"?>
-<Response>
-    <Message>Thank you for your message. A dispatcher will review it shortly.</Message>
-</Response>`);
+            res.send(`<?xml version="1.0" encoding="UTF-8"?><Response></Response>`);
         } catch (error) {
             console.error('Twilio webhook error:', error);
             res.status(500).send('Error processing webhook');

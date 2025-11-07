@@ -43,6 +43,7 @@ async function generateApi()
         addProvider: async(provider) => await database.add(providerCollection, provider),
         fuzzyUserSearch: async(searchTerm) => await database.fuzzyUserSearch(userCollection, searchTerm),
         fuzzyProviderSearch: async(searchTerm) => await database.fuzzyProviderSearch(providerCollection, searchTerm),
+        getVehicle: async(uuid) => await database.getByUuidString(vehicleCollection, uuid),
         fuzzyVehicleSearch: async(searchTerm) => await database.fuzzyVehicleSearch(vehicleCollection, searchTerm),
         addVehicle: async (vehicle) => await database.add(vehicleCollection, vehicle),
         // Notification functions
