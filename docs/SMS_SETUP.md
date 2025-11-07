@@ -68,11 +68,14 @@ VONAGE_WEBHOOK_URL=https://yourdomain.com/api/notifications/webhook/vonage
    - Select a number with SMS capability
 3. **Get Credentials**:
    - Account SID and Auth Token from dashboard
-4. **Configure Webhooks**:
+4. **Configure Webhooks** (Optional - for two-way SMS):
    - Go to your phone number settings
    - SMS Configuration:
-     - Webhook URL: `https://yourdomain.com/api/notifications/webhook/twilio`
+     - Webhook URL: `https://yourdomain.com/api/notifications/webhook` (or `/webhook/twilio`)
      - HTTP Method: POST
+     - Status Callback URL: `https://yourdomain.com/api/notifications/status` (or `/status/twilio`)
+
+**Note**: For Twilio Messaging Service SID, go to Messaging → Services and create/copy your service SID. This is an alternative to using a phone number.
 
 ### 2. Vonage Setup (Optional Fallback)
 
@@ -97,12 +100,10 @@ The application provides dedicated webhook endpoints for each provider:
 - Delivery Receipt: `POST /api/notifications/status/vonage`
 
 ### Twilio Webhooks
-- Inbound SMS: `POST /api/notifications/webhook/twilio`
-- Status Callback: `POST /api/notifications/status/twilio`
+- Inbound SMS: `POST /api/notifications/webhook/twilio` or `POST /api/notifications/webhook`
+- Status Callback: `POST /api/notifications/status/twilio` or `POST /api/notifications/status`
 
-### Legacy Endpoints (Backward Compatible)
-- Inbound SMS: `POST /api/notifications/webhook` (defaults to Twilio format)
-- Status Callback: `POST /api/notifications/status` (defaults to Twilio format)
+**Note**: The legacy endpoints (`/webhook` and `/status` without provider suffix) default to Twilio format for backward compatibility.
 
 ## API Endpoints
 

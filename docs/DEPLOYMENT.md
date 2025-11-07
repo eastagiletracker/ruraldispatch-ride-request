@@ -28,9 +28,19 @@ Railway offers the easiest deployment with automatic environment detection.
      ```
      NODE_ENV=production
      JWT_SECRET=your-super-secret-jwt-key-change-this
+     
+     # Twilio Configuration (Primary SMS Provider)
      TWILIO_ACCOUNT_SID=your-twilio-sid
      TWILIO_AUTH_TOKEN=your-twilio-token
      TWILIO_PHONE_NUMBER=your-twilio-number
+     TWILIO_MESSAGING_SERVICE_SID=your-messaging-service-sid (optional)
+     TWILIO_WEBHOOK_URL=https://your-app.up.railway.app/api/notifications/webhook
+     
+     # Vonage Configuration (Fallback SMS Provider)
+     VONAGE_API_KEY=your-vonage-api-key
+     VONAGE_API_SECRET=your-vonage-api-secret
+     VONAGE_FROM_NUMBER=your-vonage-number
+     VONAGE_WEBHOOK_URL=https://your-app.up.railway.app/api/notifications/webhook/vonage
      ```
 
 5. **Configure GitHub Actions (Optional)**
@@ -95,9 +105,19 @@ Render provides excellent free tier options and good PostgreSQL support.
      NODE_ENV=production
      MONGODB_URI=your-mongodb-connection-string
      JWT_SECRET=your-super-secret-jwt-key-change-this
+     
+     # Twilio Configuration (Primary SMS Provider)
      TWILIO_ACCOUNT_SID=your-twilio-sid
      TWILIO_AUTH_TOKEN=your-twilio-token
      TWILIO_PHONE_NUMBER=your-twilio-number
+     TWILIO_MESSAGING_SERVICE_SID=your-messaging-service-sid (optional)
+     TWILIO_WEBHOOK_URL=https://your-app.onrender.com/api/notifications/webhook
+     
+     # Vonage Configuration (Fallback SMS Provider)
+     VONAGE_API_KEY=your-vonage-api-key
+     VONAGE_API_SECRET=your-vonage-api-secret
+     VONAGE_FROM_NUMBER=your-vonage-number
+     VONAGE_WEBHOOK_URL=https://your-app.onrender.com/api/notifications/webhook/vonage
      ```
 
 5. **Configure GitHub Actions (Optional)**
@@ -121,10 +141,28 @@ Required for both platforms:
 | `NODE_ENV` | Application environment | `production` |
 | `MONGODB_URI` | MongoDB connection string | `mongodb+srv://user:pass@cluster.mongodb.net/db` |
 | `JWT_SECRET` | Secret key for JWT tokens | Generate with: `openssl rand -base64 32` |
+| `PORT` | Server port (auto-set on most platforms) | `5000` |
+
+### Twilio Configuration (Primary SMS Provider):
+
+| Variable | Description | Example |
+|----------|-------------|---------|
 | `TWILIO_ACCOUNT_SID` | Twilio Account SID | From Twilio dashboard |
 | `TWILIO_AUTH_TOKEN` | Twilio Auth Token | From Twilio dashboard |
 | `TWILIO_PHONE_NUMBER` | Twilio Phone Number | Format: `+1234567890` |
-| `PORT` | Server port (auto-set on most platforms) | `5000` |
+| `TWILIO_MESSAGING_SERVICE_SID` | Twilio Messaging Service SID (optional) | Alternative to phone number |
+| `TWILIO_WEBHOOK_URL` | Webhook URL for inbound SMS | `https://your-app.com/api/notifications/webhook` |
+
+### Vonage Configuration (Fallback SMS Provider):
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `VONAGE_API_KEY` | Vonage API Key | From Vonage dashboard |
+| `VONAGE_API_SECRET` | Vonage API Secret | From Vonage dashboard |
+| `VONAGE_FROM_NUMBER` | Vonage Sender ID | Format: `+1234567890` or alphanumeric |
+| `VONAGE_WEBHOOK_URL` | Webhook URL for inbound SMS | `https://your-app.com/api/notifications/webhook/vonage` |
+
+**Note**: Configure both SMS providers for automatic fallback capability. If only one is configured, the system will use only that provider.
 
 ---
 
