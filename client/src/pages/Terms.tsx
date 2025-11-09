@@ -5,7 +5,7 @@ const Terms = () => {
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Terms of Service</h1>
-        <p className="text-sm text-gray-500 mb-8">Last Updated: November 5, 2025</p>
+        <p className="text-sm text-gray-500 mb-8">Last Updated: November 9, 2025</p>
 
         <div className="prose prose-blue max-w-none space-y-6 text-gray-700">
           <section>
@@ -215,10 +215,10 @@ const Terms = () => {
         </div>
 
         <div className="mt-12 pt-6 border-t border-gray-200">
-          <div className="flex gap-4 justify-center">
+          <div className="flex flex-wrap gap-4 justify-center">
             <Link to="/privacy" className="text-blue-600 hover:underline">Privacy Policy</Link>
+            <Link to="/sms" className="text-blue-600 hover:underline">SMS Notifications</Link>
             <Link to="/sms-terms" className="text-blue-600 hover:underline">SMS Terms</Link>
-            <Link to="/sms-consent" className="text-blue-600 hover:underline">SMS Consent</Link>
           </div>
         </div>
       </div>

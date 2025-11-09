@@ -52,18 +52,23 @@ const Footer = () => {
                 </a>
               </li>
               <li>
+                <Link to="/sms" className="hover:text-white transition">
+                  SMS Notifications
+                </Link>
+              </li>
+              <li>
                 <Link to="/sms-consent" className="hover:text-white transition">
-                  SMS Consent
+                  Opt In to SMS
                 </Link>
               </li>
               <li>
                 <Link to="/sms-opt-out" className="hover:text-white transition">
-                  Unsubscribe from SMS
+                  Opt Out of SMS
                 </Link>
               </li>
               <li>
                 <a href="/sms-terms" className="hover:text-white transition">
-                  SMS Terms & Conditions
+                  SMS Terms
                 </a>
               </li>
             </ul>

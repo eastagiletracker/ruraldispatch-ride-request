@@ -207,6 +207,8 @@ const SMSOptOut = () => {
             <span className="text-gray-400">|</span>
             <a href="/privacy" className="text-blue-600 hover:underline">Privacy Policy</a>
             <span className="text-gray-400">|</span>
+            <a href="/sms" className="text-blue-600 hover:underline">SMS Info</a>
+            <span className="text-gray-400">|</span>
             <a href="/sms-terms" className="text-blue-600 hover:underline">SMS Terms</a>
           </p>
         </div>
