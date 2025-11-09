@@ -18,7 +18,11 @@ interface AssignDriverProps {
 interface RideRequestData {
     rider: Array<{ fullName: string }>;
     pickupAddress: string;
+    dropOffAddress: string;
     pickupRequestedTime?: string;
+    roundTrip?: boolean;
+    notes?: string;
+    purpose?: string;
 }
 
 interface DriverData {
@@ -33,7 +37,11 @@ interface VehicleData {
 }
 
 export default function AssignDriver({ selectedRideRequestId, cancelFn }: AssignDriverProps) {
-    const [selectedRideRequest, setSelectedRideRequest] = useState<RideRequestData>({ rider: [{ fullName: '' }], pickupAddress: '' });
+    const [selectedRideRequest, setSelectedRideRequest] = useState<RideRequestData>({ 
+        rider: [{ fullName: '' }], 
+        pickupAddress: '',
+        dropOffAddress: ''
+    });
     const [selectedDriver, setSelectedDriver] = useState<DriverData | undefined>();
     const [selectedVehicle, setSelectedVehicle] = useState<VehicleData | undefined>();
     const [submitting, setSubmitting] = useState(false);
@@ -136,27 +144,19 @@ export default function AssignDriver({ selectedRideRequestId, cancelFn }: Assign
                             </div>
                         ) : (
                             /* Actual Ride Details */
-                            <div className="space-y-2">
+                            <div className="space-y-3">
                                 <div className="flex items-start gap-2">
                                     <User className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
-                                    <div>
-                                        <p className="text-xs text-muted-foreground">Passenger</p>
+                                    <div className="flex-1">
+                                        <p className="text-xs text-muted-foreground">Rider</p>
                                         <p className="text-sm font-medium">{selectedRideRequest.rider[0]?.fullName || 'N/A'}</p>
                                     </div>
                                 </div>
 
                                 <div className="flex items-start gap-2">
-                                    <MapPin className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
-                                    <div>
-                                        <p className="text-xs text-muted-foreground">Pickup Location</p>
-                                        <p className="text-sm font-medium">{selectedRideRequest.pickupAddress || 'N/A'}</p>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-start gap-2">
                                     <Clock className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
-                                    <div>
-                                        <p className="text-xs text-muted-foreground">Requested Time</p>
+                                    <div className="flex-1">
+                                        <p className="text-xs text-muted-foreground">Pickup Time</p>
                                         <p className="text-sm font-medium">
                                             {selectedRideRequest.pickupRequestedTime
                                                 ? new Date(selectedRideRequest.pickupRequestedTime).toLocaleString()
@@ -165,6 +165,78 @@ export default function AssignDriver({ selectedRideRequestId, cancelFn }: Assign
                                         </p>
                                     </div>
                                 </div>
+
+                                <div className="flex items-start gap-2">
+                                    <MapPin className="h-4 w-4 mt-1 text-green-600 flex-shrink-0" />
+                                    <div className="flex-1">
+                                        <p className="text-xs text-muted-foreground">Pickup Location</p>
+                                        <p className="text-sm font-medium">{selectedRideRequest.pickupAddress || 'N/A'}</p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-start gap-2">
+                                    <MapPin className="h-4 w-4 mt-1 text-red-600 flex-shrink-0" />
+                                    <div className="flex-1">
+                                        <p className="text-xs text-muted-foreground">Drop off Location</p>
+                                        <p className="text-sm font-medium">{selectedRideRequest.dropOffAddress || 'N/A'}</p>
+                                    </div>
+                                </div>
+
+                                {selectedRideRequest.purpose && (
+                                    <div className="flex items-start gap-2">
+                                        <div className="h-4 w-4 mt-1 flex-shrink-0 flex items-center justify-center">
+                                            <div className="h-2 w-2 rounded-full bg-muted-foreground" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="text-xs text-muted-foreground">Estimated Travel Time</p>
+                                            <p className="text-sm font-medium">{selectedRideRequest.purpose || 'Not specified'}</p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="flex items-start gap-2">
+                                    <div className="h-4 w-4 mt-1 flex-shrink-0 flex items-center justify-center">
+                                        <div className="h-2 w-2 rounded-full bg-muted-foreground" />
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className="text-xs text-muted-foreground">Roundtrip</p>
+                                        <p className="text-sm font-medium">{selectedRideRequest.roundTrip ? 'Yes' : 'No'}</p>
+                                    </div>
+                                </div>
+
+                                {selectedRideRequest.notes && (
+                                    <>
+                                        <div className="flex items-start gap-2">
+                                            <div className="h-4 w-4 mt-1 flex-shrink-0 flex items-center justify-center">
+                                                <div className="h-2 w-2 rounded-full bg-muted-foreground" />
+                                            </div>
+                                            <div className="flex-1">
+                                                <p className="text-xs text-muted-foreground">Estimated Wait Time</p>
+                                                <p className="text-sm font-medium">
+                                                    {selectedRideRequest.notes.includes('Wait time:') 
+                                                        ? selectedRideRequest.notes.split('Wait time:')[1]?.trim() || 'Not specified'
+                                                        : 'Not specified'
+                                                    }
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-start gap-2">
+                                            <div className="h-4 w-4 mt-1 flex-shrink-0 flex items-center justify-center">
+                                                <div className="h-2 w-2 rounded-full bg-muted-foreground" />
+                                            </div>
+                                            <div className="flex-1">
+                                                <p className="text-xs text-muted-foreground">Wheelchair Accessible</p>
+                                                <p className="text-sm font-medium">
+                                                    {selectedRideRequest.notes.includes('Accessibility:') 
+                                                        ? selectedRideRequest.notes.split('Accessibility:')[1]?.split('.')[0]?.trim() || 'None'
+                                                        : 'None'
+                                                    }
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         )}
                     </div>

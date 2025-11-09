@@ -275,20 +275,11 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                                         <div className="flex gap-2">
                                             <Button
                                                 onClick={() => callbackFn(rideRequest.uuid)}
-                                                className="flex-1"
+                                                className="w-full"
                                                 size="sm"
                                             >
                                                 <UserPlus className="h-4 w-4 mr-2" />
-                                                Assign Driver
-                                            </Button>
-                                            <Button
-                                                onClick={() => callbackFn(rideRequest.uuid)}
-                                                variant="outline"
-                                                className="flex-1"
-                                                size="sm"
-                                            >
-                                                <Car className="h-4 w-4 mr-2" />
-                                                Assign Vehicle
+                                                Assign Driver & Vehicle
                                             </Button>
                                         </div>
                                     </div>
@@ -309,8 +300,7 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                                     <TableHead className="whitespace-nowrap">Pickup Location</TableHead>
                                     <TableHead className="whitespace-nowrap">Dropoff Location</TableHead>
                                     <TableHead className="whitespace-nowrap">Requested Pickup Time</TableHead>
-                                    <TableHead className="whitespace-nowrap">Driver</TableHead>
-                                    <TableHead className="whitespace-nowrap">Vehicle</TableHead>
+                                    <TableHead className="whitespace-nowrap">Driver & Vehicle</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -322,7 +312,7 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                                     </>
                                 ) : rideRequests.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                                        <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                                             No pending ride requests
                                         </TableCell>
                                     </TableRow>
@@ -382,17 +372,7 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                                                     variant="default"
                                                 >
                                                     <UserPlus className="h-4 w-4 mr-2" />
-                                                    Assign Driver
-                                                </Button>
-                                            </TableCell>
-                                            <TableCell>
-                                                <Button
-                                                    onClick={() => callbackFn(rideRequest.uuid)}
-                                                    size="sm"
-                                                    variant="outline"
-                                                >
-                                                    <Car className="h-4 w-4 mr-2" />
-                                                    Assign Vehicle
+                                                    Assign Driver & Vehicle
                                                 </Button>
                                             </TableCell>
                                         </TableRow>
