@@ -13,6 +13,7 @@ import SMSOptOut from "./pages/SMSOptOut";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import SMSTerms from "./pages/SMSTerms";
+import SMS from "./pages/SMS";
 
 
 function AppRoutes() {
@@ -26,6 +27,7 @@ function AppRoutes() {
             <Route path="/service-provider" element={<ServiceProviderHome />} />
             <Route path="/vehicle" element={<VehicleHome />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/sms" element={<SMS />} />
             <Route path="/sms-consent" element={<SMSConsent />} />
             <Route path="/sms-opt-out" element={<SMSOptOut />} />
             <Route path="/terms" element={<Terms />} />

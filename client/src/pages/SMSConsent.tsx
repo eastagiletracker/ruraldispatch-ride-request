@@ -67,11 +67,21 @@ const SMSConsent = () => {
           {/* Why We Need Consent */}
           <div>
             <h2 className="text-xl font-semibold text-gray-900 mb-3">
-              Why We Need Your Consent
+              SMS Notifications Are Optional
             </h2>
+            <div className="bg-green-50 border-l-4 border-green-500 p-4 mb-4">
+              <p className="text-green-900 font-semibold">
+                ✓ You can use Rural Dispatch services with or without SMS notifications.
+              </p>
+              <p className="text-green-800 text-sm mt-2">
+                Consent to receive text messages is NOT a condition of getting service. Riders can 
+                confirm their transportation by phone instead.
+              </p>
+            </div>
             <p className="text-gray-700 leading-relaxed">
               Rural Dispatch uses SMS to keep you informed about your ride status. This helps us 
-              provide you with real-time updates and ensure a smooth ride experience.
+              provide you with real-time updates and ensure a smooth ride experience. However, this 
+              is completely optional.
             </p>
           </div>
 
