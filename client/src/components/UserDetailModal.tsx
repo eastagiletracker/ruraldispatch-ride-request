@@ -29,16 +29,40 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
 
   // Record verbal SMS consent (staff action)
   const handleRecordVerbalConsent = async () => {
-    if (!user.phone) {
-      toast.error('Cannot record consent', { description: 'No phone number on file.' });
+    // Prefer explicit rider phone, fallback to mobilePhone (for drivers or legacy records)
+    let phone: string | undefined = user.phone || user.mobilePhone;
+
+    // Allow staff to manually enter if missing
+    if (!phone) {
+      const entered = window.prompt('Enter the user phone number (E.164 like +18669017244 or digits):');
+      if (!entered) {
+        toast.error('Cannot record consent', { description: 'Phone number required.' });
+        return;
+      }
+      phone = entered.trim();
+    }
+
+    // Basic normalization / validation
+    if (!/^\+?\d{10,15}$/.test(phone)) {
+      toast.error('Invalid phone number', { description: 'Use digits, optionally starting with +, 10-15 total.' });
       return;
     }
+
+    // Ensure phone starts with + for consistency if country code implied (assume US if 10 digits)
+    if (!phone.startsWith('+')) {
+      if (phone.length === 10) {
+        phone = '+1' + phone; // naive US default; adapt as needed
+      } else {
+        phone = '+' + phone; // fallback prefix
+      }
+    }
+
     try {
       const resp = await fetch('/api/users/sms-consent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          phoneNumber: user.phone,
+          phoneNumber: phone,
           consentGiven: true,
           timestamp: new Date().toISOString(),
           ipAddress: 'verbal' // flag for audit trail
@@ -46,13 +70,12 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
       });
       if (resp.ok) {
         toast.success('Verbal consent recorded', { description: 'Confirmation SMS sent to user.' });
-        // Simple refresh strategy – in a larger app we'd lift state
         setTimeout(() => window.location.reload(), 700);
       } else {
         const data = await resp.json().catch(() => ({}));
         throw new Error(data.message || 'Server rejected consent request');
       }
-    } catch (e:any) {
+    } catch (e: any) {
       console.error('Verbal consent error', e);
       toast.error('Failed to record consent', { description: e.message });
     }
