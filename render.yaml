@@ -9,6 +9,10 @@ services:
         value: production
       - key: MONGODB_URI
         sync: false
+      - key: MONGODB_DB_PROD
+        value: prod-ruraldispatch
+      - key: MONGODB_DB_DEV
+        value: dev-ruraldispatch
       - key: JWT_SECRET
         generateValue: true
       - key: TWILIO_ACCOUNT_SID
@@ -20,6 +24,8 @@ services:
       - key: TWILIO_MESSAGING_SERVICE_SID
         sync: false
       - key: TWILIO_WEBHOOK_URL
+        sync: false
+      - key: TWILIO_STATUS_CALLBACK_URL
         sync: false
       - key: VONAGE_API_KEY
         sync: false
