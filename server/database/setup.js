@@ -1,6 +1,21 @@
 require('dotenv').config({ path: '../.env' });
 const { MongoClient } = require('mongodb');
 
+/**
+ * Get the database name based on NODE_ENV
+ * - development: dev-ruraldispatch
+ * - production: prod-ruraldispatch
+ */
+function getDatabaseName() {
+    const env = process.env.NODE_ENV || 'development';
+
+    if (env === 'production') {
+        return process.env.MONGODB_DB_PROD || 'prod-ruraldispatch';
+    }
+
+    return process.env.MONGODB_DB_DEV || 'dev-ruraldispatch';
+}
+
 async function getDatabaseConnectionAsync(dbUri)
 {
     // Should these share a client or should there be multiple clients?
@@ -11,8 +26,11 @@ async function getDatabaseConnectionAsync(dbUri)
         socketTimeoutMS: 45000,
     }).connect();
 
+    const dbName = getDatabaseName();
+    console.log(`📊 Connecting to database: "${dbName}" (${process.env.NODE_ENV || 'development'} mode)`);
+
     async function getCollectionAsync(collectionName) {
-        const db = client.db();
+        const db = client.db(dbName);
         const collection = db.collection(collectionName);
         
         // Create unique index for uuid
