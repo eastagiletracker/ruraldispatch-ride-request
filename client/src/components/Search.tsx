@@ -18,6 +18,7 @@ export default function Search<T extends SearchableElement>({
     const [filteredElements, setFilteredElements] = useState<T[]>([]);
     const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
     const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [error, setError] = useState<string>('');
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     // Filter elements based on search term
@@ -25,6 +26,7 @@ export default function Search<T extends SearchableElement>({
         if (searchTerm.trim() === '') {
             setFilteredElements([]);
             setIsDropdownOpen(false);
+            setError('');
         } else {
             setElementsToMatchesAsync(searchTerm);
         }
@@ -32,9 +34,19 @@ export default function Search<T extends SearchableElement>({
 
     // Possible race conditions if network lags?
     async function setElementsToMatchesAsync(searchTerm: string): Promise<void> {
-        const filtered = await fetchMatchesFn(searchTerm);
-        setFilteredElements(filtered);
-        setIsDropdownOpen(filtered.length > 0);
+        setIsLoading(true);
+        setError('');
+        try {
+            const filtered = await fetchMatchesFn(searchTerm);
+            setFilteredElements(filtered);
+            setIsDropdownOpen(true);
+        } catch (err) {
+            console.error('Search error:', err);
+            setError(`Failed to search for ${searchElementName}s`);
+            setFilteredElements([]);
+        } finally {
+            setIsLoading(false);
+        }
     }
 
     // Close dropdown when clicking outside
@@ -92,9 +104,13 @@ export default function Search<T extends SearchableElement>({
             {/* Dropdown */}
             {isDropdownOpen && (
                 <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
-                    {filteredElements.length === 0 ? (
-                        <div className="px-4 py-2 text-gray-500 text-sm">
-                            No elements found
+                    {error ? (
+                        <div className="px-4 py-3 text-amber-600 text-sm bg-amber-50 border-l-4 border-amber-500">
+                            {error}
+                        </div>
+                    ) : filteredElements.length === 0 ? (
+                        <div className="px-4 py-3 text-gray-500 text-sm">
+                            No {searchElementName}s found
                         </div>
                     ) : (
                         filteredElements.map(element => renderElementFn(element, handleElementSelect))

@@ -8,6 +8,10 @@ async function getCollection(collection)
 
 async function add(collection, document)
 {
+    // Auto-generate UUID if not provided
+    if (!document.uuid) {
+        document.uuid = Date.now();
+    }
     return await collection.insertOne(document);
 }
 
@@ -91,10 +95,17 @@ async function updateUserSMSConsent(collection, phone, consentData) {
     return result;
 }
 
+async function deleteByUuid(collection, uuid) {
+    const filter = { uuid: parseInt(uuid) };
+    const result = await collection.deleteOne(filter);
+    return result;
+}
+
 module.exports = {
     getCollection,
     add,
     update,
+    deleteByUuid,
     fuzzyUserSearch,
     fuzzyProviderSearch,
     fuzzyVehicleSearch,

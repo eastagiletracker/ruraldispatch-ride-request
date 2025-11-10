@@ -1,16 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { createDocument } from "../utils/database";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import {
     Card,
     CardContent,
@@ -21,115 +17,112 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { MapPin, User, Phone, Building2, Accessibility, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
-import type { 
-    RideRequestFormData, 
-    RideRequestFormErrors, 
-    RideRequestFormProps 
-} from "@/types/form";
+import { PhoneInput } from "@/components/ui/phone-input";
+import { rideRequestFormSchema, type RideRequestFormData } from "@/schemas/validation";
+import type { RideRequestFormProps } from "@/types/form";
 
-export default function RideRequestForm({ selectedUser, setShowRideRequestForm, setShowBaseForm, setShowUserForm }: RideRequestFormProps) {
-    const [formData, setFormData] = useState<RideRequestFormData>({
-        riderName: '',
-        riderPickupBaseAddress: '',
-        rideRequestType: 'Standard',
-        accessibilityNeeds: 'None',
-        pickupSameAsBase: false,
-        pickupLocation: '',
-        dropoffLocation: '',
-        roundtrip: false,
-        estimatedWaitTime: '',
-        pickupRequestedDate: '',
-        pickupRequestedTime: '',
-        dropoffRequestedDate: '',
-        dropoffRequestedTime: ''
+export default function RideRequestForm({
+    selectedUser,
+    setShowRideRequestForm,
+    setShowBaseForm,
+    setShowUserForm,
+    caseManagerName,
+    caseManagerUsername
+}: RideRequestFormProps) {
+    const [submitSuccess, setSubmitSuccess] = useState<boolean>(false);
+    const [submitError, setSubmitError] = useState<string>('');
+
+    const {
+        register,
+        handleSubmit,
+        control,
+        setValue,
+        formState: { errors, isSubmitting },
+        reset
+    } = useForm<RideRequestFormData>({
+        resolver: zodResolver(rideRequestFormSchema),
+        mode: 'onSubmit',
+        defaultValues: {
+            caseManagerFullName: caseManagerName || '',
+            caseManagerAgency: '',
+            caseManagerPhone: '',
+            riderFullName: selectedUser?.fullName || '',
+            riderMobilePhone: selectedUser?.phone || '',
+            pickupLocation: '',
+            dropoffLocation: '',
+            roundtrip: false,
+            pickupRequestedDate: '',
+            pickupRequestedTime: '',
+            estimatedWaitTime: '',
+            walkerAccessible: false,
+            wheelchairAccessible: false,
+            serviceAnimalFriendly: false,
+            oxygenTankAccessible: false,
+            purposeOfTrip: '',
+            notesComments: ''
+        }
     });
 
-    const [errors, setErrors] = useState<RideRequestFormErrors>({});
-    const [submitError, setSubmitError] = useState('');
-    const [submitSuccess, setSubmitSuccess] = useState(false);
-
-    // Update rider name when selectedUser changes
+    // Update rider info when selectedUser changes
     useEffect(() => {
         if (selectedUser) {
-            setFormData(prev => ({
-                ...prev,
-                riderName: selectedUser.fullName,
-                riderPickupBaseAddress: selectedUser.residence?.current || selectedUser.residence?.last || ''
-            }));
+            reset({
+                caseManagerFullName: caseManagerName || '',
+                caseManagerAgency: '',
+                caseManagerPhone: '',
+                riderFullName: selectedUser.fullName,
+                riderMobilePhone: selectedUser.phone || '',
+                pickupLocation: '',
+                dropoffLocation: '',
+                roundtrip: false,
+                pickupRequestedDate: '',
+                pickupRequestedTime: '',
+                estimatedWaitTime: '',
+                walkerAccessible: false,
+                wheelchairAccessible: false,
+                serviceAnimalFriendly: false,
+                oxygenTankAccessible: false,
+                purposeOfTrip: '',
+                notesComments: ''
+            }, { keepDefaultValues: false });
         }
-    }, [selectedUser]);
+    }, [selectedUser, caseManagerName, reset]);
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement> | { target: { name: string; value?: string; type?: string; checked?: boolean } }) => {
-        const { name, value, type, checked } = e.target;
-
-        if (name === 'pickupSameAsBase') {
-            setFormData(prev => ({
-                ...prev,
-                pickupSameAsBase: checked,
-                pickupLocation: checked ? prev.riderPickupBaseAddress : ''
-            }));
-        } else {
-            setFormData(prev => ({
-                ...prev,
-                [name]: type === 'checkbox' ? checked : value
-            }));
-        }
-    };
-
-    const handleSelectChange = (name: keyof RideRequestFormData, value: string) => {
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
-    };
-
-    const validateForm = (): boolean => {
-        const newErrors: RideRequestFormErrors = {};
-
-        if (!formData.riderName.trim()) newErrors.riderName = 'Rider name is required';
-        if (!formData.riderPickupBaseAddress.trim()) newErrors.riderPickupBaseAddress = 'Rider pickup base address is required';
-        if (!formData.pickupLocation.trim()) newErrors.pickupLocation = 'Pickup location is required';
-        if (!formData.dropoffLocation.trim()) newErrors.dropoffLocation = 'Drop-off location is required';
-        if (!formData.pickupRequestedDate) newErrors.pickupRequestedDate = 'Pickup requested date is required';
-        if (!formData.pickupRequestedTime) newErrors.pickupRequestedTime = 'Pickup requested time is required';
-        if (!formData.dropoffRequestedDate) newErrors.dropoffRequestedDate = 'Dropoff requested date is required';
-        if (!formData.dropoffRequestedTime) newErrors.dropoffRequestedTime = 'Dropoff requested time is required';
-
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const onSubmit = async (data: RideRequestFormData) => {
         setSubmitError('');
         setSubmitSuccess(false);
 
-        if (!validateForm()) {
-            toast.error('Please fill in all required fields');
-            return;
-        }
-
         try {
+            // Build accessibility features string
+            const accessibilityFeatures = [];
+            if (data.walkerAccessible) accessibilityFeatures.push('Walker Accessible');
+            if (data.wheelchairAccessible) accessibilityFeatures.push('Wheelchair Accessible');
+            if (data.serviceAnimalFriendly) accessibilityFeatures.push('Service Animal Friendly');
+            if (data.oxygenTankAccessible) accessibilityFeatures.push('Oxygen Tank/Medical Device Accessible');
+
             const rideRequestData = {
-                uuid: Date.now(),
                 serviceUserUuid: selectedUser?.uuid || '',
                 serviceUserRole: 'rider',
-                pickupAddress: formData.pickupLocation,
-                dropOffAddress: formData.dropoffLocation,
-                roundTrip: formData.roundtrip,
-                pickupRequestedTime: `${formData.pickupRequestedDate}T${formData.pickupRequestedTime}`,
-                dropOffRequestedTime: `${formData.dropoffRequestedDate}T${formData.dropoffRequestedTime}`,
+                pickupAddress: data.pickupLocation,
+                dropOffAddress: data.dropoffLocation,
+                roundTrip: data.roundtrip || false,
+                pickupRequestedTime: `${data.pickupRequestedDate}T${data.pickupRequestedTime}`,
+                dropOffRequestedTime: `${data.pickupRequestedDate}T${data.pickupRequestedTime}`,
                 rideStartedActualTime: new Date(),
                 pickupActualTime: new Date(),
                 dropOffActualTime: new Date(),
                 rideCompleteRequestedTime: new Date(),
                 rideCompleteActualTime: new Date(),
                 rideStatus: 0,
-                purpose: formData.rideRequestType,
+                purpose: data.purposeOfTrip,
                 rideRequestStatus: 100,
-                notes: `Accessibility: ${formData.accessibilityNeeds || 'None'}. Wait time: ${formData.estimatedWaitTime || 'Not specified'}`
+                notes: `Case Manager: ${data.caseManagerFullName} (${data.caseManagerAgency}, ${data.caseManagerPhone}). ` +
+                       `Rider Phone: ${data.riderMobilePhone}. ` +
+                       `Accessibility: ${accessibilityFeatures.join(', ') || 'None'}. ` +
+                       `Wait time: ${data.estimatedWaitTime || 'Not specified'}. ` +
+                       `${data.notesComments || ''}`
             };
 
             const response = await createDocument("riderequests", rideRequestData);
@@ -137,25 +130,14 @@ export default function RideRequestForm({ selectedUser, setShowRideRequestForm, 
             if (response.ok) {
                 setSubmitSuccess(true);
                 toast.success('Ride request created successfully!', {
-                    description: `Request for ${formData.riderName} has been submitted.`
+                    description: `Request for ${data.riderFullName} has been submitted.`
                 });
-                // Reset form
-                setFormData({
-                    riderName: '',
-                    riderPickupBaseAddress: '',
-                    rideRequestType: 'Standard',
-                    accessibilityNeeds: 'None',
-                    pickupSameAsBase: false,
-                    pickupLocation: '',
-                    dropoffLocation: '',
-                    roundtrip: false,
-                    estimatedWaitTime: '',
-                    pickupRequestedDate: '',
-                    pickupRequestedTime: '',
-                    dropoffRequestedDate: '',
-                    dropoffRequestedTime: ''
-                });
-                setErrors({});
+
+                // Reset and return to base form after a short delay
+                setTimeout(() => {
+                    reset();
+                    handleCancel();
+                }, 1500);
             } else {
                 const errorData = await response.json();
                 const errorMessage = errorData.message || 'Failed to create ride request';
@@ -166,42 +148,29 @@ export default function RideRequestForm({ selectedUser, setShowRideRequestForm, 
             }
         } catch (error) {
             console.error('Error submitting form:', error);
-            const errorMessage = 'Error submitting form. Please try again.';
+            const errorMessage = 'Please try again or contact support.';
             setSubmitError(errorMessage);
             toast.error('Error submitting form', {
-                description: 'Please try again or contact support.'
+                description: errorMessage
             });
         }
     };
 
     const handleCancel = () => {
-        setFormData({
-            riderName: '',
-            riderPickupBaseAddress: '',
-            rideRequestType: 'Standard',
-            accessibilityNeeds: 'None',
-            pickupSameAsBase: false,
-            pickupLocation: '',
-            dropoffLocation: '',
-            roundtrip: false,
-            estimatedWaitTime: '',
-            pickupRequestedDate: '',
-            pickupRequestedTime: '',
-            dropoffRequestedDate: '',
-            dropoffRequestedTime: ''
-        });
-        setErrors({});
-        setShowRideRequestForm(false);
-        setShowBaseForm(true);
-        setShowUserForm(false);
+        reset();
+        setSubmitSuccess(false);
+        setSubmitError('');
+        if (setShowRideRequestForm) setShowRideRequestForm(false);
+        if (setShowBaseForm) setShowBaseForm(true);
+        if (setShowUserForm) setShowUserForm(false);
     };
 
     return (
         <Card className="max-w-4xl mx-auto">
             <CardHeader>
-                <CardTitle>Ride Request Form</CardTitle>
+                <CardTitle>Create Ride Request</CardTitle>
                 <CardDescription>
-                    Fill in Rider information to submit a Ride Request
+                    Fill in the information to submit a ride request for {selectedUser?.fullName}
                 </CardDescription>
             </CardHeader>
 
@@ -210,7 +179,7 @@ export default function RideRequestForm({ selectedUser, setShowRideRequestForm, 
                     <Alert className="mb-6 border-green-500 bg-green-50 text-green-900 dark:border-green-700 dark:bg-green-950 dark:text-green-100">
                         <AlertCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
                         <AlertDescription>
-                            Ride request created successfully!
+                            Ride request created successfully! Redirecting...
                         </AlertDescription>
                     </Alert>
                 )}
@@ -218,216 +187,297 @@ export default function RideRequestForm({ selectedUser, setShowRideRequestForm, 
                 {submitError && (
                     <Alert variant="destructive" className="mb-6">
                         <AlertCircle className="h-4 w-4" />
-                        <AlertDescription>{submitError}</AlertDescription>
+                        <AlertDescription>
+                            {submitError}
+                        </AlertDescription>
                     </Alert>
                 )}
 
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    {/* Rider Information */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label>Rider Name</Label>
-                            <p className="text-lg font-medium">{selectedUser.fullName}</p>
+                <form key={selectedUser?.uuid} onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+                    {/* Case Manager Section */}
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-2">
+                            <Building2 className="h-5 w-5 text-primary" />
+                            <h3 className="text-lg font-semibold">Case Manager Information</h3>
                         </div>
+                        <Separator />
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="caseManagerFullName">
+                                    Case Manager's Full Name <span className="text-destructive">*</span>
+                                </Label>
+                                <Input
+                                    id="caseManagerFullName"
+                                    {...register('caseManagerFullName')}
+                                    placeholder="Enter case manager name"
+                                    className={errors.caseManagerFullName ? 'border-destructive' : ''}
+                                />
+                                {errors.caseManagerFullName && (
+                                    <p className="text-sm text-destructive">{errors.caseManagerFullName.message}</p>
+                                )}
+                            </div>
 
-                        <div className="space-y-2">
-                            <Label htmlFor="riderPickupBaseAddress">Rider Pickup Base Address</Label>
-                            <Input
-                                id="riderPickupBaseAddress"
-                                name="riderPickupBaseAddress"
-                                value={formData.riderPickupBaseAddress}
-                                onChange={handleInputChange}
-                                placeholder="Enter base address"
-                                className={errors.riderPickupBaseAddress ? 'border-destructive' : ''}
-                            />
-                            {errors.riderPickupBaseAddress && (
-                                <p className="text-sm text-destructive">{errors.riderPickupBaseAddress}</p>
-                            )}
-                        </div>
-                    </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="caseManagerAgency">
+                                    Case Manager's Agency <span className="text-destructive">*</span>
+                                </Label>
+                                <Input
+                                    id="caseManagerAgency"
+                                    {...register('caseManagerAgency')}
+                                    placeholder="Enter agency name"
+                                    className={errors.caseManagerAgency ? 'border-destructive' : ''}
+                                />
+                                {errors.caseManagerAgency && (
+                                    <p className="text-sm text-destructive">{errors.caseManagerAgency.message}</p>
+                                )}
+                            </div>
 
-                    <Separator />
-
-                    {/* Ride Request Type and Accessibility */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                            <Label>Ride Request Type</Label>
-                            <Select
-                                value={formData.rideRequestType}
-                                onValueChange={(value) => handleSelectChange('rideRequestType', value)}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="Standard">Standard</SelectItem>
-                                    <SelectItem value="Emergency">Emergency</SelectItem>
-                                    <SelectItem value="Medical">Medical</SelectItem>
-                                    <SelectItem value="Shopping">Shopping</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label>Accessibility Needs</Label>
-                            <Select
-                                value={formData.accessibilityNeeds}
-                                onValueChange={(value) => handleSelectChange('accessibilityNeeds', value)}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select accessibility needs" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="None">None</SelectItem>
-                                    <SelectItem value="Walker Accessible">Walker Accessible</SelectItem>
-                                    <SelectItem value="Wheelchair Accessible">Wheelchair Accessible</SelectItem>
-                                    <SelectItem value="Oxygen Tank Accessible">Oxygen Tank Accessible</SelectItem>
-                                </SelectContent>
-                            </Select>
+                            <div className="space-y-2 md:col-span-2">
+                                <Label htmlFor="caseManagerPhone">
+                                    Case Manager's Phone Number <span className="text-destructive">*</span>
+                                </Label>
+                                <Controller
+                                    name="caseManagerPhone"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <PhoneInput
+                                            value={field.value}
+                                            onChange={field.onChange}
+                                            placeholder="+1 (555) 000-0000"
+                                            className={errors.caseManagerPhone ? 'border-destructive' : ''}
+                                        />
+                                    )}
+                                />
+                                {errors.caseManagerPhone && (
+                                    <p className="text-sm text-destructive">{errors.caseManagerPhone.message}</p>
+                                )}
+                            </div>
                         </div>
                     </div>
 
-                    {/* Pickup Location Checkbox */}
-                    <div className="flex items-center space-x-2">
-                        <Checkbox
-                            id="pickupSameAsBase"
-                            checked={formData.pickupSameAsBase}
-                            onCheckedChange={(checked) =>
-                                handleInputChange({
-                                    target: { name: 'pickupSameAsBase', type: 'checkbox', checked: checked as boolean }
-                                })
-                            }
-                        />
-                        <Label
-                            htmlFor="pickupSameAsBase"
-                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                        >
-                            Check if Pickup Location is the same as Base Address
-                        </Label>
-                    </div>
-
-                    {/* Location Selection */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                            <Label htmlFor="pickupLocation">Pickup Location</Label>
-                            <Input
-                                id="pickupLocation"
-                                name="pickupLocation"
-                                value={formData.pickupLocation}
-                                onChange={handleInputChange}
-                                placeholder="Enter pickup address"
-                                className={errors.pickupLocation ? 'border-destructive' : ''}
-                            />
-                            {errors.pickupLocation && (
-                                <p className="text-sm text-destructive">{errors.pickupLocation}</p>
-                            )}
+                    {/* Rider Section */}
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-2">
+                            <User className="h-5 w-5 text-primary" />
+                            <h3 className="text-lg font-semibold">Rider Information</h3>
                         </div>
+                        <Separator />
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="riderFullName">
+                                    Rider's Full Name <span className="text-destructive">*</span>
+                                </Label>
+                                <Input
+                                    id="riderFullName"
+                                    {...register('riderFullName')}
+                                    placeholder="Enter rider name"
+                                    className={errors.riderFullName ? 'border-destructive' : ''}
+                                />
+                                {errors.riderFullName && (
+                                    <p className="text-sm text-destructive">{errors.riderFullName.message}</p>
+                                )}
+                            </div>
 
-                        <div className="space-y-2">
-                            <Label htmlFor="dropoffLocation">Drop-off Location</Label>
-                            <Input
-                                id="dropoffLocation"
-                                name="dropoffLocation"
-                                value={formData.dropoffLocation}
-                                onChange={handleInputChange}
-                                placeholder="Enter drop-off address"
-                                className={errors.dropoffLocation ? 'border-destructive' : ''}
-                            />
-                            {errors.dropoffLocation && (
-                                <p className="text-sm text-destructive">{errors.dropoffLocation}</p>
-                            )}
+                            <div className="space-y-2">
+                                <Label htmlFor="riderMobilePhone">
+                                    Rider's Mobile Phone Number <span className="text-destructive">*</span>
+                                </Label>
+                                <Controller
+                                    name="riderMobilePhone"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <PhoneInput
+                                            {...field}
+                                            placeholder="+1 (555) 000-0000"
+                                            className={errors.riderMobilePhone ? 'border-destructive' : ''}
+                                        />
+                                    )}
+                                />
+                                {errors.riderMobilePhone && (
+                                    <p className="text-sm text-destructive">{errors.riderMobilePhone.message}</p>
+                                )}
+                            </div>
                         </div>
                     </div>
 
-                    {/* Roundtrip and Wait Time */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="flex items-center space-x-2">
-                            <Checkbox
-                                id="roundtrip"
-                                checked={formData.roundtrip}
-                                onCheckedChange={(checked) =>
-                                    handleInputChange({
-                                        target: { name: 'roundtrip', type: 'checkbox', checked: checked as boolean }
-                                    })
-                                }
-                            />
-                            <Label htmlFor="roundtrip">Roundtrip</Label>
+                    {/* Ride Details Section */}
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-2">
+                            <MapPin className="h-5 w-5 text-primary" />
+                            <h3 className="text-lg font-semibold">Ride Request</h3>
                         </div>
+                        <Separator />
+                        
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="pickupLocation">
+                                    Pickup Location <span className="text-destructive">*</span>
+                                </Label>
+                                <Input
+                                    id="pickupLocation"
+                                    {...register('pickupLocation')}
+                                    placeholder="Enter pickup address"
+                                    className={errors.pickupLocation ? 'border-destructive' : ''}
+                                />
+                                {errors.pickupLocation && (
+                                    <p className="text-sm text-destructive">{errors.pickupLocation.message}</p>
+                                )}
+                            </div>
 
-                        <div className="space-y-2">
-                            <Label htmlFor="estimatedWaitTime">Estimated Wait Time (Optional)</Label>
-                            <Input
-                                id="estimatedWaitTime"
-                                name="estimatedWaitTime"
-                                value={formData.estimatedWaitTime}
-                                onChange={handleInputChange}
-                                placeholder="ex. 1 hour"
-                            />
+                            <div className="space-y-2">
+                                <Label htmlFor="dropoffLocation">
+                                    Drop-off Location <span className="text-destructive">*</span>
+                                </Label>
+                                <Input
+                                    id="dropoffLocation"
+                                    {...register('dropoffLocation')}
+                                    placeholder="Enter drop-off address"
+                                    className={errors.dropoffLocation ? 'border-destructive' : ''}
+                                />
+                                {errors.dropoffLocation && (
+                                    <p className="text-sm text-destructive">{errors.dropoffLocation.message}</p>
+                                )}
+                            </div>
+
+                            <div className="flex items-center space-x-2">
+                                <Checkbox
+                                    id="roundtrip"
+                                    {...register('roundtrip')}
+                                />
+                                <Label htmlFor="roundtrip" className="cursor-pointer">
+                                    Round trip
+                                </Label>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="pickupRequestedDate">
+                                        Pickup Date <span className="text-destructive">*</span>
+                                    </Label>
+                                    <Input
+                                        id="pickupRequestedDate"
+                                        type="date"
+                                        {...register('pickupRequestedDate')}
+                                        className={errors.pickupRequestedDate ? 'border-destructive' : ''}
+                                    />
+                                    {errors.pickupRequestedDate && (
+                                        <p className="text-sm text-destructive">{errors.pickupRequestedDate.message}</p>
+                                    )}
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="pickupRequestedTime">
+                                        Pickup Time <span className="text-destructive">*</span>
+                                    </Label>
+                                    <Input
+                                        id="pickupRequestedTime"
+                                        type="time"
+                                        {...register('pickupRequestedTime')}
+                                        className={errors.pickupRequestedTime ? 'border-destructive' : ''}
+                                    />
+                                    {errors.pickupRequestedTime && (
+                                        <p className="text-sm text-destructive">{errors.pickupRequestedTime.message}</p>
+                                    )}
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="estimatedWaitTime">
+                                        Estimated Wait Time
+                                    </Label>
+                                    <Input
+                                        id="estimatedWaitTime"
+                                        {...register('estimatedWaitTime')}
+                                        placeholder="e.g., 15 minutes"
+                                    />
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <Separator />
+                    {/* Accessibility Section */}
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-2">
+                            <Accessibility className="h-5 w-5 text-primary" />
+                            <h3 className="text-lg font-semibold">Additional Ride Information</h3>
+                        </div>
+                        <Separator />
+                        
+                        <p className="text-sm font-medium text-muted-foreground">Accessibility Feature Type</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="flex items-center space-x-2">
+                                <Checkbox
+                                    id="walkerAccessible"
+                                    {...register('walkerAccessible')}
+                                />
+                                <Label htmlFor="walkerAccessible" className="cursor-pointer">
+                                    Walker Accessible
+                                </Label>
+                            </div>
 
-                    {/* Date and Time Selection */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="flex items-center space-x-2">
+                                <Checkbox
+                                    id="wheelchairAccessible"
+                                    {...register('wheelchairAccessible')}
+                                />
+                                <Label htmlFor="wheelchairAccessible" className="cursor-pointer">
+                                    Wheelchair Accessible
+                                </Label>
+                            </div>
+
+                            <div className="flex items-center space-x-2">
+                                <Checkbox
+                                    id="serviceAnimalFriendly"
+                                    {...register('serviceAnimalFriendly')}
+                                />
+                                <Label htmlFor="serviceAnimalFriendly" className="cursor-pointer">
+                                    Service Animal Friendly
+                                </Label>
+                            </div>
+
+                            <div className="flex items-center space-x-2">
+                                <Checkbox
+                                    id="oxygenTankAccessible"
+                                    {...register('oxygenTankAccessible')}
+                                />
+                                <Label htmlFor="oxygenTankAccessible" className="cursor-pointer">
+                                    Oxygen Tank/Medical Device Accessible
+                                </Label>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Purpose and Notes Section */}
+                    <div className="space-y-4">
                         <div className="space-y-2">
-                            <Label htmlFor="pickupRequestedDate">Pickup Requested Date</Label>
-                            <Input
-                                id="pickupRequestedDate"
-                                type="date"
-                                name="pickupRequestedDate"
-                                value={formData.pickupRequestedDate}
-                                onChange={handleInputChange}
-                                className={errors.pickupRequestedDate ? 'border-destructive' : ''}
+                            <Label htmlFor="purposeOfTrip">
+                                Purpose of Trip <span className="text-destructive">*</span>
+                            </Label>
+                            <p className="text-sm text-muted-foreground">Let us know why you need a ride.</p>
+                            <Textarea
+                                id="purposeOfTrip"
+                                {...register('purposeOfTrip')}
+                                placeholder="Ex. I need to go to a doctor's appointment"
+                                rows={4}
+                                className={errors.purposeOfTrip ? 'border-destructive' : ''}
                             />
-                            {errors.pickupRequestedDate && (
-                                <p className="text-sm text-destructive">{errors.pickupRequestedDate}</p>
+                            {errors.purposeOfTrip && (
+                                <p className="text-sm text-destructive">{errors.purposeOfTrip.message}</p>
                             )}
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="pickupRequestedTime">Pickup Requested Time</Label>
-                            <Input
-                                id="pickupRequestedTime"
-                                type="time"
-                                name="pickupRequestedTime"
-                                value={formData.pickupRequestedTime}
-                                onChange={handleInputChange}
-                                className={errors.pickupRequestedTime ? 'border-destructive' : ''}
+                            <Label htmlFor="notesComments">
+                                Notes/Comments
+                            </Label>
+                            <p className="text-sm text-muted-foreground">Let your driver know if you have additional needs or concerns for this ride.</p>
+                            <Textarea
+                                id="notesComments"
+                                {...register('notesComments')}
+                                placeholder="Ex. I will have my child with me for this ride. Or I need help getting to the vehicle."
+                                rows={4}
                             />
-                            {errors.pickupRequestedTime && (
-                                <p className="text-sm text-destructive">{errors.pickupRequestedTime}</p>
-                            )}
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="dropoffRequestedDate">Dropoff Requested Date</Label>
-                            <Input
-                                id="dropoffRequestedDate"
-                                type="date"
-                                name="dropoffRequestedDate"
-                                value={formData.dropoffRequestedDate}
-                                onChange={handleInputChange}
-                                className={errors.dropoffRequestedDate ? 'border-destructive' : ''}
-                            />
-                            {errors.dropoffRequestedDate && (
-                                <p className="text-sm text-destructive">{errors.dropoffRequestedDate}</p>
-                            )}
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="dropoffRequestedTime">Dropoff Requested Time</Label>
-                            <Input
-                                id="dropoffRequestedTime"
-                                type="time"
-                                name="dropoffRequestedTime"
-                                value={formData.dropoffRequestedTime}
-                                onChange={handleInputChange}
-                                className={errors.dropoffRequestedTime ? 'border-destructive' : ''}
-                            />
-                            {errors.dropoffRequestedTime && (
-                                <p className="text-sm text-destructive">{errors.dropoffRequestedTime}</p>
-                            )}
                         </div>
                     </div>
                 </form>
@@ -436,16 +486,18 @@ export default function RideRequestForm({ selectedUser, setShowRideRequestForm, 
             <CardFooter className="flex justify-between">
                 <Button
                     type="button"
-                    variant="secondary"
+                    variant="outline"
                     onClick={handleCancel}
+                    disabled={isSubmitting}
                 >
                     Cancel
                 </Button>
                 <Button
                     type="submit"
-                    onClick={handleSubmit}
+                    onClick={handleSubmit(onSubmit)}
+                    disabled={isSubmitting}
                 >
-                    Submit Request
+                    {isSubmitting ? 'Creating...' : 'Create Ride Request'}
                 </Button>
             </CardFooter>
         </Card>

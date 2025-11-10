@@ -10,7 +10,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { UserPlus, Car, MapPin, Clock, MessageSquare, User, Phone } from "lucide-react";
 import { toast } from "sonner";
 
@@ -39,6 +38,8 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
     const [selectedRideForSms, setSelectedRideForSms] = useState<RideRequest | null>(null);
     const [userDetailModalOpen, setUserDetailModalOpen] = useState(false);
     const [selectedUserDetail, setSelectedUserDetail] = useState<any>(null);
+    const [cancelModalOpen, setCancelModalOpen] = useState(false);
+    const [rideRequestToCancel, setRideRequestToCancel] = useState<RideRequest | null>(null);
     const [loading, setLoading] = useState(true);
 
     let fetchInterval: NodeJS.Timeout;
@@ -54,6 +55,23 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
             console.error('Error starting ride:', error);
             const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
             toast.error('Failed to start ride', {
+                description: errorMessage
+            });
+        }
+    }
+
+    async function cancelRideRequest(rideRequest: RideRequest) {
+        try {
+            await updateDocument("riderequests", rideRequest.uuid, { rideRequestStatus: 109 });
+            toast.success('Ride request cancelled successfully!', {
+                description: `Request for ${rideRequest.rider?.[0]?.fullName || 'rider'} has been cancelled.`
+            });
+            closeCancelModal();
+            getRideRequests();
+        } catch (error) {
+            console.error('Error cancelling ride request:', error);
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+            toast.error('Failed to cancel ride request', {
                 description: errorMessage
             });
         }
@@ -77,6 +95,16 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
     const closeUserDetailModal = () => {
         setUserDetailModalOpen(false);
         setSelectedUserDetail(null);
+    };
+
+    const openCancelModal = (rideRequest: RideRequest) => {
+        setRideRequestToCancel(rideRequest);
+        setCancelModalOpen(true);
+    };
+
+    const closeCancelModal = () => {
+        setCancelModalOpen(false);
+        setRideRequestToCancel(null);
     };
 
     const getRideRequests = async () => {
@@ -142,6 +170,7 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
             <TableCell><Skeleton className="h-4 w-28" /></TableCell>
             <TableCell><Skeleton className="h-8 w-32" /></TableCell>
             <TableCell><Skeleton className="h-8 w-32" /></TableCell>
+            <TableCell><Skeleton className="h-8 w-20" /></TableCell>
         </TableRow>
     );
 
@@ -221,7 +250,14 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                                         <div className="flex items-start justify-between">
                                             <div>
                                                 <p className="text-sm font-medium text-muted-foreground">Rider</p>
-                                                <p className="text-base font-semibold">{rideRequest.rider[0].fullName}</p>
+                                                <button
+                                                    onClick={() => openUserDetailModal(rideRequest.rider?.[0], 'rider')}
+                                                    className="text-base font-semibold text-primary hover:underline cursor-pointer text-left"
+                                                >
+                                                    {rideRequest.rider && rideRequest.rider.length > 0 
+                                                        ? rideRequest.rider[0].fullName 
+                                                        : 'Unknown Rider'}
+                                                </button>
                                             </div>
                                             <Badge variant="secondary">Pending</Badge>
                                         </div>
@@ -274,12 +310,20 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
 
                                         <div className="flex gap-2">
                                             <Button
+                                                onClick={() => openCancelModal(rideRequest)}
+                                                variant="outline"
+                                                className="flex-1"
+                                                size="sm"
+                                            >
+                                                Cancel
+                                            </Button>
+                                            <Button
                                                 onClick={() => callbackFn(rideRequest.uuid)}
-                                                className="w-full"
+                                                className="flex-1"
                                                 size="sm"
                                             >
                                                 <UserPlus className="h-4 w-4 mr-2" />
-                                                Assign Driver & Vehicle
+                                                Assign Driver
                                             </Button>
                                         </div>
                                     </div>
@@ -301,6 +345,7 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                                     <TableHead className="whitespace-nowrap">Dropoff Location</TableHead>
                                     <TableHead className="whitespace-nowrap">Requested Pickup Time</TableHead>
                                     <TableHead className="whitespace-nowrap">Driver & Vehicle</TableHead>
+                                    <TableHead className="whitespace-nowrap">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -312,7 +357,7 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                                     </>
                                 ) : rideRequests.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                                        <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                                             No pending ride requests
                                         </TableCell>
                                     </TableRow>
@@ -336,7 +381,16 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                                                     })
                                                     : 'N/A'}
                                             </TableCell>
-                                            <TableCell className="font-medium whitespace-nowrap">{rideRequest.rider[0].fullName}</TableCell>
+                                            <TableCell className="font-medium whitespace-nowrap">
+                                                <button
+                                                    onClick={() => openUserDetailModal(rideRequest.rider?.[0], 'rider')}
+                                                    className="text-primary hover:underline cursor-pointer text-left"
+                                                >
+                                                    {rideRequest.rider && rideRequest.rider.length > 0 
+                                                        ? rideRequest.rider[0].fullName 
+                                                        : 'Unknown Rider'}
+                                                </button>
+                                            </TableCell>
                                             <TableCell className="whitespace-nowrap">
                                                 <a
                                                     href={`https://www.google.com/maps/search/${rideRequest.pickupAddress}`}
@@ -373,6 +427,15 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                                                 >
                                                     <UserPlus className="h-4 w-4 mr-2" />
                                                     Assign Driver & Vehicle
+                                                </Button>
+                                            </TableCell>
+                                            <TableCell className="whitespace-nowrap">
+                                                <Button
+                                                    onClick={() => openCancelModal(rideRequest)}
+                                                    size="sm"
+                                                    variant="outline"
+                                                >
+                                                    Cancel
                                                 </Button>
                                             </TableCell>
                                         </TableRow>
@@ -419,10 +482,12 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                                                 <div>
                                                     <p className="text-sm font-medium text-muted-foreground">Rider</p>
                                                     <button
-                                                        onClick={() => openUserDetailModal(ride.rider[0], 'rider')}
+                                                        onClick={() => openUserDetailModal(ride.rider?.[0], 'rider')}
                                                         className="text-base font-semibold text-primary hover:underline cursor-pointer text-left"
                                                     >
-                                                        {ride.rider[0].fullName}
+                                                        {ride.rider && ride.rider.length > 0 
+                                                            ? ride.rider[0].fullName 
+                                                            : 'Unknown Rider'}
                                                     </button>
                                                 </div>
                                                 <AssignedRideStatus
@@ -494,10 +559,12 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                                             <div>
                                                 <p className="text-sm font-medium text-muted-foreground mb-1">Driver</p>
                                                 <button
-                                                    onClick={() => openUserDetailModal(ride.driver[0], 'driver')}
+                                                    onClick={() => openUserDetailModal(ride.driver?.[0], 'driver')}
                                                     className="text-sm font-semibold text-primary hover:underline cursor-pointer text-left"
                                                 >
-                                                    {ride.driver[0].fullName}
+                                                    {ride.driver && ride.driver.length > 0 
+                                                        ? ride.driver[0].fullName 
+                                                        : 'No Driver Assigned'}
                                                 </button>
                                             </div>
 
@@ -568,18 +635,22 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                                                     </TableCell>
                                                     <TableCell className="font-medium whitespace-nowrap">
                                                         <button
-                                                            onClick={() => openUserDetailModal(ride.rider[0], 'rider')}
+                                                            onClick={() => openUserDetailModal(ride.rider?.[0], 'rider')}
                                                             className="text-primary hover:underline cursor-pointer text-left"
                                                         >
-                                                            {ride.rider[0].fullName}
+                                                            {ride.rider && ride.rider.length > 0 
+                                                                ? ride.rider[0].fullName 
+                                                                : 'Unknown Rider'}
                                                         </button>
                                                     </TableCell>
                                                     <TableCell className="font-medium whitespace-nowrap">
                                                         <button
-                                                            onClick={() => openUserDetailModal(ride.driver[0], 'driver')}
+                                                            onClick={() => openUserDetailModal(ride.driver?.[0], 'driver')}
                                                             className="text-primary hover:underline cursor-pointer text-left"
                                                         >
-                                                            {ride.driver[0].fullName}
+                                                            {ride.driver && ride.driver.length > 0 
+                                                                ? ride.driver[0].fullName 
+                                                                : 'No Driver Assigned'}
                                                         </button>
                                                     </TableCell>
                                                     <TableCell className="whitespace-nowrap">{ride.pickupAddress}</TableCell>
@@ -630,12 +701,16 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                                 <div className="flex items-center gap-4 mt-2 text-sm">
                                     <span className="flex items-center gap-1.5 font-medium">
                                         <User className="h-4 w-4" />
-                                        {selectedRideForSms.rider[0].fullName}
+                                        {selectedRideForSms.rider && selectedRideForSms.rider.length > 0 
+                                            ? selectedRideForSms.rider[0].fullName 
+                                            : 'Unknown Rider'}
                                     </span>
                                     <Separator orientation="vertical" className="h-4" />
                                     <span className="flex items-center gap-1.5">
                                         <Phone className="h-4 w-4" />
-                                        {selectedRideForSms.rider[0].phone}
+                                        {selectedRideForSms.rider && selectedRideForSms.rider.length > 0 
+                                            ? selectedRideForSms.rider[0].phone 
+                                            : 'N/A'}
                                     </span>
                                 </div>
                             ) : (
@@ -647,9 +722,15 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                         {selectedRideForSms && (
                             <SMSConversationModal
                                 rideUuid={selectedRideForSms.uuid}
-                                riderPhone={selectedRideForSms.rider[0].phone}
-                                driverPhone={selectedRideForSms.driver[0].mobilePhone}
-                                riderName={selectedRideForSms.rider[0].fullName}
+                                riderPhone={selectedRideForSms.rider && selectedRideForSms.rider.length > 0 
+                                    ? selectedRideForSms.rider[0].phone 
+                                    : ''}
+                                driverPhone={selectedRideForSms.driver && selectedRideForSms.driver.length > 0 
+                                    ? selectedRideForSms.driver[0].mobilePhone 
+                                    : ''}
+                                riderName={selectedRideForSms.rider && selectedRideForSms.rider.length > 0 
+                                    ? selectedRideForSms.rider[0].fullName 
+                                    : 'Unknown Rider'}
                             />
                         )}
                     </div>
@@ -663,6 +744,61 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                 user={selectedUserDetail}
                 type={selectedUserDetail?.type || 'rider'}
             />
+
+            {/* Cancel Confirmation Modal */}
+            <Dialog open={cancelModalOpen} onOpenChange={setCancelModalOpen}>
+                <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                        <DialogTitle>Cancel Ride Request</DialogTitle>
+                        <DialogDescription>
+                            Are you sure you want to cancel this ride request? This action cannot be undone.
+                        </DialogDescription>
+                    </DialogHeader>
+                    {rideRequestToCancel && (
+                        <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                            <div className="flex items-center gap-2">
+                                <User className="h-4 w-4 text-muted-foreground" />
+                                <div>
+                                    <p className="text-sm font-medium">Rider</p>
+                                    <p className="text-sm text-muted-foreground">
+                                        {rideRequestToCancel.rider?.[0]?.fullName || 'Unknown Rider'}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-2">
+                                <MapPin className="h-4 w-4 mt-0.5 text-green-600" />
+                                <div>
+                                    <p className="text-sm font-medium">Pickup</p>
+                                    <p className="text-sm text-muted-foreground">{rideRequestToCancel.pickupAddress}</p>
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-2">
+                                <MapPin className="h-4 w-4 mt-0.5 text-red-600" />
+                                <div>
+                                    <p className="text-sm font-medium">Dropoff</p>
+                                    <p className="text-sm text-muted-foreground">{rideRequestToCancel.dropOffAddress}</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                    <div className="flex gap-3 justify-end">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={closeCancelModal}
+                        >
+                            Keep Request
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="destructive"
+                            onClick={() => rideRequestToCancel && cancelRideRequest(rideRequestToCancel)}
+                        >
+                            Cancel Request
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

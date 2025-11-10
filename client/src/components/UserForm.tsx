@@ -1,5 +1,7 @@
-import { useState, ChangeEvent, FormEvent } from 'react';
-import {createDocument} from "../utils/database";
+import { useState } from 'react';
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { createDocument } from "../utils/database";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,158 +12,64 @@ import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { toast } from "sonner";
-import type {
-  User,
-  FormErrors,
-  FormComponentProps,
-  ServiceUserRole
-} from "@/types";
+import { PhoneInput } from "@/components/ui/phone-input";
+import { userFormSchema, type UserFormData, ServiceUserRoles } from "@shared/schemas";
+import type { FormComponentProps, ServiceUserRole } from "@/types";
 
-// Generate a random UUID
-const generateUUID = (): string => {
-    return 'xxxxxxxxx'.replace(/[xy]/g, function(c) {
-        const r = Math.random() * 16 | 0;
-        const v = c === 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
-    });
-};
-
-const SERVICE_USER_ROLES: ServiceUserRole[] = ['rider', 'caregiver', 'relative', 'guardian', 'case manager', 'other'];
+const SERVICE_USER_ROLES: ServiceUserRole[] = [...ServiceUserRoles];
 
 export default function UserForm({ setShowBaseForm, setShowUserForm }: FormComponentProps) {
-    const [formData, setFormData] = useState<User>({
-        uuid: generateUUID(),
-        fullName: '',
-        phone: '',
-        dob: '',
-        race: '',
-        maritalStatus: '',
-        residence: {
-            current: '',
-            last: ''
-        },
-        income: {
-            current: '',
-            last: ''
-        },
-        serviceUserRole: [],
-        veteranStatus: '',
-        disabilityStatus: ''
-    });
-    
-    const [smsConsent, setSmsConsent] = useState<boolean>(false);
-
-    const [errors, setErrors] = useState<FormErrors<User>>({});
     const [submitting, setSubmitting] = useState<boolean>(false);
     const [submitSuccess, setSubmitSuccess] = useState<boolean>(false);
     const [submitError, setSubmitError] = useState<string>('');
+    const [smsConsent, setSmsConsent] = useState<boolean>(true);
 
-    const handleInputChange = (e: ChangeEvent<HTMLInputElement> | { target: { name: string; value: string; type?: string; checked?: boolean } }) => {
-        const { name, value, type, checked } = e.target;
-
-        if (name.includes('.')) {
-            const [parent, child] = name.split('.');
-            // Type-safe handling of nested properties
-            if (parent === 'residence' && (child === 'current' || child === 'last')) {
-                setFormData(prev => ({
-                    ...prev,
-                    residence: {
-                        ...prev.residence,
-                        [child]: value
-                    }
-                }));
-            } else if (parent === 'income' && (child === 'current' || child === 'last')) {
-                setFormData(prev => ({
-                    ...prev,
-                    income: {
-                        ...prev.income,
-                        [child]: value
-                    }
-                }));
-            }
-        } else if (type === 'checkbox') {
-            if (checked) {
-                setFormData(prev => ({
-                    ...prev,
-                    serviceUserRole: [...prev.serviceUserRole, value as ServiceUserRole]
-                }));
-            } else {
-                setFormData(prev => ({
-                    ...prev,
-                    serviceUserRole: prev.serviceUserRole.filter(role => role !== value)
-                }));
-            }
-        } else {
-            setFormData(prev => ({
-                ...prev,
-                [name]: value
-            }));
+    const {
+        register,
+        control,
+        handleSubmit,
+        reset,
+        formState: { errors }
+    } = useForm<UserFormData>({
+        resolver: zodResolver(userFormSchema),
+        mode: 'onSubmit',
+        defaultValues: {
+            fullName: '',
+            phone: '',
+            dob: '',
+            race: '',
+            maritalStatus: '',
+            residence: {
+                current: '',
+                last: ''
+            },
+            income: {
+                current: '',
+                last: ''
+            },
+            serviceUserRole: [],
+            veteranStatus: '',
+            disabilityStatus: ''
         }
+    });
 
-        // Clear error when user starts typing
-        if (errors[name]) {
-            setErrors(prev => ({
-                ...prev,
-                [name]: ''
-            }));
-        }
-    };
-
-    const handleSelectChange = (name: keyof User, value: string) => {
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
-
-        // Clear error when user selects
-        if (errors[name]) {
-            setErrors(prev => ({
-                ...prev,
-                [name]: ''
-            }));
-        }
-    };
-
-    const validateForm = (): boolean => {
-        const newErrors: FormErrors<User> = {};
-
-        if (!formData.fullName.trim()) newErrors.fullName = 'Full name is required';
-        if (!formData.phone.trim()) newErrors.phone = 'Phone number is required';
-        if (!formData.dob.trim()) newErrors.dob = 'Date of birth is required';
-        if (!formData.race) newErrors.race = 'Race selection is required';
-        if (!formData.maritalStatus) newErrors.maritalStatus = 'Marital status is required';
-        if (!formData.residence.last.trim()) newErrors.residenceLast = 'Last residence is required';
-        if (!formData.income.last.trim()) newErrors.incomeLast = 'Last income is required';
-        if (formData.serviceUserRole.length === 0) newErrors.serviceUserRole = 'At least one service user role is required';
-
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
-
-    const handleSubmit = async (e: FormEvent<HTMLButtonElement>) => {
-        e.preventDefault();
-
-        if (!validateForm()) {
-            toast.error('Please fill in all required fields');
-            return;
-        }
-
+    const onSubmit = async (data: UserFormData) => {
         setSubmitting(true);
         setSubmitError('');
         setSubmitSuccess(false);
-        
+
         try {
-            const response = await createDocument("users", formData);
+            const response = await createDocument("users", data);
 
             if (response.ok) {
                 // If SMS consent was given, record it
-                if (smsConsent && formData.phone) {
+                if (smsConsent && data.phone) {
                     try {
                         await fetch('/api/users/sms-consent', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
-                                phoneNumber: formData.phone,
+                                phoneNumber: data.phone,
                                 consentGiven: true,
                                 timestamp: new Date().toISOString(),
                                 ipAddress: window.location.hostname
@@ -175,25 +83,12 @@ export default function UserForm({ setShowBaseForm, setShowUserForm }: FormCompo
 
                 setSubmitSuccess(true);
                 toast.success('User created successfully!', {
-                    description: `${formData.fullName} has been added to the system.`
+                    description: `${data.fullName} has been added to the system.`
                 });
 
                 // Reset form
-                setFormData({
-                    uuid: generateUUID(),
-                    fullName: '',
-                    phone: '',
-                    dob: '',
-                    race: '',
-                    maritalStatus: '',
-                    residence: { current: '', last: '' },
-                    income: { current: '', last: '' },
-                    serviceUserRole: [],
-                    veteranStatus: '',
-                    disabilityStatus: ''
-                });
-                setSmsConsent(false);
-                setErrors({});
+                reset();
+                setSmsConsent(true);
             } else {
                 const errorData = await response.json();
                 const errorMessage = errorData.message || 'Please try again.';
@@ -215,21 +110,8 @@ export default function UserForm({ setShowBaseForm, setShowUserForm }: FormCompo
     };
 
     const handleReset = () => {
-        setFormData({
-            uuid: generateUUID(),
-            fullName: '',
-            phone: '',
-            dob: '',
-            race: '',
-            maritalStatus: '',
-            residence: { current: '', last: '' },
-            income: { current: '', last: '' },
-            serviceUserRole: [],
-            veteranStatus: '',
-            disabilityStatus: ''
-        });
-        setSmsConsent(false);
-        setErrors({});
+        reset();
+        setSmsConsent(true);
         setSubmitSuccess(false);
         setSubmitError('');
     };
@@ -262,23 +144,7 @@ export default function UserForm({ setShowBaseForm, setShowUserForm }: FormCompo
                     </Alert>
                 )}
 
-                <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
-                    {/* UUID Field */}
-                    <div className="space-y-2">
-                        <Label htmlFor="uuid">
-                            User UUID (Auto-generated)
-                        </Label>
-                        <Input
-                            id="uuid"
-                            name="uuid"
-                            value={formData.uuid}
-                            readOnly
-                            disabled
-                            className="bg-muted cursor-not-allowed"
-                        />
-                        <p className="text-xs text-muted-foreground">This UUID is automatically generated</p>
-                    </div>
-
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                     {/* Basic Information */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
@@ -287,14 +153,12 @@ export default function UserForm({ setShowBaseForm, setShowUserForm }: FormCompo
                             </Label>
                             <Input
                                 id="fullName"
-                                name="fullName"
-                                value={formData.fullName}
-                                onChange={handleInputChange}
+                                {...register('fullName')}
                                 placeholder="Enter full name"
                                 className={errors.fullName ? 'border-destructive' : ''}
                             />
                             {errors.fullName && (
-                                <p className="text-sm text-destructive">{errors.fullName}</p>
+                                <p className="text-sm text-destructive">{String(errors.fullName.message)}</p>
                             )}
                         </div>
 
@@ -302,17 +166,20 @@ export default function UserForm({ setShowBaseForm, setShowUserForm }: FormCompo
                             <Label htmlFor="phone">
                                 Phone Number <span className="text-destructive">*</span>
                             </Label>
-                            <Input
-                                id="phone"
+                            <Controller
                                 name="phone"
-                                type="tel"
-                                value={formData.phone}
-                                onChange={handleInputChange}
-                                placeholder="Enter phone number"
-                                className={errors.phone ? 'border-destructive' : ''}
+                                control={control}
+                                render={({ field }) => (
+                                    <PhoneInput
+                                        value={field.value}
+                                        onChange={field.onChange}
+                                        placeholder="Enter phone number"
+                                        className={errors.phone ? 'border-destructive' : ''}
+                                    />
+                                )}
                             />
                             {errors.phone && (
-                                <p className="text-sm text-destructive">{errors.phone}</p>
+                                <p className="text-sm text-destructive">{String(errors.phone.message)}</p>
                             )}
                         </div>
 
@@ -322,14 +189,12 @@ export default function UserForm({ setShowBaseForm, setShowUserForm }: FormCompo
                             </Label>
                             <Input
                                 id="dob"
-                                name="dob"
                                 type="date"
-                                value={formData.dob}
-                                onChange={handleInputChange}
+                                {...register('dob')}
                                 className={errors.dob ? 'border-destructive' : ''}
                             />
                             {errors.dob && (
-                                <p className="text-sm text-destructive">{errors.dob}</p>
+                                <p className="text-sm text-destructive">{String(errors.dob.message)}</p>
                             )}
                         </div>
                     </div>
@@ -342,25 +207,31 @@ export default function UserForm({ setShowBaseForm, setShowUserForm }: FormCompo
                             <Label htmlFor="race">
                                 Race <span className="text-destructive">*</span>
                             </Label>
-                            <Select
-                                value={formData.race}
-                                onValueChange={(value) => handleSelectChange('race', value)}
-                            >
-                                <SelectTrigger className={errors.race ? 'border-destructive' : ''}>
-                                    <SelectValue placeholder="Select race" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="black">Black</SelectItem>
-                                    <SelectItem value="white">White</SelectItem>
-                                    <SelectItem value="asian">Asian</SelectItem>
-                                    <SelectItem value="latino">Latino</SelectItem>
-                                    <SelectItem value="native american">Native American</SelectItem>
-                                    <SelectItem value="other">Other</SelectItem>
-                                    <SelectItem value="prefer not to say">Prefer not to say</SelectItem>
-                                </SelectContent>
-                            </Select>
+                            <Controller
+                                name="race"
+                                control={control}
+                                render={({ field }) => (
+                                    <Select
+                                        value={field.value}
+                                        onValueChange={field.onChange}
+                                    >
+                                        <SelectTrigger className={errors.race ? 'border-destructive' : ''}>
+                                            <SelectValue placeholder="Select race" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="black">Black</SelectItem>
+                                            <SelectItem value="white">White</SelectItem>
+                                            <SelectItem value="asian">Asian</SelectItem>
+                                            <SelectItem value="latino">Latino</SelectItem>
+                                            <SelectItem value="native american">Native American</SelectItem>
+                                            <SelectItem value="other">Other</SelectItem>
+                                            <SelectItem value="prefer not to say">Prefer not to say</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                )}
+                            />
                             {errors.race && (
-                                <p className="text-sm text-destructive">{errors.race}</p>
+                                <p className="text-sm text-destructive">{String(errors.race.message)}</p>
                             )}
                         </div>
 
@@ -368,25 +239,31 @@ export default function UserForm({ setShowBaseForm, setShowUserForm }: FormCompo
                             <Label htmlFor="maritalStatus">
                                 Marital Status <span className="text-destructive">*</span>
                             </Label>
-                            <Select
-                                value={formData.maritalStatus}
-                                onValueChange={(value) => handleSelectChange('maritalStatus', value)}
-                            >
-                                <SelectTrigger className={errors.maritalStatus ? 'border-destructive' : ''}>
-                                    <SelectValue placeholder="Select marital status" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="single">Single</SelectItem>
-                                    <SelectItem value="married">Married</SelectItem>
-                                    <SelectItem value="divorced">Divorced</SelectItem>
-                                    <SelectItem value="widowed">Widowed</SelectItem>
-                                    <SelectItem value="separated">Separated</SelectItem>
-                                    <SelectItem value="other">Other</SelectItem>
-                                    <SelectItem value="prefer not to say">Prefer not to say</SelectItem>
-                                </SelectContent>
-                            </Select>
+                            <Controller
+                                name="maritalStatus"
+                                control={control}
+                                render={({ field }) => (
+                                    <Select
+                                        value={field.value}
+                                        onValueChange={field.onChange}
+                                    >
+                                        <SelectTrigger className={errors.maritalStatus ? 'border-destructive' : ''}>
+                                            <SelectValue placeholder="Select marital status" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="single">Single</SelectItem>
+                                            <SelectItem value="married">Married</SelectItem>
+                                            <SelectItem value="divorced">Divorced</SelectItem>
+                                            <SelectItem value="widowed">Widowed</SelectItem>
+                                            <SelectItem value="separated">Separated</SelectItem>
+                                            <SelectItem value="other">Other</SelectItem>
+                                            <SelectItem value="prefer not to say">Prefer not to say</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                )}
+                            />
                             {errors.maritalStatus && (
-                                <p className="text-sm text-destructive">{errors.maritalStatus}</p>
+                                <p className="text-sm text-destructive">{String(errors.maritalStatus.message)}</p>
                             )}
                         </div>
                     </div>
@@ -403,9 +280,7 @@ export default function UserForm({ setShowBaseForm, setShowUserForm }: FormCompo
                                 </Label>
                                 <Input
                                     id="residence.current"
-                                    name="residence.current"
-                                    value={formData.residence.current}
-                                    onChange={handleInputChange}
+                                    {...register('residence.current')}
                                     placeholder="Enter current residence"
                                 />
                             </div>
@@ -416,14 +291,12 @@ export default function UserForm({ setShowBaseForm, setShowUserForm }: FormCompo
                                 </Label>
                                 <Input
                                     id="residence.last"
-                                    name="residence.last"
-                                    value={formData.residence.last}
-                                    onChange={handleInputChange}
+                                    {...register('residence.last')}
                                     placeholder="Enter last residence"
-                                    className={errors.residenceLast ? 'border-destructive' : ''}
+                                    className={errors.residence?.last ? 'border-destructive' : ''}
                                 />
-                                {errors.residenceLast && (
-                                    <p className="text-sm text-destructive">{errors.residenceLast}</p>
+                                {errors.residence?.last && (
+                                    <p className="text-sm text-destructive">{String(errors.residence.last.message)}</p>
                                 )}
                             </div>
                         </div>
@@ -441,9 +314,7 @@ export default function UserForm({ setShowBaseForm, setShowUserForm }: FormCompo
                                 </Label>
                                 <Input
                                     id="income.current"
-                                    name="income.current"
-                                    value={formData.income.current}
-                                    onChange={handleInputChange}
+                                    {...register('income.current')}
                                     placeholder="Enter current income"
                                 />
                             </div>
@@ -454,14 +325,12 @@ export default function UserForm({ setShowBaseForm, setShowUserForm }: FormCompo
                                 </Label>
                                 <Input
                                     id="income.last"
-                                    name="income.last"
-                                    value={formData.income.last}
-                                    onChange={handleInputChange}
+                                    {...register('income.last')}
                                     placeholder="Enter last income"
-                                    className={errors.incomeLast ? 'border-destructive' : ''}
+                                    className={errors.income?.last ? 'border-destructive' : ''}
                                 />
-                                {errors.incomeLast && (
-                                    <p className="text-sm text-destructive">{errors.incomeLast}</p>
+                                {errors.income?.last && (
+                                    <p className="text-sm text-destructive">{String(errors.income.last.message)}</p>
                                 )}
                             </div>
                         </div>
@@ -475,33 +344,34 @@ export default function UserForm({ setShowBaseForm, setShowUserForm }: FormCompo
                             Service User Role(s) <span className="text-destructive">*</span>
                         </Label>
                         <p className="text-sm text-muted-foreground">Select all that apply</p>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                            {SERVICE_USER_ROLES.map((role) => (
-                                <label key={role} className="flex items-center space-x-2 cursor-pointer">
-                                    <Checkbox
-                                        id={`role-${role}`}
-                                        name="serviceUserRole"
-                                        value={role}
-                                        checked={formData.serviceUserRole.includes(role)}
-                                        onCheckedChange={(checked) => {
-                                            handleInputChange({
-                                                target: {
-                                                    name: 'serviceUserRole',
-                                                    value: role,
-                                                    type: 'checkbox',
-                                                    checked: checked as boolean
-                                                }
-                                            });
-                                        }}
-                                    />
-                                    <Label htmlFor={`role-${role}`} className="capitalize font-normal cursor-pointer">
-                                        {role}
-                                    </Label>
-                                </label>
-                            ))}
-                        </div>
+                        <Controller
+                            name="serviceUserRole"
+                            control={control}
+                            render={({ field }) => (
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                    {SERVICE_USER_ROLES.map((role) => (
+                                        <label key={role} className="flex items-center space-x-2 cursor-pointer">
+                                            <Checkbox
+                                                id={`role-${role}`}
+                                                checked={field.value.includes(role)}
+                                                onCheckedChange={(checked) => {
+                                                    if (checked) {
+                                                        field.onChange([...field.value, role]);
+                                                    } else {
+                                                        field.onChange(field.value.filter((r) => r !== role));
+                                                    }
+                                                }}
+                                            />
+                                            <Label htmlFor={`role-${role}`} className="capitalize font-normal cursor-pointer">
+                                                {role}
+                                            </Label>
+                                        </label>
+                                    ))}
+                                </div>
+                            )}
+                        />
                         {errors.serviceUserRole && (
-                            <p className="text-sm text-destructive">{errors.serviceUserRole}</p>
+                            <p className="text-sm text-destructive">{String(errors.serviceUserRole.message)}</p>
                         )}
                     </div>
 
@@ -513,38 +383,50 @@ export default function UserForm({ setShowBaseForm, setShowUserForm }: FormCompo
                             <Label htmlFor="veteranStatus">
                                 Veteran Status <span className="text-muted-foreground text-xs">(optional)</span>
                             </Label>
-                            <Select
-                                value={formData.veteranStatus}
-                                onValueChange={(value) => handleSelectChange('veteranStatus', value)}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select veteran status" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="veteran">Veteran</SelectItem>
-                                    <SelectItem value="not veteran">Not Veteran</SelectItem>
-                                    <SelectItem value="prefer not to say">Prefer not to say</SelectItem>
-                                </SelectContent>
-                            </Select>
+                            <Controller
+                                name="veteranStatus"
+                                control={control}
+                                render={({ field }) => (
+                                    <Select
+                                        value={field.value}
+                                        onValueChange={field.onChange}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select veteran status" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="veteran">Veteran</SelectItem>
+                                            <SelectItem value="not veteran">Not Veteran</SelectItem>
+                                            <SelectItem value="prefer not to say">Prefer not to say</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                )}
+                            />
                         </div>
 
                         <div className="space-y-2">
                             <Label htmlFor="disabilityStatus">
                                 Disability Status <span className="text-muted-foreground text-xs">(optional)</span>
                             </Label>
-                            <Select
-                                value={formData.disabilityStatus}
-                                onValueChange={(value) => handleSelectChange('disabilityStatus', value)}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select disability status" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="yes">Yes</SelectItem>
-                                    <SelectItem value="no">No</SelectItem>
-                                    <SelectItem value="prefer not to say">Prefer not to say</SelectItem>
-                                </SelectContent>
-                            </Select>
+                            <Controller
+                                name="disabilityStatus"
+                                control={control}
+                                render={({ field }) => (
+                                    <Select
+                                        value={field.value}
+                                        onValueChange={field.onChange}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select disability status" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="yes">Yes</SelectItem>
+                                            <SelectItem value="no">No</SelectItem>
+                                            <SelectItem value="prefer not to say">Prefer not to say</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                )}
+                            />
                         </div>
                     </div>
 
@@ -626,8 +508,8 @@ export default function UserForm({ setShowBaseForm, setShowUserForm }: FormCompo
                     </Button>
                     <Button
                         type="submit"
-                        onClick={handleSubmit}
                         disabled={submitting}
+                        onClick={handleSubmit(onSubmit)}
                     >
                         {submitting ? 'Creating...' : 'Create User'}
                     </Button>

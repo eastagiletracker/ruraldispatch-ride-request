@@ -1,6 +1,7 @@
 require('dotenv').config({ path: '../.env' });
 const express = require('express');
 const notificationService = require('../services/notificationService');
+const { checkPermission } = require('../middleware/permissions');
 
 
 function createRouter(api)
@@ -120,8 +121,14 @@ function createRouter(api)
         }
     });
 
-    router.get(`/users`, async (req, res) => {
-        res.json(await api.getUsers());
+    router.get(`/users`, checkPermission('canViewUsers'), async (req, res) => {
+        try {
+            const users = await api.getUsers();
+            res.json({ success: true, users: users });
+        } catch (error) {
+            console.error('Error fetching users:', error);
+            res.status(500).json({ success: false, error: error.message });
+        }
     });
 
     router.get(`/users/:id`, async (req, res) => {
@@ -626,6 +633,277 @@ function createRouter(api)
             res.json({ success: true, status });
         } catch (error) {
             console.error('Error getting provider status:', error);
+            res.status(500).json({ success: false, error: error.message });
+        }
+    });
+
+    // ====================
+    // SYSTEM USER / AUTHENTICATION ENDPOINTS
+    // ====================
+
+    // Login endpoint
+    router.post(`/auth/login`, async (req, res) => {
+        try {
+            const { username, password } = req.body;
+
+            if (!username || !password) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Username and password are required'
+                });
+            }
+
+            const result = await api.authenticateSystemUser(username, password);
+
+            if (result.success) {
+                res.json({
+                    success: true,
+                    user: result.user
+                });
+            } else {
+                res.status(401).json({
+                    success: false,
+                    message: result.message
+                });
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Server error during login'
+            });
+        }
+    });
+
+    // Get all system users (admin only)
+    router.get(`/auth/users`, async (req, res) => {
+        try {
+            const users = await api.getAllSystemUsers();
+            res.json({ success: true, users });
+        } catch (error) {
+            console.error('Error getting system users:', error);
+            res.status(500).json({ success: false, error: error.message });
+        }
+    });
+
+    // Get system user by UUID
+    router.get(`/auth/users/:uuid`, async (req, res) => {
+        try {
+            const user = await api.getSystemUserByUuid(req.params.uuid);
+            if (user) {
+                const { passwordHash, ...userWithoutPassword } = user;
+                res.json({ success: true, user: userWithoutPassword });
+            } else {
+                res.status(404).json({ success: false, message: 'User not found' });
+            }
+        } catch (error) {
+            console.error('Error getting system user:', error);
+            res.status(500).json({ success: false, error: error.message });
+        }
+    });
+
+    // Create new system user (admin only)
+    router.post(`/auth/users`, async (req, res) => {
+        try {
+            const result = await api.createSystemUser(req.body);
+            res.json({
+                success: true,
+                message: 'User created successfully',
+                user: result.user
+            });
+        } catch (error) {
+            console.error('Error creating system user:', error);
+            res.status(400).json({
+                success: false,
+                message: error.message || 'Failed to create user'
+            });
+        }
+    });
+
+    // Update system user (admin only)
+    router.put(`/auth/users/:uuid`, async (req, res) => {
+        try {
+            const result = await api.updateSystemUser(req.params.uuid, req.body);
+            res.json({
+                success: true,
+                message: 'User updated successfully',
+                result
+            });
+        } catch (error) {
+            console.error('Error updating system user:', error);
+            res.status(500).json({ success: false, error: error.message });
+        }
+    });
+
+    // Deactivate system user (admin only)
+    router.post(`/auth/users/:uuid/deactivate`, async (req, res) => {
+        try {
+            const result = await api.deactivateSystemUser(req.params.uuid);
+            res.json({
+                success: true,
+                message: 'User deactivated successfully',
+                result
+            });
+        } catch (error) {
+            console.error('Error deactivating system user:', error);
+            res.status(500).json({ success: false, error: error.message });
+        }
+    });
+
+    // Activate system user (admin only)
+    router.post(`/auth/users/:uuid/activate`, async (req, res) => {
+        try {
+            const result = await api.activateSystemUser(req.params.uuid);
+            res.json({
+                success: true,
+                message: 'User activated successfully',
+                result
+            });
+        } catch (error) {
+            console.error('Error activating system user:', error);
+            res.status(500).json({ success: false, error: error.message });
+        }
+    });
+
+    // Delete system user (admin only)
+    router.delete(`/auth/users/:uuid`, async (req, res) => {
+        try {
+            const result = await api.deleteSystemUser(req.params.uuid);
+            res.json({
+                success: true,
+                message: 'User deleted successfully',
+                result
+            });
+        } catch (error) {
+            console.error('Error deleting system user:', error);
+            res.status(500).json({ success: false, error: error.message });
+        }
+    });
+
+    // ==================== MANAGER ENDPOINTS (Admin Only) ====================
+
+    // Get all service providers (admin/dispatcher)
+    router.get(`/service-providers`, checkPermission('canViewServiceProviders'), async (req, res) => {
+        try {
+            const providers = await api.getProviders();
+            res.json({ 
+                success: true, 
+                serviceProviders: providers 
+            });
+        } catch (error) {
+            console.error('Error fetching service providers:', error);
+            res.status(500).json({ success: false, error: error.message });
+        }
+    });
+
+    // Delete service provider (admin only)
+    router.delete(`/service-providers/:uuid`, checkPermission('canDeleteServiceProviders'), async (req, res) => {
+        try {
+            const result = await api.deleteProvider(req.params.uuid);
+            res.json({ 
+                success: true, 
+                message: 'Service provider deleted successfully',
+                result 
+            });
+        } catch (error) {
+            console.error('Error deleting service provider:', error);
+            res.status(500).json({ success: false, error: error.message });
+        }
+    });
+
+    // Get all vehicles (admin/dispatcher)
+    router.get(`/vehicles`, checkPermission('canViewVehicles'), async (req, res) => {
+        try {
+            const vehicles = await api.getVehicles();
+            res.json({ 
+                success: true, 
+                vehicles: vehicles 
+            });
+        } catch (error) {
+            console.error('Error fetching vehicles:', error);
+            res.status(500).json({ success: false, error: error.message });
+        }
+    });
+
+    // Delete vehicle (admin only)
+    router.delete(`/vehicles/:uuid`, checkPermission('canDeleteVehicles'), async (req, res) => {
+        try {
+            const result = await api.deleteVehicle(req.params.uuid);
+            res.json({ 
+                success: true, 
+                message: 'Vehicle deleted successfully',
+                result 
+            });
+        } catch (error) {
+            console.error('Error deleting vehicle:', error);
+            res.status(500).json({ success: false, error: error.message });
+        }
+    });
+
+    // Delete user/rider (admin only)
+    router.delete(`/users/:uuid`, checkPermission('canDeleteUsers'), async (req, res) => {
+        try {
+            const result = await api.deleteUser(req.params.uuid);
+            res.json({ 
+                success: true, 
+                message: 'User deleted successfully',
+                result 
+            });
+        } catch (error) {
+            console.error('Error deleting user:', error);
+            res.status(500).json({ success: false, error: error.message });
+        }
+    });
+
+    // Get all system users (case managers, etc.) - admin only
+    router.get(`/auth/system-users`, checkPermission('canViewSystemUsers'), async (req, res) => {
+        try {
+            const role = req.query.role;
+            let users;
+            
+            if (role) {
+                users = await api.getSystemUsersByRole(role);
+            } else {
+                users = await api.getAllSystemUsers();
+            }
+            
+            res.json({ 
+                success: true, 
+                users: users 
+            });
+        } catch (error) {
+            console.error('Error fetching system users:', error);
+            res.status(500).json({ success: false, error: error.message });
+        }
+    });
+
+    // Toggle system user status (admin only)
+    router.patch(`/auth/system-users/:uuid/toggle-status`, checkPermission('canManageSystemUsers'), async (req, res) => {
+        try {
+            const { isActive } = req.body;
+            const result = await api.updateSystemUserStatus(req.params.uuid, isActive);
+            res.json({ 
+                success: true, 
+                message: 'User status updated successfully',
+                result 
+            });
+        } catch (error) {
+            console.error('Error updating system user status:', error);
+            res.status(500).json({ success: false, error: error.message });
+        }
+    });
+
+    // Delete system user (admin only)
+    router.delete(`/auth/system-users/:uuid`, checkPermission('canManageSystemUsers'), async (req, res) => {
+        try {
+            const result = await api.deleteSystemUser(req.params.uuid);
+            res.json({ 
+                success: true, 
+                message: 'System user deleted successfully',
+                result 
+            });
+        } catch (error) {
+            console.error('Error deleting system user:', error);
             res.status(500).json({ success: false, error: error.message });
         }
     });

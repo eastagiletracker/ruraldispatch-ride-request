@@ -1,4 +1,6 @@
-import { useState, ChangeEvent, FormEvent } from 'react';
+import { useState } from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { createDocument } from "../utils/database";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,7 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { toast } from "sonner";
-import type { ServiceProvider, FormErrors, Organization, ServiceProviderRole, Specialization } from "@/types";
+import { serviceProviderFormSchema, type ServiceProviderFormData } from "@/schemas/validation";
+import type { Organization, ServiceProviderRole, Specialization } from "@/types";
+import { PhoneInput } from "@/components/ui/phone-input";
 
 const ORGANIZATIONS: Organization[] = ['EASTCONN', 'Generations Health'];
 
@@ -26,122 +30,48 @@ const SPECIALIZATIONS: Specialization[] = [
     'Intake'
 ];
 
-const generateUUID = (): string => {
-    return 'xxxxxxxxx'.replace(/[xy]/g, function(c) {
-        const r = Math.random() * 16 | 0;
-        const v = c === 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
-    });
-};
-
 export default function CreateProvider() {
-    const [formData, setFormData] = useState<ServiceProvider>({
-        uuid: generateUUID(),
-        fullName: '',
-        title: '',
-        organization: '',
-        mobilePhone: '',
-        serviceProviderRole: '',
-        specializations: '',
-        faxPhone: ''
-    });
-
-    const [errors, setErrors] = useState<FormErrors<ServiceProvider>>({});
-    const [submitting, setSubmitting] = useState<boolean>(false);
     const [submitSuccess, setSubmitSuccess] = useState<boolean>(false);
     const [submitError, setSubmitError] = useState<string>('');
 
-    const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
-
-        // Clear error when user starts typing
-        if (errors[name as keyof ServiceProvider]) {
-            setErrors(prev => ({
-                ...prev,
-                [name]: ''
-            }));
+    const {
+        register,
+        handleSubmit,
+        control,
+        watch,
+        formState: { errors, isSubmitting },
+        reset
+    } = useForm<ServiceProviderFormData>({
+        resolver: zodResolver(serviceProviderFormSchema),
+        defaultValues: {
+            fullName: '',
+            title: '',
+            organization: '',
+            mobilePhone: '',
+            serviceProviderRole: '',
+            specializations: '',
+            faxPhone: ''
         }
-    };
+    });
 
-    const handleSelectChange = (name: keyof ServiceProvider, value: string) => {
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
+    const serviceProviderRole = watch('serviceProviderRole');
 
-        // Clear error when user selects
-        if (errors[name]) {
-            setErrors(prev => ({
-                ...prev,
-                [name]: ''
-            }));
-        }
-    };
-
-    const validateForm = (): boolean => {
-        const newErrors: FormErrors<ServiceProvider> = {};
-
-        if (!formData.fullName.trim()) {
-            newErrors.fullName = 'Full name is required';
-        }
-
-        if (!formData.title.trim()) {
-            newErrors.title = 'Title is required';
-        }
-
-        if (!formData.organization) {
-            newErrors.organization = 'Organization is required';
-        }
-
-        if (!formData.mobilePhone.trim()) {
-            newErrors.mobilePhone = 'Mobile phone is required';
-        }
-
-        if (!formData.serviceProviderRole) {
-            newErrors.serviceProviderRole = 'Service provider role is required';
-        }
-
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
-
-    const handleSubmit = async (e: FormEvent<HTMLButtonElement>) => {
-        e.preventDefault();
-
-        if (!validateForm()) {
-            toast.error('Please fill in all required fields');
-            return;
-        }
-
-        setSubmitting(true);
+    const onSubmit = async (data: ServiceProviderFormData) => {
         setSubmitError('');
         setSubmitSuccess(false);
         
         try {
-            const response = await createDocument("providers", formData);
+            // Backend will generate UUID
+            const response = await createDocument("providers", data);
 
             if (response.ok) {
                 setSubmitSuccess(true);
                 toast.success('Service provider created successfully!', {
-                    description: `${formData.fullName} has been added to the system.`
+                    description: `${data.fullName} has been added to the system.`
                 });
 
                 // Reset form
-                setFormData({
-                    uuid: generateUUID(),
-                    fullName: '',
-                    title: '',
-                    organization: '',
-                    mobilePhone: '',
-                    serviceProviderRole: '',
-                    specializations: '',
-                    faxPhone: ''
-                });
-                setErrors({});
+                reset();
             } else {
                 const errorData = await response.json();
                 const errorMessage = errorData.message || 'Please try again.';
@@ -157,23 +87,11 @@ export default function CreateProvider() {
             toast.error('Error submitting form', {
                 description: errorMessage
             });
-        } finally {
-            setSubmitting(false);
         }
     };
 
     const handleReset = () => {
-        setFormData({
-            uuid: generateUUID(),
-            fullName: '',
-            title: '',
-            organization: '',
-            mobilePhone: '',
-            serviceProviderRole: '',
-            specializations: '',
-            faxPhone: ''
-        });
-        setErrors({});
+        reset();
         setSubmitSuccess(false);
         setSubmitError('');
     };
@@ -206,23 +124,7 @@ export default function CreateProvider() {
                     </Alert>
                 )}
 
-                <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
-                    {/* UUID Field */}
-                    <div className="space-y-2">
-                        <Label htmlFor="uuid">
-                            Service Provider UUID (Auto-generated)
-                        </Label>
-                        <Input
-                            id="uuid"
-                            name="uuid"
-                            value={formData.uuid}
-                            readOnly
-                            disabled
-                            className="bg-muted cursor-not-allowed"
-                        />
-                        <p className="text-xs text-muted-foreground">This UUID is automatically generated</p>
-                    </div>
-
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" id="provider-form">
                     {/* Full Name */}
                     <div className="space-y-2">
                         <Label htmlFor="fullName">
@@ -230,14 +132,12 @@ export default function CreateProvider() {
                         </Label>
                         <Input
                             id="fullName"
-                            name="fullName"
-                            value={formData.fullName}
-                            onChange={handleInputChange}
+                            {...register('fullName')}
                             placeholder="Enter full name"
                             className={errors.fullName ? 'border-destructive' : ''}
                         />
                         {errors.fullName && (
-                            <p className="text-sm text-destructive">{errors.fullName}</p>
+                            <p className="text-sm text-destructive">{errors.fullName.message}</p>
                         )}
                     </div>
 
@@ -248,14 +148,12 @@ export default function CreateProvider() {
                         </Label>
                         <Input
                             id="title"
-                            name="title"
-                            value={formData.title}
-                            onChange={handleInputChange}
+                            {...register('title')}
                             placeholder="Enter title"
                             className={errors.title ? 'border-destructive' : ''}
                         />
                         {errors.title && (
-                            <p className="text-sm text-destructive">{errors.title}</p>
+                            <p className="text-sm text-destructive">{errors.title.message}</p>
                         )}
                     </div>
 
@@ -264,21 +162,24 @@ export default function CreateProvider() {
                         <Label htmlFor="organization">
                             Organization <span className="text-destructive">*</span>
                         </Label>
-                        <Select
-                            value={formData.organization}
-                            onValueChange={(value) => handleSelectChange('organization', value)}
-                        >
-                            <SelectTrigger className={errors.organization ? 'border-destructive' : ''}>
-                                <SelectValue placeholder="Select organization" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {ORGANIZATIONS.map(org => (
-                                    <SelectItem key={org} value={org}>{org}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                        <Controller
+                            name="organization"
+                            control={control}
+                            render={({ field }) => (
+                                <Select onValueChange={field.onChange} value={field.value}>
+                                    <SelectTrigger id="organization" className={errors.organization ? 'border-destructive' : ''}>
+                                        <SelectValue placeholder="Select organization" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {ORGANIZATIONS.map(org => (
+                                            <SelectItem key={org} value={org}>{org}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            )}
+                        />
                         {errors.organization && (
-                            <p className="text-sm text-destructive">{errors.organization}</p>
+                            <p className="text-sm text-destructive">{errors.organization.message}</p>
                         )}
                     </div>
 
@@ -287,17 +188,20 @@ export default function CreateProvider() {
                         <Label htmlFor="mobilePhone">
                             Mobile Phone <span className="text-destructive">*</span>
                         </Label>
-                        <Input
-                            id="mobilePhone"
+                        <Controller
                             name="mobilePhone"
-                            type="tel"
-                            value={formData.mobilePhone}
-                            onChange={handleInputChange}
-                            placeholder="Enter mobile phone number"
-                            className={errors.mobilePhone ? 'border-destructive' : ''}
+                            control={control}
+                            render={({ field }) => (
+                                <PhoneInput
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                    placeholder="Enter mobile phone number"
+                                    className={errors.mobilePhone ? 'border-destructive' : ''}
+                                />
+                            )}
                         />
                         {errors.mobilePhone && (
-                            <p className="text-sm text-destructive">{errors.mobilePhone}</p>
+                            <p className="text-sm text-destructive">{errors.mobilePhone.message}</p>
                         )}
                     </div>
 
@@ -306,45 +210,51 @@ export default function CreateProvider() {
                         <Label htmlFor="serviceProviderRole">
                             Service Provider Role <span className="text-destructive">*</span>
                         </Label>
-                        <Select
-                            value={formData.serviceProviderRole}
-                            onValueChange={(value) => handleSelectChange('serviceProviderRole', value)}
-                        >
-                            <SelectTrigger className={errors.serviceProviderRole ? 'border-destructive' : ''}>
-                                <SelectValue placeholder="Select role" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {SERVICE_PROVIDER_ROLES.map(role => (
-                                    <SelectItem key={role} value={role}>{role}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                        <Controller
+                            name="serviceProviderRole"
+                            control={control}
+                            render={({ field }) => (
+                                <Select onValueChange={field.onChange} value={field.value}>
+                                    <SelectTrigger id="serviceProviderRole" className={errors.serviceProviderRole ? 'border-destructive' : ''}>
+                                        <SelectValue placeholder="Select role" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {SERVICE_PROVIDER_ROLES.map(role => (
+                                            <SelectItem key={role} value={role}>{role}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            )}
+                        />
                         {errors.serviceProviderRole && (
-                            <p className="text-sm text-destructive">{errors.serviceProviderRole}</p>
+                            <p className="text-sm text-destructive">{errors.serviceProviderRole.message}</p>
                         )}
                     </div>
 
                     {/* Specializations - Only show if Staff role selected */}
-                    {formData.serviceProviderRole === 'Staff' && (
+                    {serviceProviderRole === 'Staff' && (
                         <div className="space-y-2">
                             <Label htmlFor="specializations">
                                 Specializations
                             </Label>
-                            <Select
-                                value={formData.specializations}
-                                onValueChange={(value) => handleSelectChange('specializations', value)}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select specialization" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {SPECIALIZATIONS.map(specialization => (
-                                        <SelectItem key={specialization} value={specialization}>
-                                            {specialization}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <Controller
+                                name="specializations"
+                                control={control}
+                                render={({ field }) => (
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                        <SelectTrigger id="specializations">
+                                            <SelectValue placeholder="Select specialization" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {SPECIALIZATIONS.map(specialization => (
+                                                <SelectItem key={specialization} value={specialization}>
+                                                    {specialization}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                )}
+                            />
                         </div>
                     )}
 
@@ -353,13 +263,16 @@ export default function CreateProvider() {
                         <Label htmlFor="faxPhone">
                             Fax Phone <span className="text-muted-foreground text-xs">(optional)</span>
                         </Label>
-                        <Input
-                            id="faxPhone"
+                        <Controller
                             name="faxPhone"
-                            type="tel"
-                            value={formData.faxPhone}
-                            onChange={handleInputChange}
-                            placeholder="Enter fax phone number (optional)"
+                            control={control}
+                            render={({ field }) => (
+                                <PhoneInput
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                    placeholder="Enter fax phone number (optional)"
+                                />
+                            )}
                         />
                     </div>
                 </form>
@@ -370,16 +283,16 @@ export default function CreateProvider() {
                     type="button"
                     variant="outline"
                     onClick={handleReset}
-                    disabled={submitting}
+                    disabled={isSubmitting}
                 >
                     Reset Form
                 </Button>
                 <Button
                     type="submit"
-                    onClick={handleSubmit}
-                    disabled={submitting}
+                    form="provider-form"
+                    disabled={isSubmitting}
                 >
-                    {submitting ? 'Creating...' : 'Create Service Provider'}
+                    {isSubmitting ? 'Creating...' : 'Create Service Provider'}
                 </Button>
             </CardFooter>
         </Card>
