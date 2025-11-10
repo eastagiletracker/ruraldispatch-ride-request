@@ -8,7 +8,6 @@ import ServiceProviderHome from './pages/ServiceProviderHome'
 import Dashboard from './pages/Dashboard'
 import CreateRideRequest from './pages/CreateRideRequest'
 import VehicleHome from "./pages/VehicleHome";
-import SMSConsent from "./pages/SMSConsent";
 import SMSOptOut from "./pages/SMSOptOut";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
@@ -28,7 +27,6 @@ function AppRoutes() {
             <Route path="/vehicle" element={<VehicleHome />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/sms" element={<SMS />} />
-            <Route path="/sms-consent" element={<SMSConsent />} />
             <Route path="/sms-opt-out" element={<SMSOptOut />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
