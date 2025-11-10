@@ -6,7 +6,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { User, Phone, Calendar, Clock, Hash, Shield, Activity, Briefcase, Building2, Heart, Home, DollarSign, Flag } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
+import { User, Phone, Calendar, Clock, Hash, Shield, Activity, Briefcase, Building2, Heart, Home, DollarSign, Flag, MessageSquarePlus } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 
@@ -24,6 +26,37 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
   type,
 }) => {
   if (!user) return null;
+
+  // Record verbal SMS consent (staff action)
+  const handleRecordVerbalConsent = async () => {
+    if (!user.phone) {
+      toast.error('Cannot record consent', { description: 'No phone number on file.' });
+      return;
+    }
+    try {
+      const resp = await fetch('/api/users/sms-consent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phoneNumber: user.phone,
+          consentGiven: true,
+          timestamp: new Date().toISOString(),
+          ipAddress: 'verbal' // flag for audit trail
+        })
+      });
+      if (resp.ok) {
+        toast.success('Verbal consent recorded', { description: 'Confirmation SMS sent to user.' });
+        // Simple refresh strategy – in a larger app we'd lift state
+        setTimeout(() => window.location.reload(), 700);
+      } else {
+        const data = await resp.json().catch(() => ({}));
+        throw new Error(data.message || 'Server rejected consent request');
+      }
+    } catch (e:any) {
+      console.error('Verbal consent error', e);
+      toast.error('Failed to record consent', { description: e.message });
+    }
+  };
 
   const formatDate = (date: string | Date) => {
     return new Date(date).toLocaleDateString('en-US', {
@@ -154,6 +187,35 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                   </div>
                 </div>
               )}
+
+              {/* SMS Consent Status & Verbal Opt-In */}
+              <div className="flex items-start gap-3 pt-2">
+                <MessageSquarePlus className="h-5 w-5 text-muted-foreground mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-muted-foreground">SMS Consent</p>
+                  {user.smsConsent?.given ? (
+                    <div className="flex flex-col gap-1">
+                      <Badge className="bg-green-600 hover:bg-green-700 w-fit">Opted-In</Badge>
+                      {user.smsConsent?.timestamp && (
+                        <p className="text-xs text-muted-foreground">Since: {new Date(user.smsConsent.timestamp).toLocaleString()}</p>
+                      )}
+                      {user.smsConsent?.ipAddress === 'verbal' && (
+                        <p className="text-xs text-muted-foreground">Method: Verbal</p>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <Badge variant="destructive" className="w-fit">Not Opted-In</Badge>
+                      <p className="text-xs text-muted-foreground max-w-sm">User has not provided SMS consent. Obtain explicit verbal permission before enabling.</p>
+                      <Button size="sm" onClick={handleRecordVerbalConsent}>
+                        <MessageSquarePlus className="h-4 w-4 mr-2" />
+                        Record Verbal Consent
+                      </Button>
+                      <p className="text-[10px] text-muted-foreground leading-snug">Script: “Our service sends ride updates by text message. Do you agree to receive text messages about your rides from Rural Dispatch? Reply STOP to cancel.”</p>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
 
