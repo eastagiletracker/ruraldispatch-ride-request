@@ -129,17 +129,22 @@ const SMSConsent = () => {
                 <span className="text-sm">
                   at the phone number <strong>{phoneNumber || 'provided in my account'}</strong>. I understand that:
                 </span>
-                <ul className="mt-2 ml-5 space-y-1 text-sm text-gray-700">
-                  <li>• Messages help me track my rides and receive important updates</li>
-                  <li>• I can opt-out anytime by replying <strong>STOP</strong></li>
-                  <li>• I can get help by replying <strong>HELP</strong></li>
-                  <li>• Message & data rates may apply</li>
-                  <li>• Consent is not required to use Rural Dispatch services</li>
+                <ul className="mt-2 ml-5 space-y-1 text-sm text-gray-700 list-disc list-inside">
+                  <li>Messages help me track my rides and receive important updates</li>
+                  <li>I can opt-out anytime by replying <strong>STOP</strong></li>
+                  <li>I can get help by replying <strong>HELP</strong></li>
+                  <li>Message & data rates may apply</li>
                 </ul>
               </label>
             </div>
 
-            <div className="bg-yellow-50 border border-yellow-200 rounded p-3 text-sm">
+            <div className="mt-4 p-3 bg-yellow-50 border border-yellow-300 rounded-lg">
+                <p className="text-xs font-semibold text-yellow-800">
+                    Note: SMS consent is NOT required to use Rural Dispatch services. If you do not consent, you will receive ride information via phone calls.
+                </p>
+            </div>
+
+            <div className="bg-blue-100 border border-blue-200 rounded p-3 text-sm mt-4">
               <span className="font-semibold">📱 Message Frequency:</span> You may receive 1-5 SMS 
               messages per active ride, plus occasional service notifications. Frequency depends on 
               ride activity.
