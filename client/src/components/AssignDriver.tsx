@@ -23,6 +23,10 @@ interface RideRequestData {
     roundTrip?: boolean;
     notes?: string;
     purpose?: string;
+    assignedDriverUuid?: number;
+    assignedVehicleUuid?: number;
+    driver?: Array<{ uuid: string; fullName: string }>;
+    vehicle?: Array<{ uuid: string; model?: string; displayName?: string }>;
 }
 
 interface DriverData {
@@ -51,6 +55,24 @@ export default function AssignDriver({ selectedRideRequestId, cancelFn }: Assign
         try {
             const rideRequest = await fetchDocument("riderequests", selectedRideRequestId) as RideRequestData;
             setSelectedRideRequest(rideRequest);
+            
+            // Pre-populate existing driver assignment
+            if (rideRequest.driver && rideRequest.driver.length > 0) {
+                setSelectedDriver({
+                    uuid: rideRequest.driver[0].uuid,
+                    fullName: rideRequest.driver[0].fullName
+                });
+            }
+            
+            // Pre-populate existing vehicle assignment
+            if (rideRequest.vehicle && rideRequest.vehicle.length > 0) {
+                setSelectedVehicle({
+                    uuid: rideRequest.vehicle[0].uuid,
+                    model: rideRequest.vehicle[0].model,
+                    displayName: rideRequest.vehicle[0].displayName
+                });
+            }
+            
             setLoading(false);
         } catch (error) {
             console.error('Error fetching ride request:', error);
@@ -67,13 +89,33 @@ export default function AssignDriver({ selectedRideRequestId, cancelFn }: Assign
 
         setSubmitting(true);
         try {
+            const isEditing = selectedRideRequest.assignedDriverUuid || selectedRideRequest.assignedVehicleUuid;
+            
+            const driverUuid = parseInt(selectedDriver.uuid.toString());
+            const vehicleUuid = parseInt(selectedVehicle.uuid.toString());
+            
+            console.log('Submitting assignment:', {
+                selectedDriver,
+                selectedVehicle,
+                driverUuid,
+                vehicleUuid,
+                isValidDriver: !isNaN(driverUuid),
+                isValidVehicle: !isNaN(vehicleUuid)
+            });
+            
+            if (isNaN(driverUuid) || isNaN(vehicleUuid)) {
+                toast.error('Invalid driver or vehicle UUID');
+                return;
+            }
+            
             await updateDocument("riderequests", selectedRideRequestId, {
-                assignedDriverUuid: parseInt(selectedDriver.uuid.toString()),
-                assignedVehicleUuid: parseInt(selectedVehicle.uuid.toString()),
-                rideRequestStatus: 400
+                assignedDriverUuid: driverUuid,
+                assignedVehicleUuid: vehicleUuid,
+                rideRequestStatus: 1000, // Ready to ride
+                rideStatus: 100 // Ride confirmed
             });
 
-            toast.success('Driver and vehicle assigned successfully!', {
+            toast.success(isEditing ? 'Assignment updated successfully!' : 'Driver and vehicle assigned successfully!', {
                 description: `${selectedDriver.fullName} has been assigned to this ride.`
             });
 
@@ -102,9 +144,15 @@ export default function AssignDriver({ selectedRideRequestId, cancelFn }: Assign
         <Dialog open={true} onOpenChange={(open) => !open && cancelFn()}>
             <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                    <DialogTitle className="text-2xl">Assign Driver & Vehicle</DialogTitle>
+                    <DialogTitle className="text-2xl">
+                        {selectedRideRequest.assignedDriverUuid || selectedRideRequest.assignedVehicleUuid 
+                            ? 'Edit Assignment' 
+                            : 'Assign Driver & Vehicle'}
+                    </DialogTitle>
                     <DialogDescription>
-                        Select an available driver and vehicle for this ride request
+                        {selectedRideRequest.assignedDriverUuid || selectedRideRequest.assignedVehicleUuid
+                            ? 'Update the driver and vehicle for this ride request'
+                            : 'Select an available driver and vehicle for this ride request'}
                     </DialogDescription>
                 </DialogHeader>
 
@@ -188,8 +236,8 @@ export default function AssignDriver({ selectedRideRequestId, cancelFn }: Assign
                                             <div className="h-2 w-2 rounded-full bg-muted-foreground" />
                                         </div>
                                         <div className="flex-1">
-                                            <p className="text-xs text-muted-foreground">Estimated Travel Time</p>
-                                            <p className="text-sm font-medium">{selectedRideRequest.purpose || 'Not specified'}</p>
+                                            <p className="text-xs text-muted-foreground">Purpose of Trip</p>
+                                            <p className="text-sm font-medium">{selectedRideRequest.purpose}</p>
                                         </div>
                                     </div>
                                 )}
@@ -204,38 +252,32 @@ export default function AssignDriver({ selectedRideRequestId, cancelFn }: Assign
                                     </div>
                                 </div>
 
-                                {selectedRideRequest.notes && (
-                                    <>
-                                        <div className="flex items-start gap-2">
-                                            <div className="h-4 w-4 mt-1 flex-shrink-0 flex items-center justify-center">
-                                                <div className="h-2 w-2 rounded-full bg-muted-foreground" />
-                                            </div>
-                                            <div className="flex-1">
-                                                <p className="text-xs text-muted-foreground">Estimated Wait Time</p>
-                                                <p className="text-sm font-medium">
-                                                    {selectedRideRequest.notes.includes('Wait time:') 
-                                                        ? selectedRideRequest.notes.split('Wait time:')[1]?.trim() || 'Not specified'
-                                                        : 'Not specified'
-                                                    }
-                                                </p>
-                                            </div>
+                                {selectedRideRequest.notes && selectedRideRequest.roundTrip && selectedRideRequest.notes.includes('Wait time:') && (
+                                    <div className="flex items-start gap-2">
+                                        <div className="h-4 w-4 mt-1 flex-shrink-0 flex items-center justify-center">
+                                            <div className="h-2 w-2 rounded-full bg-muted-foreground" />
                                         </div>
+                                        <div className="flex-1">
+                                            <p className="text-xs text-muted-foreground">Estimated Wait Time</p>
+                                            <p className="text-sm font-medium">
+                                                {selectedRideRequest.notes.split('Wait time:')[1]?.split('.')[0]?.trim() || 'Not specified'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
 
-                                        <div className="flex items-start gap-2">
-                                            <div className="h-4 w-4 mt-1 flex-shrink-0 flex items-center justify-center">
-                                                <div className="h-2 w-2 rounded-full bg-muted-foreground" />
-                                            </div>
-                                            <div className="flex-1">
-                                                <p className="text-xs text-muted-foreground">Wheelchair Accessible</p>
-                                                <p className="text-sm font-medium">
-                                                    {selectedRideRequest.notes.includes('Accessibility:') 
-                                                        ? selectedRideRequest.notes.split('Accessibility:')[1]?.split('.')[0]?.trim() || 'None'
-                                                        : 'None'
-                                                    }
-                                                </p>
-                                            </div>
+                                {selectedRideRequest.notes && selectedRideRequest.notes.includes('Accessibility:') && (
+                                    <div className="flex items-start gap-2">
+                                        <div className="h-4 w-4 mt-1 flex-shrink-0 flex items-center justify-center">
+                                            <div className="h-2 w-2 rounded-full bg-muted-foreground" />
                                         </div>
-                                    </>
+                                        <div className="flex-1">
+                                            <p className="text-xs text-muted-foreground">Accessibility Requirements</p>
+                                            <p className="text-sm font-medium">
+                                                {selectedRideRequest.notes.split('Accessibility:')[1]?.split('.')[0]?.trim() || 'None'}
+                                            </p>
+                                        </div>
+                                    </div>
                                 )}
                             </div>
                         )}
@@ -246,7 +288,9 @@ export default function AssignDriver({ selectedRideRequestId, cancelFn }: Assign
                     {/* Driver Selection */}
                     <div className="space-y-3">
                         <div>
-                            <h3 className="text-sm font-semibold mb-1">Select Driver</h3>
+                            <h3 className="text-sm font-semibold mb-1">
+                                Select Driver <span className="text-destructive">*</span>
+                            </h3>
                             <p className="text-xs text-muted-foreground mb-3">
                                 Choose an available driver for this ride
                             </p>
@@ -266,7 +310,9 @@ export default function AssignDriver({ selectedRideRequestId, cancelFn }: Assign
                     {/* Vehicle Selection */}
                     <div className="space-y-3">
                         <div>
-                            <h3 className="text-sm font-semibold mb-1">Select Vehicle</h3>
+                            <h3 className="text-sm font-semibold mb-1">
+                                Select Vehicle <span className="text-destructive">*</span>
+                            </h3>
                             <p className="text-xs text-muted-foreground mb-3">
                                 Choose an available vehicle for this ride
                             </p>
@@ -298,7 +344,9 @@ export default function AssignDriver({ selectedRideRequestId, cancelFn }: Assign
                         disabled={!selectedDriver || !selectedVehicle || submitting || loading}
                         className="w-full sm:w-auto"
                     >
-                        {submitting ? 'Assigning...' : 'Assign to Ride'}
+                        {submitting 
+                            ? (selectedRideRequest.assignedDriverUuid || selectedRideRequest.assignedVehicleUuid ? 'Updating...' : 'Assigning...') 
+                            : (selectedRideRequest.assignedDriverUuid || selectedRideRequest.assignedVehicleUuid ? 'Update Assignment' : 'Assign to Ride')}
                     </Button>
                 </DialogFooter>
             </DialogContent>

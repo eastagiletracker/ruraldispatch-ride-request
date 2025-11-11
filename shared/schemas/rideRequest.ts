@@ -86,10 +86,7 @@ export const rideRequestFormSchema = z.object({
   estimatedWaitTime: z.string().optional(),
 
   // Accessibility Features
-  walkerAccessible: z.boolean().optional(),
-  wheelchairAccessible: z.boolean().optional(),
-  serviceAnimalFriendly: z.boolean().optional(),
-  oxygenTankAccessible: z.boolean().optional(),
+  accessibilityFeatures: z.string().optional(),
 
   // Purpose and Notes
   purposeOfTrip: z.string()

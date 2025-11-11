@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { UserPlus, Car, MapPin, Clock, MessageSquare, User, Phone } from "lucide-react";
+import { UserPlus, Car, MapPin, Clock, MessageSquare, User, Phone, Download } from "lucide-react";
 import { toast } from "sonner";
 
 interface RideRequest {
@@ -23,6 +23,7 @@ interface RideRequest {
     dropOffAddress: string;
     pickupRequestedTime?: string;
     createdAt?: string;
+    updatedAt?: string;
 }
 
 interface RideRequestsProps {
@@ -41,6 +42,7 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
     const [cancelModalOpen, setCancelModalOpen] = useState(false);
     const [rideRequestToCancel, setRideRequestToCancel] = useState<RideRequest | null>(null);
     const [loading, setLoading] = useState(true);
+    const [startingRide, setStartingRide] = useState<string | null>(null);
 
     let fetchInterval: NodeJS.Timeout;
 
@@ -49,6 +51,7 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
     const getDriver = (ride: RideRequest) => ride?.driver && ride.driver.length > 0 ? ride.driver[0] : undefined;
 
     async function startRide(assignedRide: RideRequest) {
+        setStartingRide(assignedRide.uuid);
         try {
             await updateDocument("riderequests", assignedRide.uuid, { rideStatus: 200 });
             toast.success('Ride started successfully!', {
@@ -61,6 +64,115 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
             toast.error('Failed to start ride', {
                 description: errorMessage
             });
+        } finally {
+            setStartingRide(null);
+        }
+    }
+
+    function exportToCSV() {
+        try {
+            // Combine both pending and assigned rides
+            const allRides = [...rideRequests, ...assignedRides];
+            
+            if (allRides.length === 0) {
+                toast.error('No rides to export');
+                return;
+            }
+
+            // CSV Headers
+            const headers = [
+                'Status',
+                'Rider Name',
+                'Rider Phone',
+                'Driver Name',
+                'Driver Phone',
+                'Pickup Location',
+                'Dropoff Location',
+                'Requested Pickup Time',
+                'Created At'
+            ];
+
+            // Map rides to CSV rows
+            const rows = allRides.map(ride => {
+                const rider = getRider(ride);
+                const driver = getDriver(ride);
+                
+                // Determine status based on rideRequestStatus and rideStatus
+                let status = 'Pending';
+                if (ride.rideRequestStatus === 1000) {
+                    if (ride.rideStatus === 200) {
+                        status = 'Ride Started';
+                    } else if (ride.rideStatus === 100) {
+                        status = 'Ride Confirmed';
+                    } else {
+                        status = 'Assigned';
+                    }
+                }
+
+                // Format created date - check multiple possible fields
+                let createdDate = 'N/A';
+                if (ride.createdAt) {
+                    createdDate = new Date(ride.createdAt).toLocaleString();
+                } else if (ride.updatedAt) {
+                    createdDate = new Date(ride.updatedAt).toLocaleString();
+                } else if ((ride as any)._id) {
+                    // MongoDB ObjectId contains timestamp - extract it as fallback
+                    try {
+                        const objectId = (ride as any)._id;
+                        const timestamp = typeof objectId === 'string' && objectId.length === 24
+                            ? parseInt(objectId.substring(0, 8), 16) * 1000
+                            : null;
+                        if (timestamp) {
+                            createdDate = new Date(timestamp).toLocaleString();
+                        }
+                    } catch (e) {
+                        console.debug('Could not extract timestamp from _id');
+                    }
+                }
+
+                return [
+                    status,
+                    rider?.fullName || 'N/A',
+                    rider?.phone || 'N/A',
+                    driver?.fullName || 'Unassigned',
+                    driver?.mobilePhone || 'N/A',
+                    ride.pickupAddress || 'N/A',
+                    ride.dropOffAddress || 'N/A',
+                    ride.pickupRequestedTime ? new Date(ride.pickupRequestedTime).toLocaleString() : 'N/A',
+                    createdDate
+                ];
+            });
+
+            // Create CSV content
+            const csvContent = [
+                headers.join(','),
+                ...rows.map(row => 
+                    row.map(cell => 
+                        // Escape commas and quotes in cell content
+                        `"${String(cell).replace(/"/g, '""')}"`
+                    ).join(',')
+                )
+            ].join('\n');
+
+            // Create and download file
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            const timestamp = new Date().toISOString().split('T')[0];
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', `ride-requests-${timestamp}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            toast.success('Export successful', {
+                description: `Downloaded ${allRides.length} ride records`
+            });
+        } catch (error) {
+            console.error('Error exporting to CSV:', error);
+            toast.error('Failed to export rides');
         }
     }
 
@@ -140,10 +252,10 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                     return timeB - timeA;
                 });
                 assignedRides.sort((a, b) => {
-                    // Use createdAt if available, fallback to uuid
-                    const timeA = a.createdAt ? new Date(a.createdAt).getTime() : Number(a.uuid);
-                    const timeB = b.createdAt ? new Date(b.createdAt).getTime() : Number(b.uuid);
-                    return timeB - timeA;
+                    // Sort by pickupRequestedTime (most urgent first)
+                    const timeA = a.pickupRequestedTime ? new Date(a.pickupRequestedTime).getTime() : Number(a.uuid);
+                    const timeB = b.pickupRequestedTime ? new Date(b.pickupRequestedTime).getTime() : Number(b.uuid);
+                    return timeA - timeB; // Earliest pickup time first
                 });
 
                 setRideRequests(nonActiveRideReqs);
@@ -223,18 +335,32 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
             {/* Pending Ride Requests Card */}
             <Card>
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <Clock className="h-5 w-5 text-primary" />
-                        Pending Ride Requests
-                    </CardTitle>
-                    <CardDescription>
-                        {loading
-                            ? 'Loading...'
-                            : rideRequests.length === 0
-                            ? 'No pending ride requests'
-                            : `${rideRequests.length} ride${rideRequests.length > 1 ? 's' : ''} awaiting assignment`
-                        }
-                    </CardDescription>
+                    <div className="flex items-center justify-between">
+                        <div className="space-y-1.5">
+                            <CardTitle className="flex items-center gap-2">
+                                <Clock className="h-5 w-5 text-primary" />
+                                Pending Ride Requests
+                            </CardTitle>
+                            <CardDescription>
+                                {loading
+                                    ? 'Loading...'
+                                    : rideRequests.length === 0
+                                    ? 'No pending ride requests'
+                                    : `${rideRequests.length} ride${rideRequests.length > 1 ? 's' : ''} awaiting assignment`
+                                }
+                            </CardDescription>
+                        </div>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={exportToCSV}
+                            disabled={loading || (rideRequests.length === 0 && assignedRides.length === 0)}
+                            className="flex items-center gap-2"
+                        >
+                            <Download className="h-4 w-4" />
+                            Export CSV
+                        </Button>
+                    </div>
                 </CardHeader>
                 <CardContent>
                     {/* Mobile View - Cards */}
@@ -504,6 +630,7 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                                                     onClickFn={() => startRide(ride)}
                                                     rideRequestStatus={ride.rideRequestStatus}
                                                     rideStatus={ride.rideStatus}
+                                                    isLoading={startingRide === ride.uuid}
                                                 />
                                             </div>
 
@@ -580,15 +707,26 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                                                 )}
                                             </div>
 
-                                            <Button
-                                                onClick={() => openSmsModal(ride)}
-                                                variant="outline"
-                                                className="w-full"
-                                                size="sm"
-                                            >
-                                                <MessageSquare className="h-4 w-4 mr-2" />
-                                                View SMS Messages
-                                            </Button>
+                                            <div className="flex gap-2">
+                                                <Button
+                                                    onClick={() => callbackFn(ride.uuid)}
+                                                    variant="outline"
+                                                    className="flex-1"
+                                                    size="sm"
+                                                >
+                                                    <UserPlus className="h-4 w-4 mr-2" />
+                                                    Edit Assignment
+                                                </Button>
+                                                <Button
+                                                    onClick={() => openSmsModal(ride)}
+                                                    variant="outline"
+                                                    className="flex-1"
+                                                    size="sm"
+                                                >
+                                                    <MessageSquare className="h-4 w-4 mr-2" />
+                                                    View SMS
+                                                </Button>
+                                            </div>
                                         </div>
                                     </CardContent>
                                 </Card>
@@ -610,7 +748,7 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                                         <TableHead className="whitespace-nowrap">Dropoff Location</TableHead>
                                         <TableHead className="whitespace-nowrap">Requested Pickup Time</TableHead>
                                         <TableHead className="whitespace-nowrap">Ride Status</TableHead>
-                                        <TableHead className="whitespace-nowrap">SMS</TableHead>
+                                        <TableHead className="whitespace-nowrap">Actions</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -682,17 +820,28 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                                                             onClickFn={() => startRide(ride)}
                                                             rideRequestStatus={ride.rideRequestStatus}
                                                             rideStatus={ride.rideStatus}
+                                                            isLoading={startingRide === ride.uuid}
                                                         />
                                                     </TableCell>
                                                     <TableCell className="whitespace-nowrap">
-                                                        <Button
-                                                            onClick={() => openSmsModal(ride)}
-                                                            size="sm"
-                                                            variant="outline"
-                                                        >
-                                                            <MessageSquare className="h-4 w-4 mr-2" />
-                                                            View
-                                                        </Button>
+                                                        <div className="flex gap-2">
+                                                            <Button
+                                                                onClick={() => callbackFn(ride.uuid)}
+                                                                size="sm"
+                                                                variant="outline"
+                                                            >
+                                                                <UserPlus className="h-4 w-4 mr-2" />
+                                                                Edit
+                                                            </Button>
+                                                            <Button
+                                                                onClick={() => openSmsModal(ride)}
+                                                                size="sm"
+                                                                variant="outline"
+                                                            >
+                                                                <MessageSquare className="h-4 w-4 mr-2" />
+                                                                SMS
+                                                            </Button>
+                                                        </div>
                                                     </TableCell>
                                                 </TableRow>
                                         ))

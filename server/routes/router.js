@@ -13,7 +13,16 @@ function createRouter(api)
     });
 
     router.get(`/riderequests/:id`, async (req, res) => {
-        res.json(await api.getRideRequest(req.params.id));
+        try {
+            const rideRequest = await api.getRideRequest(req.params.id);
+            if (!rideRequest) {
+                return res.status(404).json({ error: 'Ride request not found' });
+            }
+            res.json(rideRequest);
+        } catch (error) {
+            console.error('Error fetching ride request:', error);
+            res.status(500).json({ error: 'Failed to fetch ride request', message: error.message });
+        }
     });
 
     router.post(`/riderequests`, async (req, res) => {
@@ -24,8 +33,35 @@ function createRouter(api)
         try {
             const rideUuid = req.params.id;
 
-            // Get old ride data before update
+            // Get old ride data before update (needed for validation and notifications)
             const oldRide = await api.getRideRequest(rideUuid);
+            
+            if (!oldRide) {
+                return res.status(404).json({ error: 'Ride request not found' });
+            }
+
+            // Validate: If setting rideRequestStatus to 400 or higher, require both driver and vehicle
+            if (req.body.rideRequestStatus >= 400) {
+                // Check both the update body and existing ride data
+                const hasDriver = (req.body.assignedDriverUuid !== undefined && req.body.assignedDriverUuid !== null) 
+                    || (oldRide.assignedDriverUuid !== undefined && oldRide.assignedDriverUuid !== null);
+                const hasVehicle = (req.body.assignedVehicleUuid !== undefined && req.body.assignedVehicleUuid !== null)
+                    || (oldRide.assignedVehicleUuid !== undefined && oldRide.assignedVehicleUuid !== null);
+                
+                if (!hasDriver || !hasVehicle) {
+                    return res.status(400).json({
+                        error: 'Both driver and vehicle must be assigned before setting ride request status to 400 or higher',
+                        details: {
+                            hasDriver,
+                            hasVehicle,
+                            driverInBody: req.body.assignedDriverUuid,
+                            vehicleInBody: req.body.assignedVehicleUuid,
+                            driverInRide: oldRide.assignedDriverUuid,
+                            vehicleInRide: oldRide.assignedVehicleUuid
+                        }
+                    });
+                }
+            }
 
             // Update the ride
             const updateResult = await api.updateRideRequest(rideUuid, req.body);

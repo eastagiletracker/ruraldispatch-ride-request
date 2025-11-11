@@ -49,7 +49,22 @@ export const fetchCollection = async <T = unknown>(collectionName: string): Prom
 
 export const fetchDocument = async <T = unknown>(collectionName: string, documentId: string): Promise<T> => {
     const response = await fetch(`/api/${collectionName}/${documentId}`);
-    return await response.json();
+    
+    if (!response.ok) {
+        throw new Error(`Failed to fetch document: ${response.statusText}`);
+    }
+    
+    const text = await response.text();
+    if (!text) {
+        throw new Error('Empty response from server');
+    }
+    
+    try {
+        return JSON.parse(text);
+    } catch (error) {
+        console.error('Invalid JSON response:', text);
+        throw new Error('Invalid JSON response from server');
+    }
 }
 
 export const fetchFieldsOfDocument = async <T = unknown>(collectionName: string, documentId: string, fieldNames: string[]): Promise<T> => {
@@ -81,7 +96,9 @@ export const updateDocument = async <T = unknown>(collectionName: string, docume
     } else {
         const errorData = await response.json();
         // Error - throw to let the calling component handle it
-        throw new Error(errorData.message || 'Failed to update document');
+        const errorMessage = errorData.error || errorData.message || 'Failed to update document';
+        const details = errorData.details ? `\nDetails: ${JSON.stringify(errorData.details, null, 2)}` : '';
+        throw new Error(errorMessage + details);
     }
 }
 

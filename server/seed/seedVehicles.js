@@ -7,7 +7,6 @@
 
 require('dotenv').config({ path: '../../.env' });
 const generateApi = require('../database/api');
-const { v4: uuidv4 } = require('uuid');
 
 /**
  * Demo vehicles using the new schema:
@@ -115,10 +114,10 @@ async function seedVehicles() {
 
         for (const vehicleData of demoVehicles) {
             try {
-                // Add UUID
+                // Add UUID - using timestamp-based numeric UUID for consistency
                 const vehicleWithUuid = {
                     ...vehicleData,
-                    uuid: uuidv4()
+                    uuid: Date.now() + Math.floor(Math.random() * 1000)
                 };
 
                 // Create the vehicle

@@ -36,7 +36,9 @@ const RIDE_REQUEST_STATUSES = {
   RIDER_PICKED_UP_CONFIRMED: 600,
   EN_ROUTE_TO_DROPOFF: 610,
   RIDER_DROPPED_OFF_CONFIRMED: 700,
-  RIDE_COMPLETED_SUCCESSFULLY: 800
+  RIDE_COMPLETED_SUCCESSFULLY: 800,
+  ALL_RIDE_REQUEST_READY_TO_RIDE: 1000,
+  ALL_RIDE_REQUEST_CLOSED: 1100
 };
 
 /**
@@ -48,6 +50,51 @@ const getToday = () => new Date().toISOString().split('T')[0];
 const createDateTime = (hour, minute) => new Date(new Date().setHours(hour, minute, 0)).toISOString();
 
 const demoRides = [
+  // READY TO START - Assigned and confirmed, waiting for driver to start
+  {
+    status: 'READY_TO_START',
+    serviceUserUuid: 'placeholder',
+    serviceUserName: 'Emily Chen',
+    serviceUserRole: 'rider',
+    pickupAddress: '555 Broadway, Manhattan, NY 10012',
+    dropOffAddress: '777 Amsterdam Ave, Manhattan, NY 10025',
+    assignedVehicleUuid: null,
+    assignedDriverUuid: null,
+    roundTrip: false,
+    pickupRequestedTime: createDateTime(16, 30),
+    dropOffRequestedTime: createDateTime(17, 15),
+    rideStartedActualTime: null,
+    pickupActualTime: null,
+    dropOffActualTime: null,
+    rideCompleteRequestedTime: createDateTime(17, 15),
+    rideCompleteActualTime: null,
+    rideStatus: RIDE_STATUSES.RIDE_CONFIRMED,
+    rideRequestStatus: RIDE_REQUEST_STATUSES.ALL_RIDE_REQUEST_READY_TO_RIDE,
+    purpose: 'Physical Therapy Appointment',
+    notes: 'Driver assigned and ride confirmed. Ready to start when driver clicks "Start Ride".'
+  },
+  {
+    status: 'READY_TO_START',
+    serviceUserUuid: 'placeholder',
+    serviceUserName: 'Robert Taylor',
+    serviceUserRole: 'rider',
+    pickupAddress: '888 Park Ave, Manhattan, NY 10075',
+    dropOffAddress: '999 5th Ave, Manhattan, NY 10021',
+    assignedVehicleUuid: null,
+    assignedDriverUuid: null,
+    roundTrip: false,
+    pickupRequestedTime: createDateTime(18, 0),
+    dropOffRequestedTime: createDateTime(18, 45),
+    rideStartedActualTime: null,
+    pickupActualTime: null,
+    dropOffActualTime: null,
+    rideCompleteRequestedTime: createDateTime(18, 45),
+    rideCompleteActualTime: null,
+    rideStatus: RIDE_STATUSES.RIDE_CONFIRMED,
+    rideRequestStatus: RIDE_REQUEST_STATUSES.ALL_RIDE_REQUEST_READY_TO_RIDE,
+    purpose: 'Grocery Shopping',
+    notes: 'Driver assigned. Wheelchair accessible vehicle required.'
+  },
   // ACTIVE RIDES - Currently in progress
   {
     status: 'ACTIVE',
@@ -308,7 +355,7 @@ async function seedRides() {
                 // Create ride request with proper rider array structure
                 const rideWithUuid = {
                     ...rideData,
-                    uuid: Date.now() + Math.random() * 10000,
+                    uuid: Date.now() + Math.floor(Math.random() * 10000),
                     serviceUserUuid: actualUserUuid, // Use actual UUID from database
                     assignedDriverUuid: assignedDriverUuid, // Assign actual driver UUID
                     // Transform serviceUser fields to rider array for UI compatibility

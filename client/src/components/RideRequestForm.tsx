@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { MapPin, User, Phone, Building2, Accessibility, AlertCircle } from "lucide-react";
+import { MapPin, User, Phone, Building2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { rideRequestFormSchema, type RideRequestFormData } from "@/schemas/validation";
@@ -29,7 +29,6 @@ export default function RideRequestForm({
     setShowBaseForm,
     setShowUserForm,
     caseManagerName,
-    caseManagerUsername
 }: RideRequestFormProps) {
     const [submitSuccess, setSubmitSuccess] = useState<boolean>(false);
     const [submitError, setSubmitError] = useState<string>('');
@@ -38,7 +37,7 @@ export default function RideRequestForm({
         register,
         handleSubmit,
         control,
-        setValue,
+        watch,
         formState: { errors, isSubmitting },
         reset
     } = useForm<RideRequestFormData>({
@@ -56,10 +55,7 @@ export default function RideRequestForm({
             pickupRequestedDate: '',
             pickupRequestedTime: '',
             estimatedWaitTime: '',
-            walkerAccessible: false,
-            wheelchairAccessible: false,
-            serviceAnimalFriendly: false,
-            oxygenTankAccessible: false,
+            accessibilityFeatures: '',
             purposeOfTrip: '',
             notesComments: ''
         }
@@ -80,28 +76,21 @@ export default function RideRequestForm({
                 pickupRequestedDate: '',
                 pickupRequestedTime: '',
                 estimatedWaitTime: '',
-                walkerAccessible: false,
-                wheelchairAccessible: false,
-                serviceAnimalFriendly: false,
-                oxygenTankAccessible: false,
+                accessibilityFeatures: '',
                 purposeOfTrip: '',
                 notesComments: ''
             }, { keepDefaultValues: false });
         }
     }, [selectedUser, caseManagerName, reset]);
 
+    // Watch roundtrip checkbox to enable/disable wait time field
+    const isRoundTrip = watch('roundtrip');
+
     const onSubmit = async (data: RideRequestFormData) => {
         setSubmitError('');
         setSubmitSuccess(false);
 
         try {
-            // Build accessibility features string
-            const accessibilityFeatures = [];
-            if (data.walkerAccessible) accessibilityFeatures.push('Walker Accessible');
-            if (data.wheelchairAccessible) accessibilityFeatures.push('Wheelchair Accessible');
-            if (data.serviceAnimalFriendly) accessibilityFeatures.push('Service Animal Friendly');
-            if (data.oxygenTankAccessible) accessibilityFeatures.push('Oxygen Tank/Medical Device Accessible');
-
             const rideRequestData = {
                 serviceUserUuid: selectedUser?.uuid || '',
                 serviceUserRole: 'rider',
@@ -120,7 +109,7 @@ export default function RideRequestForm({
                 rideRequestStatus: 100,
                 notes: `Case Manager: ${data.caseManagerFullName} (${data.caseManagerAgency}, ${data.caseManagerPhone}). ` +
                        `Rider Phone: ${data.riderMobilePhone}. ` +
-                       `Accessibility: ${accessibilityFeatures.join(', ') || 'None'}. ` +
+                       `Accessibility: ${data.accessibilityFeatures || 'None'}. ` +
                        `Wait time: ${data.estimatedWaitTime || 'Not specified'}. ` +
                        `${data.notesComments || ''}`
             };
@@ -195,6 +184,9 @@ export default function RideRequestForm({
 
                 <form key={selectedUser?.uuid} onSubmit={handleSubmit(onSubmit)} className="space-y-8">
                     {/* Case Manager Section */}
+                    {/* TODO: Clarify business logic - Should case manager info be optional when rider calls directly?
+                        Currently creates ride with case manager info in notes, but doesn't validate if case manager
+                        exists in system or create a system user account. Need chargeback process clarification. */}
                     <div className="space-y-4">
                         <div className="flex items-center gap-2">
                             <Building2 className="h-5 w-5 text-primary" />
@@ -311,6 +303,9 @@ export default function RideRequestForm({
                         <Separator />
                         
                         <div className="space-y-4">
+                            {/* TODO: Add address validation/autocomplete (Google Places API, Mapbox, etc.)
+                                to prevent invalid addresses. Also need edit capability for dispatchers/case managers
+                                to correct addresses after submission. */}
                             <div className="space-y-2">
                                 <Label htmlFor="pickupLocation">
                                     Pickup Location <span className="text-destructive">*</span>
@@ -342,9 +337,16 @@ export default function RideRequestForm({
                             </div>
 
                             <div className="flex items-center space-x-2">
-                                <Checkbox
-                                    id="roundtrip"
-                                    {...register('roundtrip')}
+                                <Controller
+                                    name="roundtrip"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Checkbox
+                                            id="roundtrip"
+                                            checked={field.value}
+                                            onCheckedChange={field.onChange}
+                                        />
+                                    )}
                                 />
                                 <Label htmlFor="roundtrip" className="cursor-pointer">
                                     Round trip
@@ -382,69 +384,37 @@ export default function RideRequestForm({
                                     )}
                                 </div>
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="estimatedWaitTime">
-                                        Estimated Wait Time
-                                    </Label>
-                                    <Input
-                                        id="estimatedWaitTime"
-                                        {...register('estimatedWaitTime')}
-                                        placeholder="e.g., 15 minutes"
-                                    />
-                                </div>
+                                {isRoundTrip && (
+                                    <div className="space-y-2">
+                                        <Label htmlFor="estimatedWaitTime">
+                                            Estimated Wait Time
+                                        </Label>
+                                        <Input
+                                            id="estimatedWaitTime"
+                                            {...register('estimatedWaitTime')}
+                                            placeholder="e.g., 15 minutes"
+                                        />
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
 
                     {/* Accessibility Section */}
                     <div className="space-y-4">
-                        <div className="flex items-center gap-2">
-                            <Accessibility className="h-5 w-5 text-primary" />
-                            <h3 className="text-lg font-semibold">Additional Ride Information</h3>
-                        </div>
-                        <Separator />
-                        
-                        <p className="text-sm font-medium text-muted-foreground">Accessibility Feature Type</p>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="flex items-center space-x-2">
-                                <Checkbox
-                                    id="walkerAccessible"
-                                    {...register('walkerAccessible')}
-                                />
-                                <Label htmlFor="walkerAccessible" className="cursor-pointer">
-                                    Walker Accessible
-                                </Label>
-                            </div>
-
-                            <div className="flex items-center space-x-2">
-                                <Checkbox
-                                    id="wheelchairAccessible"
-                                    {...register('wheelchairAccessible')}
-                                />
-                                <Label htmlFor="wheelchairAccessible" className="cursor-pointer">
-                                    Wheelchair Accessible
-                                </Label>
-                            </div>
-
-                            <div className="flex items-center space-x-2">
-                                <Checkbox
-                                    id="serviceAnimalFriendly"
-                                    {...register('serviceAnimalFriendly')}
-                                />
-                                <Label htmlFor="serviceAnimalFriendly" className="cursor-pointer">
-                                    Service Animal Friendly
-                                </Label>
-                            </div>
-
-                            <div className="flex items-center space-x-2">
-                                <Checkbox
-                                    id="oxygenTankAccessible"
-                                    {...register('oxygenTankAccessible')}
-                                />
-                                <Label htmlFor="oxygenTankAccessible" className="cursor-pointer">
-                                    Oxygen Tank/Medical Device Accessible
-                                </Label>
-                            </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="accessibilityFeatures">
+                                Accessibility Feature Type
+                            </Label>
+                            <p className="text-sm text-muted-foreground">
+                                Let us know about any accessibility needs (e.g., wheelchair accessible, walker, service animal, oxygen tank/medical device).
+                            </p>
+                            <Textarea
+                                id="accessibilityFeatures"
+                                {...register('accessibilityFeatures')}
+                                placeholder="Ex. I need a wheelchair accessible vehicle. Or I will have a service animal with me."
+                                rows={4}
+                            />
                         </div>
                     </div>
 
