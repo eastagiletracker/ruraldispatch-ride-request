@@ -24,7 +24,11 @@
     "seed:drivers": "node server/seed/seedDrivers.js",
     "seed:vehicles": "node server/seed/seedVehicles.js",
     "seed:rides": "node server/seed/seedRides.js",
-    "seed:reset": "node server/seed/reset.js"
+    "seed:reset": "node server/seed/reset.js",
+    "seed:prod": "NODE_ENV=production node server/seed/seed.js",
+    "seed:prod:reset": "NODE_ENV=production node server/seed/reset.js",
+    "seed:staging": "NODE_ENV=staging node server/seed/seed.js",
+    "seed:staging:reset": "NODE_ENV=staging node server/seed/reset.js"
   },
   "dependencies": {
     "@vonage/server-sdk": "^3.25.1",
