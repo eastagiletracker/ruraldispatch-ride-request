@@ -15,7 +15,6 @@ import CreateRideRequest from './pages/CreateRideRequest'
 import CaseManagerRideRequest from './pages/CaseManagerRideRequest'
 import Manager from './pages/Manager'
 import VehicleHome from "./pages/VehicleHome";
-import SMSConsent from "./pages/SMSConsent";
 import SMSOptOut from "./pages/SMSOptOut";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
@@ -56,7 +55,6 @@ function AppRoutes() {
       <Routes>
         {/* Public Routes - No authentication required */}
         <Route path="/sms" element={<><SMS /><Toaster /></>} />
-        <Route path="/sms-consent" element={<><SMSConsent /><Toaster /></>} />
         <Route path="/sms-opt-out" element={<><SMSOptOut /><Toaster /></>} />
         <Route path="/terms" element={<><Terms /><Toaster /></>} />
         <Route path="/privacy" element={<><Privacy /><Toaster /></>} />

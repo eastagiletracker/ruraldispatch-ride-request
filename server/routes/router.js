@@ -154,6 +154,15 @@ function createRouter(api)
                 ipAddress: ipAddress || req.ip
             });
 
+            // If newly given consent, send confirmation SMS (verbal/web).
+            if (consentGiven) {
+                try {
+                    await notificationService.sendSMS(phoneNumber, 'Rural Dispatch: You have been signed up for ride updates by text as you requested. Reply STOP to cancel, HELP for help. Msg&data rates may apply.');
+                } catch (e) {
+                    console.error('Failed to send confirmation SMS:', e.message);
+                }
+            }
+
             res.json({ 
                 success: true, 
                 message: 'SMS consent updated successfully',

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -6,7 +6,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { User, Phone, Calendar, Clock, Hash, Shield, Activity, Briefcase, Building2, Heart, Home, DollarSign, Flag } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
+import { User, Phone, Calendar, Clock, Hash, Shield, Activity, Briefcase, Building2, Heart, Home, DollarSign, Flag, MessageSquarePlus } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 
@@ -23,7 +25,78 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
   user,
   type,
 }) => {
-  if (!user) return null;
+  // Local copy so we can optimistically update consent without full reload
+  const [currentUser, setCurrentUser] = useState<any>(user);
+
+  useEffect(() => {
+    setCurrentUser(user);
+  }, [user]);
+
+  if (!currentUser) return null;
+
+  // Record verbal SMS consent (staff action)
+  const handleRecordVerbalConsent = async () => {
+    // Prefer explicit rider phone, fallback to mobilePhone (for drivers or legacy records)
+    let phone: string | undefined = currentUser.phone || currentUser.mobilePhone;
+
+    // Allow staff to manually enter if missing
+    if (!phone) {
+      const entered = window.prompt('Enter the user phone number (E.164 like +18669017244 or digits):');
+      if (!entered) {
+        toast.error('Cannot record consent', { description: 'Phone number required.' });
+        return;
+      }
+      phone = entered.trim();
+    }
+
+    // Basic normalization / validation
+    if (!/^\+?\d{10,15}$/.test(phone)) {
+      toast.error('Invalid phone number', { description: 'Use digits, optionally starting with +, 10-15 total.' });
+      return;
+    }
+
+    // Ensure phone starts with + for consistency if country code implied (assume US if 10 digits)
+    if (!phone.startsWith('+')) {
+      if (phone.length === 10) {
+        phone = '+1' + phone; // naive US default; adapt as needed
+      } else {
+        phone = '+' + phone; // fallback prefix
+      }
+    }
+
+    try {
+      const resp = await fetch('/api/users/sms-consent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phoneNumber: phone,
+          consentGiven: true,
+          timestamp: new Date().toISOString(),
+          ipAddress: 'verbal' // flag for audit trail
+        })
+      });
+      if (resp.ok) {
+        const now = new Date().toISOString();
+        toast.success('Verbal consent recorded', { description: 'Confirmation SMS sent to user.' });
+        // Optimistically update local state
+        setCurrentUser((prev: any) => ({
+          ...prev,
+          phone: prev.phone || phone, // persist phone if it was manually entered
+            smsConsent: {
+              given: true,
+              timestamp: now,
+              ipAddress: 'verbal'
+            }
+        }));
+      } else {
+        const data = await resp.json().catch(() => ({}));
+        throw new Error(data.message || 'Server rejected consent request');
+      }
+    } catch (e: any) {
+      console.error('Verbal consent error', e);
+      toast.error('Failed to record consent', { description: e.message });
+    }
+  };
 
   const formatDate = (date: string | Date) => {
     return new Date(date).toLocaleDateString('en-US', {
@@ -67,7 +140,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
             {type === 'rider' ? 'Rider' : 'Driver'} Profile
           </DialogTitle>
           <DialogDescription>
-            Complete information for {user.fullName || user.name || 'User'}
+            Complete information for {currentUser.fullName || currentUser.name || 'User'}
           </DialogDescription>
         </DialogHeader>
 
@@ -84,29 +157,29 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                 <User className="h-5 w-5 text-muted-foreground mt-0.5" />
                 <div className="flex-1">
                   <p className="text-sm font-medium text-muted-foreground">Full Name</p>
-                  <p className="text-base font-semibold">{user.fullName || user.name || 'N/A'}</p>
+                  <p className="text-base font-semibold">{currentUser.fullName || currentUser.name || 'N/A'}</p>
                 </div>
               </div>
 
               {/* UUID */}
-              {user.uuid && (
+              {currentUser.uuid && (
                 <div className="flex items-start gap-3">
                   <Hash className="h-5 w-5 text-muted-foreground mt-0.5" />
                   <div className="flex-1">
                     <p className="text-sm font-medium text-muted-foreground">User ID</p>
-                    <p className="text-xs font-mono text-muted-foreground break-all">{user.uuid}</p>
+                    <p className="text-xs font-mono text-muted-foreground break-all">{currentUser.uuid}</p>
                   </div>
                 </div>
               )}
 
               {/* Date of Birth (Riders only) */}
-              {type === 'rider' && user.dob && (
+              {type === 'rider' && currentUser.dob && (
                 <div className="flex items-start gap-3">
                   <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
                   <div className="flex-1">
                     <p className="text-sm font-medium text-muted-foreground">Date of Birth</p>
-                    <p className="text-base font-semibold">{formatDate(user.dob)}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">Age: {formatAge(user.dob)} years</p>
+                    <p className="text-base font-semibold">{formatDate(currentUser.dob)}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Age: {formatAge(currentUser.dob)} years</p>
                   </div>
                 </div>
               )}
@@ -139,21 +212,50 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                 <div className="flex-1">
                   <p className="text-sm font-medium text-muted-foreground">Phone Number</p>
                   <p className="text-base font-semibold">
-                    {type === 'driver' ? (user.mobilePhone || user.phone || 'N/A') : (user.phone || 'N/A')}
+                    {type === 'driver' ? (currentUser.mobilePhone || currentUser.phone || 'N/A') : (currentUser.phone || 'N/A')}
                   </p>
                 </div>
               </div>
 
               {/* Fax Phone (Drivers/Service Providers only) */}
-              {type === 'driver' && user.faxPhone && (
+              {type === 'driver' && currentUser.faxPhone && (
                 <div className="flex items-start gap-3">
                   <Phone className="h-5 w-5 text-muted-foreground mt-0.5" />
                   <div className="flex-1">
                     <p className="text-sm font-medium text-muted-foreground">Fax Phone</p>
-                    <p className="text-base font-semibold">{user.faxPhone}</p>
+                    <p className="text-base font-semibold">{currentUser.faxPhone}</p>
                   </div>
                 </div>
               )}
+
+              {/* SMS Consent Status & Verbal Opt-In */}
+              <div className="flex items-start gap-3 pt-2">
+                <MessageSquarePlus className="h-5 w-5 text-muted-foreground mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-muted-foreground">SMS Consent</p>
+                  {currentUser.smsConsent?.given ? (
+                    <div className="flex flex-col gap-1">
+                      <Badge className="bg-green-600 hover:bg-green-700 w-fit">Opted-In</Badge>
+                      {currentUser.smsConsent?.timestamp && (
+                        <p className="text-xs text-muted-foreground">Since: {new Date(currentUser.smsConsent.timestamp).toLocaleString()}</p>
+                      )}
+                      {currentUser.smsConsent?.ipAddress === 'verbal' && (
+                        <p className="text-xs text-muted-foreground">Method: Verbal</p>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <Badge variant="destructive" className="w-fit">Not Opted-In</Badge>
+                      <p className="text-xs text-muted-foreground max-w-sm">User has not provided SMS consent. Obtain explicit verbal permission before enabling.</p>
+                      <Button size="sm" onClick={handleRecordVerbalConsent}>
+                        <MessageSquarePlus className="h-4 w-4 mr-2" />
+                        Record Verbal Consent
+                      </Button>
+                      <p className="text-[10px] text-muted-foreground leading-snug">Script: “Our service sends ride updates by text message. Do you agree to receive text messages about your rides from Rural Dispatch? Reply STOP to cancel.”</p>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
 
@@ -168,47 +270,47 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                 </h3>
                 <div className="space-y-4 pl-6">
                   {/* Title */}
-                  {user.title && (
+                  {currentUser.title && (
                     <div className="flex items-start gap-3">
                       <Briefcase className="h-5 w-5 text-muted-foreground mt-0.5" />
                       <div className="flex-1">
                         <p className="text-sm font-medium text-muted-foreground">Title</p>
-                        <p className="text-base font-semibold">{user.title}</p>
+                        <p className="text-base font-semibold">{currentUser.title}</p>
                       </div>
                     </div>
                   )}
 
                   {/* Organization */}
-                  {user.organization && (
+                  {currentUser.organization && (
                     <div className="flex items-start gap-3">
                       <Building2 className="h-5 w-5 text-muted-foreground mt-0.5" />
                       <div className="flex-1">
                         <p className="text-sm font-medium text-muted-foreground">Organization</p>
-                        <p className="text-base font-semibold">{user.organization}</p>
+                        <p className="text-base font-semibold">{currentUser.organization}</p>
                       </div>
                     </div>
                   )}
 
                   {/* Service Provider Role */}
-                  {user.serviceProviderRole && (
+                  {currentUser.serviceProviderRole && (
                     <div className="flex items-start gap-3">
                       <Shield className="h-5 w-5 text-muted-foreground mt-0.5" />
                       <div className="flex-1">
                         <p className="text-sm font-medium text-muted-foreground">Service Provider Role</p>
                         <Badge variant="default" className="mt-1">
-                          {user.serviceProviderRole}
+                          {currentUser.serviceProviderRole}
                         </Badge>
                       </div>
                     </div>
                   )}
 
                   {/* Specializations */}
-                  {user.specializations && (
+                  {currentUser.specializations && (
                     <div className="flex items-start gap-3">
                       <Activity className="h-5 w-5 text-muted-foreground mt-0.5" />
                       <div className="flex-1">
                         <p className="text-sm font-medium text-muted-foreground">Specializations</p>
-                        <p className="text-base font-semibold">{user.specializations}</p>
+                        <p className="text-base font-semibold">{currentUser.specializations}</p>
                       </div>
                     </div>
                   )}
@@ -228,61 +330,61 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                 </h3>
                 <div className="space-y-4 pl-6">
                   {/* Race */}
-                  {user.race && (
+                  {currentUser.race && (
                     <div className="flex items-start gap-3">
                       <User className="h-5 w-5 text-muted-foreground mt-0.5" />
                       <div className="flex-1">
                         <p className="text-sm font-medium text-muted-foreground">Race</p>
-                        <p className="text-base font-semibold">{capitalizeFirst(user.race)}</p>
+                        <p className="text-base font-semibold">{capitalizeFirst(currentUser.race)}</p>
                       </div>
                     </div>
                   )}
 
                   {/* Marital Status */}
-                  {user.maritalStatus && (
+                  {currentUser.maritalStatus && (
                     <div className="flex items-start gap-3">
                       <Heart className="h-5 w-5 text-muted-foreground mt-0.5" />
                       <div className="flex-1">
                         <p className="text-sm font-medium text-muted-foreground">Marital Status</p>
-                        <p className="text-base font-semibold">{capitalizeFirst(user.maritalStatus)}</p>
+                        <p className="text-base font-semibold">{capitalizeFirst(currentUser.maritalStatus)}</p>
                       </div>
                     </div>
                   )}
 
                   {/* Veteran Status */}
-                  {user.veteranStatus && (
+                  {currentUser.veteranStatus && (
                     <div className="flex items-start gap-3">
                       <Flag className="h-5 w-5 text-muted-foreground mt-0.5" />
                       <div className="flex-1">
                         <p className="text-sm font-medium text-muted-foreground">Veteran Status</p>
                         <Badge variant={user.veteranStatus === 'veteran' ? 'default' : 'secondary'}>
-                          {capitalizeFirst(user.veteranStatus)}
+                          {capitalizeFirst(currentUser.veteranStatus)}
                         </Badge>
                       </div>
                     </div>
                   )}
 
                   {/* Disability Status */}
-                  {user.disabilityStatus && (
+                  {currentUser.disabilityStatus && (
                     <div className="flex items-start gap-3">
                       <Activity className="h-5 w-5 text-muted-foreground mt-0.5" />
                       <div className="flex-1">
                         <p className="text-sm font-medium text-muted-foreground">Disability Status</p>
                         <Badge variant={user.disabilityStatus === 'yes' ? 'default' : 'secondary'}>
-                          {capitalizeFirst(user.disabilityStatus)}
+                          {capitalizeFirst(currentUser.disabilityStatus)}
                         </Badge>
                       </div>
                     </div>
                   )}
 
                   {/* Service User Roles */}
-                  {user.serviceUserRole && user.serviceUserRole.length > 0 && (
+                  {currentUser.serviceUserRole && currentUser.serviceUserRole.length > 0 && (
                     <div className="flex items-start gap-3">
                       <Shield className="h-5 w-5 text-muted-foreground mt-0.5" />
                       <div className="flex-1">
                         <p className="text-sm font-medium text-muted-foreground mb-2">Service User Roles</p>
                         <div className="flex flex-wrap gap-2">
-                          {user.serviceUserRole.map((role: string, index: number) => (
+                          {currentUser.serviceUserRole.map((role: string, index: number) => (
                             <Badge key={index} variant="outline">
                               {capitalizeFirst(role)}
                             </Badge>
@@ -304,23 +406,23 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                 </h3>
                 <div className="space-y-4 pl-6">
                   {/* Current Residence */}
-                  {user.residence?.current && (
+                  {currentUser.residence?.current && (
                     <div className="flex items-start gap-3">
                       <Home className="h-5 w-5 text-muted-foreground mt-0.5" />
                       <div className="flex-1">
                         <p className="text-sm font-medium text-muted-foreground">Current Residence</p>
-                        <p className="text-base font-semibold">{user.residence.current}</p>
+                        <p className="text-base font-semibold">{currentUser.residence.current}</p>
                       </div>
                     </div>
                   )}
 
                   {/* Last Residence */}
-                  {user.residence?.last && (
+                  {currentUser.residence?.last && (
                     <div className="flex items-start gap-3">
                       <Home className="h-5 w-5 text-muted-foreground mt-0.5" />
                       <div className="flex-1">
                         <p className="text-sm font-medium text-muted-foreground">Last Residence</p>
-                        <p className="text-base font-semibold">{user.residence.last}</p>
+                        <p className="text-base font-semibold">{currentUser.residence.last}</p>
                       </div>
                     </div>
                   )}
@@ -337,23 +439,23 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                 </h3>
                 <div className="space-y-4 pl-6">
                   {/* Current Income */}
-                  {user.income?.current && (
+                  {currentUser.income?.current && (
                     <div className="flex items-start gap-3">
                       <DollarSign className="h-5 w-5 text-muted-foreground mt-0.5" />
                       <div className="flex-1">
                         <p className="text-sm font-medium text-muted-foreground">Current Income</p>
-                        <p className="text-base font-semibold">{user.income.current}</p>
+                        <p className="text-base font-semibold">{currentUser.income.current}</p>
                       </div>
                     </div>
                   )}
 
                   {/* Last Income */}
-                  {user.income?.last && (
+                  {currentUser.income?.last && (
                     <div className="flex items-start gap-3">
                       <DollarSign className="h-5 w-5 text-muted-foreground mt-0.5" />
                       <div className="flex-1">
                         <p className="text-sm font-medium text-muted-foreground">Last Income</p>
-                        <p className="text-base font-semibold">{user.income.last}</p>
+                        <p className="text-base font-semibold">{currentUser.income.last}</p>
                       </div>
                     </div>
                   )}

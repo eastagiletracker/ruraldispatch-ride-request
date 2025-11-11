@@ -432,56 +432,6 @@ export default function UserForm({ setShowBaseForm, setShowUserForm }: FormCompo
 
                     <Separator />
 
-                    {/* SMS Consent Section */}
-                    <div className="space-y-4">
-                        <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6">
-                            <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                                📱 SMS Text Message Notifications (Optional)
-                            </h3>
-                            
-                            <p className="text-sm text-gray-700 mb-4">
-                                Would you like to receive text message updates about your rides? We'll send you pickup times, 
-                                driver information, and ride status updates.
-                            </p>
-
-                            <div className="bg-white border border-blue-300 rounded-lg p-4 mb-4">
-                                <label className="flex items-start space-x-3 cursor-pointer">
-                                    <Checkbox
-                                        id="sms-consent"
-                                        checked={smsConsent}
-                                        onCheckedChange={(checked) => setSmsConsent(checked as boolean)}
-                                        className="mt-1"
-                                    />
-                                    <div className="flex-1">
-                                        <Label htmlFor="sms-consent" className="cursor-pointer font-semibold text-gray-900">
-                                            Yes, I consent to receive SMS text messages from Rural Dispatch
-                                        </Label>
-                                        <p className="text-xs text-gray-600 mt-2">
-                                            By checking this box, I agree to receive automated text messages about my scheduled 
-                                            transportation at the phone number provided above. I understand that:
-                                        </p>
-                                        <ul className="text-xs text-gray-600 mt-2 ml-4 space-y-1">
-                                            <li>• Messages are only about my rides (pickup times, driver info, confirmations)</li>
-                                            <li>• Message & data rates may apply</li>
-                                            <li>• I can reply STOP to cancel at any time</li>
-                                            <li>• I can reply HELP for assistance</li>
-                                            <li>• <strong>SMS consent is NOT required to use Rural Dispatch services</strong></li>
-                                        </ul>
-                                    </div>
-                                </label>
-                            </div>
-
-                            <div className="flex items-center gap-2 text-xs text-gray-600">
-                                <span>ℹ️</span>
-                                <p>
-                                    Riders can confirm transportation by phone instead. 
-                                    <a href="/sms" target="_blank" className="text-blue-600 hover:underline ml-1">
-                                        Learn more about our SMS policy
-                                    </a>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
                 </form>
             </CardContent>
 
