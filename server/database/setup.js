@@ -4,16 +4,21 @@ const { MongoClient } = require('mongodb');
 /**
  * Get the database name based on NODE_ENV
  * - development: dev-ruraldispatch
+ * - staging: staging-ruraldispatch
  * - production: prod-ruraldispatch
  */
 function getDatabaseName() {
     const env = process.env.NODE_ENV || 'development';
 
-    if (env === 'production') {
-        return process.env.MONGODB_DB_PROD || 'prod-ruraldispatch';
+    switch (env) {
+        case 'production':
+            return process.env.MONGODB_DB_PROD || 'prod-ruraldispatch';
+        case 'staging':
+            return process.env.MONGODB_DB_STAGING || 'staging-ruraldispatch';
+        case 'development':
+        default:
+            return process.env.MONGODB_DB_DEV || 'dev-ruraldispatch';
     }
-
-    return process.env.MONGODB_DB_DEV || 'dev-ruraldispatch';
 }
 
 async function getDatabaseConnectionAsync(dbUri)
