@@ -68,8 +68,8 @@ export default function AssignDriver({ selectedRideRequestId, cancelFn }: Assign
         setSubmitting(true);
         try {
             await updateDocument("riderequests", selectedRideRequestId, {
-                driverUuid: selectedDriver.uuid.toString(),
-                assignedVehicleUuid: selectedVehicle.uuid.toString(),
+                assignedDriverUuid: parseInt(selectedDriver.uuid.toString()),
+                assignedVehicleUuid: parseInt(selectedVehicle.uuid.toString()),
                 rideRequestStatus: 400
             });
 

@@ -1,4 +1,6 @@
-import { useState, ChangeEvent, FormEvent } from 'react';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { createDocument } from "../utils/database";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,107 +9,44 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { toast } from "sonner";
-import type { Vehicle, FormErrors } from "@/types";
-
-const generateUUID = (): string => {
-    return 'xxxxxxxxx'.replace(/[xy]/g, function(c) {
-        const r = Math.random() * 16 | 0;
-        const v = c === 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
-    });
-};
+import { vehicleFormSchema, type VehicleFormData } from "@/schemas/validation";
 
 export default function CreateVehicle() {
-    const [formData, setFormData] = useState<Vehicle>({
-        uuid: generateUUID(),
-        displayName: '',
-        fleetId: '',
-        capacity: '',
-        serviceArea: '',
-        accessibilityFeatures: ''
-    });
-
-    const [errors, setErrors] = useState<FormErrors<Vehicle>>({});
-    const [submitting, setSubmitting] = useState<boolean>(false);
     const [submitSuccess, setSubmitSuccess] = useState<boolean>(false);
     const [submitError, setSubmitError] = useState<string>('');
 
-    const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
-
-        // Clear error when user starts typing
-        if (errors[name as keyof Vehicle]) {
-            setErrors(prev => ({
-                ...prev,
-                [name]: ''
-            }));
+    const {
+        register,
+        handleSubmit,
+        formState: { errors, isSubmitting },
+        reset
+    } = useForm<VehicleFormData>({
+        resolver: zodResolver(vehicleFormSchema),
+        defaultValues: {
+            displayName: '',
+            fleetId: '',
+            capacity: 0,
+            serviceArea: '',
+            accessibilityFeatures: ''
         }
-    };
+    });
 
-    const validateForm = (): boolean => {
-        const newErrors: FormErrors<Vehicle> = {};
-
-        if (!formData.displayName.trim()) {
-            newErrors.displayName = 'Display name is required';
-        }
-
-        if (!formData.fleetId.trim()) {
-            newErrors.fleetId = 'Fleet ID is required';
-        }
-
-        if (!formData.capacity.toString().trim()) {
-            newErrors.capacity = 'Capacity is required';
-        } else if (isNaN(Number(formData.capacity)) || parseInt(formData.capacity.toString()) <= 0) {
-            newErrors.capacity = 'Capacity must be a positive number';
-        }
-
-        if (!formData.serviceArea.trim()) {
-            newErrors.serviceArea = 'Service area is required';
-        }
-
-        if (!formData.accessibilityFeatures.trim()) {
-            newErrors.accessibilityFeatures = 'Accessibility features are required';
-        }
-
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
-
-    const handleSubmit = async (e: FormEvent<HTMLButtonElement>) => {
-        e.preventDefault();
-
-        if (!validateForm()) {
-            toast.error('Please fill in all required fields');
-            return;
-        }
-
-        setSubmitting(true);
+    const onSubmit = async (data: VehicleFormData) => {
         setSubmitError('');
         setSubmitSuccess(false);
         
         try {
-            const response = await createDocument("vehicles", formData);
+            // Backend will generate UUID
+            const response = await createDocument("vehicles", data);
 
             if (response.ok) {
                 setSubmitSuccess(true);
                 toast.success('Vehicle created successfully!', {
-                    description: `${formData.displayName} has been added to the fleet.`
+                    description: `${data.displayName} has been added to the fleet.`
                 });
 
                 // Reset form
-                setFormData({
-                    uuid: generateUUID(),
-                    displayName: '',
-                    fleetId: '',
-                    capacity: '',
-                    serviceArea: '',
-                    accessibilityFeatures: ''
-                });
-                setErrors({});
+                reset();
             } else {
                 const errorData = await response.json();
                 const errorMessage = errorData.message || 'Please try again.';
@@ -123,21 +62,11 @@ export default function CreateVehicle() {
             toast.error('Error submitting form', {
                 description: errorMessage
             });
-        } finally {
-            setSubmitting(false);
         }
     };
 
     const handleReset = () => {
-        setFormData({
-            uuid: generateUUID(),
-            displayName: '',
-            fleetId: '',
-            capacity: '',
-            serviceArea: '',
-            accessibilityFeatures: ''
-        });
-        setErrors({});
+        reset();
         setSubmitSuccess(false);
         setSubmitError('');
     };
@@ -170,23 +99,7 @@ export default function CreateVehicle() {
                     </Alert>
                 )}
 
-                <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
-                    {/* UUID Field */}
-                    <div className="space-y-2">
-                        <Label htmlFor="uuid">
-                            Vehicle UUID (Auto-generated)
-                        </Label>
-                        <Input
-                            id="uuid"
-                            name="uuid"
-                            value={formData.uuid}
-                            readOnly
-                            disabled
-                            className="bg-muted cursor-not-allowed"
-                        />
-                        <p className="text-xs text-muted-foreground">This UUID is automatically generated</p>
-                    </div>
-
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" id="vehicle-form">
                     {/* Display Name */}
                     <div className="space-y-2">
                         <Label htmlFor="displayName">
@@ -194,14 +107,12 @@ export default function CreateVehicle() {
                         </Label>
                         <Input
                             id="displayName"
-                            name="displayName"
-                            value={formData.displayName}
-                            onChange={handleInputChange}
+                            {...register('displayName')}
                             placeholder="e.g., Van #1, Blue Sedan"
                             className={errors.displayName ? 'border-destructive' : ''}
                         />
                         {errors.displayName && (
-                            <p className="text-sm text-destructive">{errors.displayName}</p>
+                            <p className="text-sm text-destructive">{errors.displayName.message}</p>
                         )}
                     </div>
 
@@ -212,14 +123,12 @@ export default function CreateVehicle() {
                         </Label>
                         <Input
                             id="fleetId"
-                            name="fleetId"
-                            value={formData.fleetId}
-                            onChange={handleInputChange}
+                            {...register('fleetId')}
                             placeholder="Enter fleet identification number"
                             className={errors.fleetId ? 'border-destructive' : ''}
                         />
                         {errors.fleetId && (
-                            <p className="text-sm text-destructive">{errors.fleetId}</p>
+                            <p className="text-sm text-destructive">{errors.fleetId.message}</p>
                         )}
                     </div>
 
@@ -230,16 +139,14 @@ export default function CreateVehicle() {
                         </Label>
                         <Input
                             id="capacity"
-                            name="capacity"
                             type="number"
                             min="1"
-                            value={formData.capacity}
-                            onChange={handleInputChange}
+                            {...register('capacity', { valueAsNumber: true })}
                             placeholder="Number of passengers"
                             className={errors.capacity ? 'border-destructive' : ''}
                         />
                         {errors.capacity && (
-                            <p className="text-sm text-destructive">{errors.capacity}</p>
+                            <p className="text-sm text-destructive">{String(errors.capacity.message)}</p>
                         )}
                         <p className="text-xs text-muted-foreground">Maximum number of passengers</p>
                     </div>
@@ -251,14 +158,12 @@ export default function CreateVehicle() {
                         </Label>
                         <Input
                             id="serviceArea"
-                            name="serviceArea"
-                            value={formData.serviceArea}
-                            onChange={handleInputChange}
+                            {...register('serviceArea')}
                             placeholder="e.g., Downtown, North County"
                             className={errors.serviceArea ? 'border-destructive' : ''}
                         />
                         {errors.serviceArea && (
-                            <p className="text-sm text-destructive">{errors.serviceArea}</p>
+                            <p className="text-sm text-destructive">{errors.serviceArea.message}</p>
                         )}
                     </div>
 
@@ -269,14 +174,12 @@ export default function CreateVehicle() {
                         </Label>
                         <Input
                             id="accessibilityFeatures"
-                            name="accessibilityFeatures"
-                            value={formData.accessibilityFeatures}
-                            onChange={handleInputChange}
+                            {...register('accessibilityFeatures')}
                             placeholder="e.g., Wheelchair accessible, Walker storage"
                             className={errors.accessibilityFeatures ? 'border-destructive' : ''}
                         />
                         {errors.accessibilityFeatures && (
-                            <p className="text-sm text-destructive">{errors.accessibilityFeatures}</p>
+                            <p className="text-sm text-destructive">{errors.accessibilityFeatures.message}</p>
                         )}
                         <p className="text-xs text-muted-foreground">
                             List special accessibility features and equipment
@@ -290,16 +193,16 @@ export default function CreateVehicle() {
                     type="button"
                     variant="outline"
                     onClick={handleReset}
-                    disabled={submitting}
+                    disabled={isSubmitting}
                 >
                     Reset Form
                 </Button>
                 <Button
                     type="submit"
-                    onClick={handleSubmit}
-                    disabled={submitting}
+                    form="vehicle-form"
+                    disabled={isSubmitting}
                 >
-                    {submitting ? 'Creating...' : 'Create Vehicle'}
+                    {isSubmitting ? 'Creating...' : 'Create Vehicle'}
                 </Button>
             </CardFooter>
         </Card>

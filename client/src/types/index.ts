@@ -1,37 +1,39 @@
-// Barrel file - re-exports all types from individual files
-// This maintains backward compatibility with existing imports from '@/types'
+// Barrel file - re-exports all types
+// Now uses shared Zod schemas for type inference
 
-// User types
+// Re-export types from shared schemas (Zod-inferred types)
 export type {
+  // User
   User,
+  UserFormData,
   RaceOption,
   MaritalStatusOption,
   VeteranStatusOption,
   DisabilityStatusOption,
-  ServiceUserRole
-} from './user';
-
-// Service Provider types
-export type {
+  ServiceUserRole,
+  
+  // Service Provider
   ServiceProvider,
+  ServiceProviderFormData,
   ServiceProviderRole,
   Specialization,
-  Organization
-} from './serviceProvider';
-
-// Vehicle types
-export type {
+  Organization,
+  
+  // Vehicle
   Vehicle,
-  AccessibilityNeed
-} from './vehicle';
-
-// Ride Request types
-export type {
+  VehicleFormData,
+  AccessibilityNeed,
+  
+  // Ride Request
   RideRequest,
-  RideRequestType
-} from './rideRequest';
+  RideRequestFormData,
+  RideRequestType,
+  
+  // Auth
+  SignInFormData
+} from '@shared/schemas';
 
-// Notification types
+// Keep non-schema types from original files
 export type {
   Notification,
   NotificationType,
@@ -42,7 +44,6 @@ export type {
   CloseSessionResponse
 } from './notification';
 
-// API types
 export type {
   ApiResponse,
   Document

@@ -1,18 +1,45 @@
 import type { User, ServiceProvider, Vehicle, Notification, NotificationStats, CloseSessionResponse } from '@/types';
 
 export const fetchTopUserMatches = async (searchTerm: string): Promise<User[]> => {
-    const matches = await fetch(`/api/users/fuzzy/${searchTerm}`);
-    return await matches.json();
+    try {
+        const matches = await fetch(`/api/users/fuzzy/${searchTerm}`);
+        if (!matches.ok) {
+            console.error('Failed to fetch user matches:', matches.statusText);
+            return [];
+        }
+        return await matches.json();
+    } catch (error) {
+        console.error('Error fetching user matches:', error);
+        return [];
+    }
 }
 
 export const fetchTopProviderMatches = async (searchTerm: string): Promise<ServiceProvider[]> => {
-    const matches = await fetch(`/api/providers/fuzzy/${searchTerm}`);
-    return await matches.json();
+    try {
+        const matches = await fetch(`/api/providers/fuzzy/${searchTerm}`);
+        if (!matches.ok) {
+            console.error('Failed to fetch provider matches:', matches.statusText);
+            return [];
+        }
+        return await matches.json();
+    } catch (error) {
+        console.error('Error fetching provider matches:', error);
+        return [];
+    }
 }
 
 export const fetchTopVehicleMatches = async (searchTerm: string): Promise<Vehicle[]> => {
-    const matches = await fetch(`/api/vehicles/fuzzy/${searchTerm}`);
-    return await matches.json();
+    try {
+        const matches = await fetch(`/api/vehicles/fuzzy/${searchTerm}`);
+        if (!matches.ok) {
+            console.error('Failed to fetch vehicle matches:', matches.statusText);
+            return [];
+        }
+        return await matches.json();
+    } catch (error) {
+        console.error('Error fetching vehicle matches:', error);
+        return [];
+    }
 }
 
 export const fetchCollection = async <T = unknown>(collectionName: string): Promise<T[]> => {

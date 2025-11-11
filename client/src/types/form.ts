@@ -1,6 +1,5 @@
-import type { User } from './user';
-import type { ServiceProvider } from './serviceProvider';
-import type { Vehicle } from './vehicle';
+// Import types from shared schemas
+import type { User, ServiceProvider, Vehicle, RideRequestFormData } from '@shared/schemas';
 
 // Form error types
 export type FormErrors<T> = {
@@ -15,22 +14,8 @@ export interface FormComponentProps {
   setShowUserForm: (show: boolean) => void;
 }
 
-// Ride Request Form specific types
-export interface RideRequestFormData {
-  riderName: string;
-  riderPickupBaseAddress: string;
-  rideRequestType: string;
-  accessibilityNeeds: string;
-  pickupSameAsBase: boolean;
-  pickupLocation: string;
-  dropoffLocation: string;
-  roundtrip: boolean;
-  estimatedWaitTime: string;
-  pickupRequestedDate: string;
-  pickupRequestedTime: string;
-  dropoffRequestedDate: string;
-  dropoffRequestedTime: string;
-}
+// Re-export RideRequestFormData from shared schemas
+export type { RideRequestFormData } from '@shared/schemas';
 
 export interface RideRequestFormErrors {
   riderName?: string;
@@ -46,6 +31,7 @@ export interface RideRequestFormErrors {
 export interface SelectedUser {
   uuid: string;
   fullName: string;
+  phone?: string;
   residence?: {
     current?: string;
     last?: string;
@@ -53,10 +39,12 @@ export interface SelectedUser {
 }
 
 export interface RideRequestFormProps {
-  selectedUser: SelectedUser;
-  setShowRideRequestForm: (show: boolean) => void;
-  setShowBaseForm: (show: boolean) => void;
-  setShowUserForm: (show: boolean) => void;
+  selectedUser?: SelectedUser;
+  setShowRideRequestForm?: (show: boolean) => void;
+  setShowBaseForm?: (show: boolean) => void;
+  setShowUserForm?: (show: boolean) => void;
+  caseManagerName?: string;
+  caseManagerUsername?: string;
 }
 
 export interface UserSearchProps {

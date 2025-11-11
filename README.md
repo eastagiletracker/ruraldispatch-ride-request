@@ -1,51 +1,274 @@
-# ride-request-mvp
+# Rural Dispatch - Ride Request MVP
 
-## Installation Steps
+> A full-stack ride-sharing management application with React/TypeScript frontend, Node.js/Express backend, and MongoDB database.
 
-### Install project packages
+## Features
 
-#### Install Node/npm (if not present):
+- **Role-Based Access Control**: Admin, Dispatcher, Driver, and Case Manager roles
+- **Ride Request Management**: Create, assign, and track ride requests
+- **SMS Notifications**: Two-way SMS with Twilio/Vonage integration
+- **User Management**: Service users, drivers, and vehicles
+- **Real-time Updates**: Live ride status tracking
+- **TCPA Compliant**: SMS consent and opt-out handling
 
-(On Linux - if using Homebrew, please utilize appropriate package manager commands)
-* `sudo apt update`
-* `sudo apt install npm nodejs`
+---
 
-#### Install packages
-* `npm install`
+## Quick Start
 
-### Set up database
+### Prerequisites
+- **Node.js** v18.0.0 or higher
+- **npm** v9.0.0 or higher
+- **MongoDB** (local or Atlas)
 
-#### Create database on MongoDB
-* Create an account on MongoDB Atlas. Set it up as a Free learning
-account.
-* On the MongoDB Atlas web interface, create a new project (such as "ride-request-mvp"). Be sure to save the name and password of the user you create!
-* Create a cluster - For ease, name it "TransportationAppCluster".
+### Installation
 
-#### Get project credentials
+```bash
+# Install all dependencies
+npm run install-all
 
-* Select your cluster, click connect, choose Drivers
-* Copy the entire connection string
+# Set up environment variables
+cp .env.example .env
+# Edit .env with your MongoDB URI and other credentials
 
-#### Save credentials to project
+# Seed demo data
+npm run seed:system-users
 
-* If you don't already have a .env file at the root of the repo, create one. This is for sensitive info and is ignored by git.
-* In the .env file, add the following line:
-    `MONGODB_URI="YOUR_CONNECTION_STRING"`
-    replacing YOUR_CONNECTION_STRING with the connection string you copied from Atlas.
-* Toward the beginning of the connection string is a part reading `<db_password>`. Replace this with the user password you created a few steps ago.
+# Start development server
+npm run dev
+```
 
-## Start The Application
+### Access the Application
 
-* In the root directory of the repo, type `npm run dev`
+1. Open http://localhost:3001
+2. **Portal Password**: `hackct25`
+3. **Sign in** with demo credentials:
 
-Then point your web browser at http://localhost:3001/, or whichever URL is displayed in the terminal.
+| Role | Username | Password | Description |
+|------|----------|----------|-------------|
+| **Admin** | `admin` | `admin123` | Full system access |
+| **Dispatch Staff** | `dispatcher` | `dispatch123` | Coordinate rides, assign drivers |
+| **Case Manager** | `casemanager` | `case123` | Request rides for others |
+| **Driver** | `gusedriver` | `gusedriver123` | View assigned rides |
 
-## Troubleshooting
+---
 
-### You get an error like this in the terminal: `listen EADDRINUSE: address already in use :::5000`
-The database API runs separately on port 5000, but in this case some process on your machine is already using that port.
+## Documentation
 
-Direct the app to use an alternate port by adding this line to your .env file:
-`PORT=5001`, using 5001 as written or some other port number.
+For detailed setup, development, and deployment instructions:
 
-Then, in the file client/vite.config.js, change the port on the "target" field to match the new port number. (Please don't commit this change! :D)
+### 📚 Essential Guides
+- **[Development Guide](./docs/DEVELOPMENT_GUIDE.md)** - Complete local setup and workflow
+- **[API Reference](./docs/API_REFERENCE.md)** - Full API documentation with examples
+- **[Authentication Guide](./docs/AUTHENTICATION.md)** - Role-based access control details
+
+### 🔧 Configuration Guides
+- **[SMS Setup](./docs/SMS_SETUP.md)** - Twilio and Vonage configuration
+- **[Database Seeding](./docs/SEEDING.md)** - Populate demo data
+- **[Deployment Guide](./docs/DEPLOYMENT.md)** - Deploy to Railway or Render
+
+### 📖 Additional Resources
+- **[CLAUDE.md](./CLAUDE.md)** - Project architecture overview for AI assistants
+- **[Toll-Free Verification](./docs/TOLL_FREE_VERIFICATION.md)** - SMS compliance setup
+- **[Shared Schemas](./docs/SHARED_SCHEMAS.md)** - Zod validation schemas
+- **[UI Design System](./docs/UI_DESIGN_SYSTEM.md)** - shadcn/ui components
+
+---
+
+## Tech Stack
+
+### Frontend
+- React 18 + TypeScript
+- Vite (build tool)
+- Tailwind CSS + shadcn/ui
+- React Hook Form + Zod validation
+- React Router v6
+
+### Backend
+- Node.js + Express
+- MongoDB (native driver)
+- bcryptjs (authentication)
+- SMS: Twilio (primary) + Vonage (fallback)
+
+---
+
+## Understanding User Roles
+
+### 1. **Rider**
+**Who**: People who need transportation (clients, service users)
+**What they do**: Request rides and receive confirmations
+**Access**: Can request rides and view ride history
+**SMS**: Receives updates about pickups, driver info, and ETAs
+
+**Examples**: John Smith, Mary Johnson
+
+---
+
+### 2. **Driver / Service Provider**
+**Who**: People providing transportation services
+**What they do**: Accept ride requests, pick up riders, complete trips
+**Access**: Can view available and assigned rides, and update statuses
+**Login**: Use their username and password
+
+**Note**: Drivers exist in TWO places:
+1. **Service Providers** (in System Manager) - Their profile, phone, assigned to rides
+2. **Login Account** - Separate username/password for app access
+
+**Example**: Driver "Johan Guse":
+- Profile in Providers: Johan Guse (+5547991274449) - Gets assigned to rides
+- Login account: Username `gusedriver` / Password `gusedriver123` - Logs into app
+
+---
+
+### 3. **Caregiver / Relative / Guardian / Case Manager**
+**Who**: People managing rides for others (like elderly or disabled riders)
+**What they do**: Request rides on behalf of the actual rider
+**Access**: Can create ride requests and manage riders
+**Login**: Username and password
+
+**Example**: `casemanager` / `case123`
+
+---
+
+### 4. **Dispatch Staff**
+**Who**: Team members coordinating rides
+**What they do**:
+- Request rides for users
+- Assign drivers and vehicles to rides
+- Manage ride requests and statuses
+- View **all rides** in the system
+
+**Access**: Cannot access System Manager or delete data
+**Login**: Username and password
+
+**Example**: `dispatcher` / `dispatch123`
+
+---
+
+### 5. **Admin**
+**Who**: System administrators with full access
+**What they do**:
+- Create user accounts (all types)
+- Request rides for users
+- Assign drivers and vehicles
+- Manage ride requests
+- Access System Manager to add/edit/delete any data
+
+**Access**: Full dashboard with all management features
+**Login**: Username and password
+
+**Example**: `admin` / `admin123`
+
+---
+
+## System Manager - Managing Data (Admin Only)
+
+The **System Manager** is accessible only to **Admins** and has 5 tabs for managing different types of data:
+
+### 1. **Riders Tab**
+Manage the people who need rides. Add new riders, edit their information, or remove them from the system.
+
+### 2. **Providers Tab**
+Manage your drivers and transportation staff (these are the profiles that get assigned to rides, separate from login accounts).
+
+### 3. **Vehicles Tab**
+Manage your fleet vehicles. Each vehicle can be assigned to rides along with a driver.
+
+**Examples**: 2023 Toyota Sienna (Silver) - XYZ1234, 2022 Honda Odyssey (Black) - ABC5678
+
+### 4. **Dispatchers Tab**
+Manage dispatcher accounts who coordinate daily operations. Add, edit, activate/deactivate, or remove dispatcher accounts.
+
+### 5. **Case Managers Tab**
+Manage case manager accounts who request rides on behalf of riders. Add, edit, activate/deactivate, or remove case manager accounts.
+
+---
+
+## Project Structure
+
+```
+ride-request-mvp-johan/
+├── client/          # React frontend (Vite)
+├── server/          # Express backend
+├── shared/          # Shared Zod schemas
+├── docs/            # Documentation
+└── README.md        # This file
+```
+
+---
+
+## Common Commands
+
+```bash
+# Development
+npm run dev              # Run client + server concurrently
+npm run client           # Run client only (port 3001)
+npm run server           # Run server only (port 5000)
+
+# Database
+npm run seed             # Seed all demo data
+npm run seed:system-users   # Create demo user accounts
+npm run seed:users       # Seed service users
+npm run seed:providers   # Seed drivers
+npm run seed:vehicles    # Seed vehicles
+
+# Production
+npm run build            # Build client for production
+npm start                # Start production server
+```
+
+---
+
+## Quick Troubleshooting
+
+### Port Already in Use
+```bash
+# Change server port in .env
+PORT=5001
+
+# Update client/vite.config.ts proxy target to match
+```
+
+### MongoDB Connection Failed
+```bash
+# Verify connection string in .env
+MONGODB_URI=mongodb://localhost:27017/ride-request-app
+# OR for Atlas:
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/ride-request-app
+```
+
+### TypeScript Errors
+```bash
+# Reinstall dependencies
+npm run install-all
+
+# Restart TypeScript server in VS Code
+# Cmd+Shift+P → "TypeScript: Restart TS Server"
+```
+
+For more troubleshooting, see the [Development Guide](./docs/DEVELOPMENT_GUIDE.md#troubleshooting).
+
+---
+
+## Contributing
+
+1. Read the [Development Guide](./docs/DEVELOPMENT_GUIDE.md)
+2. Check the [CLAUDE.md](./CLAUDE.md) for architecture details
+3. Review existing documentation in `/docs`
+4. Follow the established patterns and conventions
+
+---
+
+## License
+
+This project is licensed under the **GNU General Public License v3.0**.
+
+See the [LICENSE.md](./LICENSE.md) file for full license text and details.
+
+---
+
+## Support
+
+For questions or issues:
+- Check the [Development Guide](./docs/DEVELOPMENT_GUIDE.md)
+- Review the [API Reference](./docs/API_REFERENCE.md)
+- See [Troubleshooting](./docs/DEVELOPMENT_GUIDE.md#troubleshooting)

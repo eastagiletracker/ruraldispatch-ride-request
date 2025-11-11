@@ -12,7 +12,7 @@ const pipelines = {
         {
             '$lookup': {
                 'from': 'service-providers',
-                'localField': 'driverUuid',
+                'localField': 'assignedDriverUuid',
                 'foreignField': 'uuid',
                 'as': 'driver'
             }

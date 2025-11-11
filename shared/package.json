@@ -1,0 +1,10 @@
+{
+  "name": "@ride-request/shared",
+  "version": "2.0.0",
+  "description": "Shared schemas and types for ride-request application",
+  "main": "index.ts",
+  "dependencies": {
+    "react-phone-number-input": "^3.4.13",
+    "zod": "^4.1.12"
+  }
+}

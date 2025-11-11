@@ -357,7 +357,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                       <Flag className="h-5 w-5 text-muted-foreground mt-0.5" />
                       <div className="flex-1">
                         <p className="text-sm font-medium text-muted-foreground">Veteran Status</p>
-                        <Badge variant={user.veteranStatus === 'veteran' ? 'default' : 'secondary'}>
+                        <Badge variant={currentUser.veteranStatus === 'veteran' ? 'default' : 'secondary'}>
                           {capitalizeFirst(currentUser.veteranStatus)}
                         </Badge>
                       </div>
@@ -370,7 +370,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                       <Activity className="h-5 w-5 text-muted-foreground mt-0.5" />
                       <div className="flex-1">
                         <p className="text-sm font-medium text-muted-foreground">Disability Status</p>
-                        <Badge variant={user.disabilityStatus === 'yes' ? 'default' : 'secondary'}>
+                        <Badge variant={currentUser.disabilityStatus === 'yes' ? 'default' : 'secondary'}>
                           {capitalizeFirst(currentUser.disabilityStatus)}
                         </Badge>
                       </div>
@@ -465,7 +465,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
           )}
 
           {/* Account Information Section - Only show if timestamps exist */}
-          {(user.createdAt || user.updatedAt) && (
+          {(currentUser.createdAt || currentUser.updatedAt) && (
             <>
               <Separator />
               
@@ -475,29 +475,29 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                   Account Information
                 </h3>
                 <div className="space-y-4 pl-6">
-                  {/* Created Date */}
-                  {user.createdAt && (
+                  {/* Created At */}
+                  {currentUser.createdAt && (
                     <div className="flex items-start gap-3">
                       <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
                       <div className="flex-1">
-                        <p className="text-sm font-medium text-muted-foreground">Member Since</p>
-                        <p className="text-base font-semibold">{formatDate(user.createdAt)}</p>
+                        <p className="text-sm font-medium text-muted-foreground">Created</p>
+                        <p className="text-base font-semibold">{formatDate(currentUser.createdAt)}</p>
                         <p className="text-xs text-muted-foreground mt-0.5">
-                          {formatDateTime(user.createdAt)}
+                          {formatDateTime(currentUser.createdAt)}
                         </p>
                       </div>
                     </div>
                   )}
 
-                  {/* Updated Date */}
-                  {user.updatedAt && (
+                  {/* Updated At */}
+                  {currentUser.updatedAt && (
                     <div className="flex items-start gap-3">
                       <Clock className="h-5 w-5 text-muted-foreground mt-0.5" />
                       <div className="flex-1">
                         <p className="text-sm font-medium text-muted-foreground">Last Updated</p>
-                        <p className="text-base font-semibold">{formatDate(user.updatedAt)}</p>
+                        <p className="text-base font-semibold">{formatDate(currentUser.updatedAt)}</p>
                         <p className="text-xs text-muted-foreground mt-0.5">
-                          {formatDateTime(user.updatedAt)}
+                          {formatDateTime(currentUser.updatedAt)}
                         </p>
                       </div>
                     </div>
