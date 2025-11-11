@@ -17,3 +17,9 @@ export * from './serviceProvider';
 
 // Ride Request schemas and types
 export * from './rideRequest';
+
+// Ride Status constants and types
+export * from './rideStatuses';
+
+// Ride Request Status constants and types
+export * from './rideRequestStatuses';

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { fetchCollection } from "../utils/database";
+import { RIDE_STATUSES, RIDE_REQUEST_STATUSES } from "@shared/schemas";
 import AssignedRideStatus from "../components/AssignedRideStatus";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -33,9 +34,9 @@ export default function MyRides() {
         try {
             const fetchedRideRequests = await fetchCollection("riderequests") as RideRequest[];
             if (fetchedRideRequests) {
-                // Filter to only show assigned rides (rideRequestStatus >= 400)
+                // Filter to only show assigned rides (rideRequestStatus >= RIDE_CONFIRMATION_NEEDED)
                 const assignedRides = fetchedRideRequests.filter(rr =>
-                    parseInt(rr.rideRequestStatus.toString()) >= 400
+                    parseInt(rr.rideRequestStatus.toString()) >= RIDE_REQUEST_STATUSES.RIDE_CONFIRMATION_NEEDED
                 );
 
                 // Sort by pickup requested time - most recent first
@@ -70,21 +71,21 @@ export default function MyRides() {
 
     const activeRides = allAssignedRides.filter(ride => {
         // Ride status 200-299 are active/in-progress rides
-        const status = ride.rideStatus || 0;
-        return status >= 200 && status < 300;
+        const status = ride.rideStatus || RIDE_STATUSES.REQUEST_IN_PROGRESS;
+        return status >= RIDE_STATUSES.RIDE_STARTED && status < RIDE_STATUSES.RIDER_PICKED_UP;
     });
 
     const upcomingRides = allAssignedRides.filter(ride => {
         // Rides that are scheduled but not started yet (status < 200)
-        const status = ride.rideStatus || 0;
+        const status = ride.rideStatus || RIDE_STATUSES.REQUEST_IN_PROGRESS;
         const pickupTime = ride.pickupRequestedTime ? new Date(ride.pickupRequestedTime) : null;
-        return status < 200 && (!pickupTime || pickupTime > now);
+        return status < RIDE_STATUSES.RIDE_STARTED && (!pickupTime || pickupTime > now);
     });
 
     const completedRides = allAssignedRides.filter(ride => {
         // Completed rides (status >= 300)
-        const status = ride.rideStatus || 0;
-        return status >= 300;
+        const status = ride.rideStatus || RIDE_STATUSES.REQUEST_IN_PROGRESS;
+        return status >= RIDE_STATUSES.RIDER_PICKED_UP;
     });
 
     const formatDateTime = (dateString?: string) => {

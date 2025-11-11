@@ -318,6 +318,21 @@ async function seedRides() {
             return;
         }
 
+        // Fetch vehicles
+        console.log('🚙 Fetching vehicles for assignment...');
+        const vehicles = await api.getVehicles();
+        
+        const availableVehicles = [];
+        if (vehicles && vehicles.length > 0) {
+            vehicles.forEach(vehicle => {
+                availableVehicles.push(vehicle);
+            });
+            console.log(`   ✓ Found ${availableVehicles.length} vehicle(s)\n`);
+        } else {
+            console.log(`   ⚠️  No vehicles found. Please run seedVehicles.js first!\n`);
+            return;
+        }
+
         // Create new rides
         console.log('🚗 Creating fresh demo ride requests...\n');
 
@@ -326,6 +341,7 @@ async function seedRides() {
         const ridesByStatus = {};
 
         let driverIndex = 0; // For round-robin driver assignment
+        let vehicleIndex = 0; // For round-robin vehicle assignment
 
         for (const rideData of demoRides) {
             try {
@@ -352,12 +368,23 @@ async function seedRides() {
                     driverIndex++;
                 }
 
+                // Assign vehicle round-robin (only for ACTIVE and COMPLETED rides, not UNASSIGNED)
+                let assignedVehicle = null;
+                let assignedVehicleUuid = null;
+                
+                if (rideData.status !== 'UNASSIGNED' && availableVehicles.length > 0) {
+                    assignedVehicle = availableVehicles[vehicleIndex % availableVehicles.length];
+                    assignedVehicleUuid = assignedVehicle.uuid;
+                    vehicleIndex++;
+                }
+
                 // Create ride request with proper rider array structure
                 const rideWithUuid = {
                     ...rideData,
                     uuid: Date.now() + Math.floor(Math.random() * 10000),
                     serviceUserUuid: actualUserUuid, // Use actual UUID from database
                     assignedDriverUuid: assignedDriverUuid, // Assign actual driver UUID
+                    assignedVehicleUuid: assignedVehicleUuid, // Assign actual vehicle UUID
                     // Transform serviceUser fields to rider array for UI compatibility
                     rider: rideData.serviceUserName ? [{
                         fullName: rideData.serviceUserName,
@@ -368,6 +395,11 @@ async function seedRides() {
                         fullName: assignedDriver.fullName,
                         mobilePhone: assignedDriver.phone || '555-0200',
                         uuid: assignedDriver.uuid
+                    }] : [],
+                    vehicle: assignedVehicle ? [{
+                        uuid: assignedVehicle.uuid,
+                        displayName: assignedVehicle.displayName,
+                        model: assignedVehicle.model
                     }] : []
                 };
 
@@ -381,8 +413,9 @@ async function seedRides() {
                 }
                 ridesByStatus[rideData.status].push(rideData);
 
-                const driverDisplay = assignedDriver ? `Assigned to ${assignedDriver.fullName}` : 'No Driver (Unassigned)';
-                console.log(`✅ Created: ${rideData.serviceUserName.padEnd(20)} | ${rideData.status.padEnd(12)} | ${driverDisplay}`);
+                const driverDisplay = assignedDriver ? `Driver: ${assignedDriver.fullName}` : 'No Driver';
+                const vehicleDisplay = assignedVehicle ? `Vehicle: ${assignedVehicle.displayName || assignedVehicle.fleetId}` : 'No Vehicle';
+                console.log(`✅ Created: ${rideData.serviceUserName.padEnd(20)} | ${rideData.status.padEnd(12)} | ${driverDisplay.padEnd(30)} | ${vehicleDisplay}`);
 
             } catch (error) {
                 failedRides.push({ 

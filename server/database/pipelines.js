@@ -16,6 +16,14 @@ const pipelines = {
                 'foreignField': 'uuid',
                 'as': 'driver'
             }
+        },
+        {
+            '$lookup': {
+                'from': 'vehicles',
+                'localField': 'assignedVehicleUuid',
+                'foreignField': 'uuid',
+                'as': 'vehicle'
+            }
         }
     ],
 

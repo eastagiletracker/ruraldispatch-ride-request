@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { fetchCollection, updateDocument } from "../utils/database";
+import { RIDE_STATUSES, RIDE_REQUEST_STATUSES } from "@shared/schemas";
 import AssignedRideStatus from "./AssignedRideStatus";
 import SMSConversationModal from "./SMSConversationModal";
 import { UserDetailModal } from "./UserDetailModal";
@@ -10,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { UserPlus, Car, MapPin, Clock, MessageSquare, User, Phone, Download } from "lucide-react";
+import { UserPlus, Car, MapPin, Clock, MessageSquare, User, Phone, Download, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface RideRequest {
@@ -34,6 +35,7 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
 
     const [rideRequests, setRideRequests] = useState<RideRequest[]>([]);
     const [assignedRides, setAssignedRides] = useState<RideRequest[]>([]);
+    const [completedRides, setCompletedRides] = useState<RideRequest[]>([]);
     const [expandedRideUuid, setExpandedRideUuid] = useState<string | null>(null);
     const [smsModalOpen, setSmsModalOpen] = useState(false);
     const [selectedRideForSms, setSelectedRideForSms] = useState<RideRequest | null>(null);
@@ -72,7 +74,7 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
     function exportToCSV() {
         try {
             // Combine both pending and assigned rides
-            const allRides = [...rideRequests, ...assignedRides];
+            const allRides = [...rideRequests, ...assignedRides, ...completedRides];
             
             if (allRides.length === 0) {
                 toast.error('No rides to export');
@@ -97,15 +99,42 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                 const rider = getRider(ride);
                 const driver = getDriver(ride);
                 
-                // Determine status based on rideRequestStatus and rideStatus
+                // Determine status based on rideStatus
                 let status = 'Pending';
-                if (ride.rideRequestStatus === 1000) {
-                    if (ride.rideStatus === 200) {
-                        status = 'Ride Started';
-                    } else if (ride.rideStatus === 100) {
-                        status = 'Ride Confirmed';
-                    } else {
-                        status = 'Assigned';
+                if (ride.rideStatus !== undefined) {
+                    switch(ride.rideStatus) {
+                        case RIDE_STATUSES.REQUEST_IN_PROGRESS:
+                            status = 'Pending';
+                            break;
+                        case RIDE_STATUSES.RIDE_CONFIRMED:
+                            status = 'Confirmed';
+                            break;
+                        case RIDE_STATUSES.RIDE_CANCELED_BY_RIDER:
+                            status = 'Canceled';
+                            break;
+                        case RIDE_STATUSES.RIDE_STARTED:
+                            status = 'In Progress';
+                            break;
+                        case RIDE_STATUSES.RIDE_INTERRUPTED:
+                            status = 'Interrupted';
+                            break;
+                        case RIDE_STATUSES.RIDER_PICKED_UP:
+                            status = 'En Route';
+                            break;
+                        case RIDE_STATUSES.RIDER_NOT_PICKED_UP:
+                            status = 'Not Picked Up';
+                            break;
+                        case RIDE_STATUSES.RIDER_DROPPED_OFF:
+                            status = 'Dropped Off';
+                            break;
+                        case RIDE_STATUSES.RIDE_COMPLETE:
+                            status = 'Complete';
+                            break;
+                        case RIDE_STATUSES.RIDE_INCOMPLETE:
+                            status = 'Incomplete';
+                            break;
+                        default:
+                            status = 'Unknown';
                     }
                 }
 
@@ -178,7 +207,7 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
 
     async function cancelRideRequest(rideRequest: RideRequest) {
         try {
-            await updateDocument("riderequests", rideRequest.uuid, { rideRequestStatus: 109 });
+            await updateDocument("riderequests", rideRequest.uuid, { rideRequestStatus: RIDE_REQUEST_STATUSES.ALL_RIDE_REQUEST_CANCELED });
             toast.success('Ride request cancelled successfully!', {
                 description: `Request for ${rideRequest.rider?.[0]?.fullName || 'rider'} has been cancelled.`
             });
@@ -198,10 +227,6 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
         setSmsModalOpen(true);
     };
 
-    const closeSmsModal = () => {
-        setSmsModalOpen(false);
-        setSelectedRideForSms(null);
-    };
 
     const openUserDetailModal = (user: any, type: 'rider' | 'driver') => {
         setSelectedUserDetail({ ...user, type });
@@ -231,17 +256,27 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                 const rideReqsSortedByRrStatus = fetchedRideRequests.sort((a, b) => a.rideRequestStatus - b.rideRequestStatus);
                 const length = rideReqsSortedByRrStatus.length;
 
-                let pivotIndex = rideReqsSortedByRrStatus.findIndex(rr => parseInt(rr.rideRequestStatus.toString()) >= 400);
+                let pivotIndex = rideReqsSortedByRrStatus.findIndex(rr => parseInt(rr.rideRequestStatus.toString()) >= RIDE_REQUEST_STATUSES.RIDE_CONFIRMATION_NEEDED);
 
-                let nonActiveRideReqs: RideRequest[], assignedRides: RideRequest[];
+                let nonActiveRideReqs: RideRequest[], activeRides: RideRequest[], completedRides: RideRequest[];
 
                 if (pivotIndex < 0) {
                     nonActiveRideReqs = rideReqsSortedByRrStatus;
-                    assignedRides = [];
+                    activeRides = [];
+                    completedRides = [];
                 }
                 else {
                     nonActiveRideReqs = rideReqsSortedByRrStatus.slice(0, pivotIndex);
-                    assignedRides = rideReqsSortedByRrStatus.slice(pivotIndex, length);
+                    const assignedRides = rideReqsSortedByRrStatus.slice(pivotIndex, length);
+                    
+                    // Separate assigned rides into active and completed
+                    // Completed: rideStatus >= RIDER_DROPPED_OFF (400) or complete (500)
+                    completedRides = assignedRides.filter(ride => 
+                        ride.rideStatus !== undefined && parseInt(ride.rideStatus.toString()) >= RIDE_STATUSES.RIDER_DROPPED_OFF
+                    );
+                    activeRides = assignedRides.filter(ride => 
+                        ride.rideStatus === undefined || parseInt(ride.rideStatus.toString()) < RIDE_STATUSES.RIDER_DROPPED_OFF
+                    );
                 }
 
                 // Sort by uuid (timestamp) - most recent first
@@ -251,15 +286,22 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                     const timeB = b.createdAt ? new Date(b.createdAt).getTime() : Number(b.uuid);
                     return timeB - timeA;
                 });
-                assignedRides.sort((a, b) => {
+                activeRides.sort((a, b) => {
                     // Sort by pickupRequestedTime (most urgent first)
                     const timeA = a.pickupRequestedTime ? new Date(a.pickupRequestedTime).getTime() : Number(a.uuid);
                     const timeB = b.pickupRequestedTime ? new Date(b.pickupRequestedTime).getTime() : Number(b.uuid);
                     return timeA - timeB; // Earliest pickup time first
                 });
+                completedRides.sort((a, b) => {
+                    // Sort by createdAt (most recent first)
+                    const timeA = a.createdAt ? new Date(a.createdAt).getTime() : Number(a.uuid);
+                    const timeB = b.createdAt ? new Date(b.createdAt).getTime() : Number(b.uuid);
+                    return timeB - timeA;
+                });
 
                 setRideRequests(nonActiveRideReqs);
-                setAssignedRides(assignedRides);
+                setAssignedRides(activeRides);
+                setCompletedRides(completedRides);
             }
         } catch (error) {
             console.error('Error fetching ride requests:', error);
@@ -354,7 +396,7 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                             variant="outline"
                             size="sm"
                             onClick={exportToCSV}
-                            disabled={loading || (rideRequests.length === 0 && assignedRides.length === 0)}
+                            disabled={loading || (rideRequests.length === 0 && assignedRides.length === 0 && completedRides.length === 0)}
                             className="flex items-center gap-2"
                         >
                             <Download className="h-4 w-4" />
@@ -585,18 +627,44 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
             {/* Assigned Rides Card */}
             <Card>
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <Car className="h-5 w-5 text-primary" />
-                        Assigned Rides
-                    </CardTitle>
-                    <CardDescription>
-                        {loading
-                            ? 'Loading...'
-                            : assignedRides.length === 0
-                            ? 'No assigned rides'
-                            : `${assignedRides.length} active ride${assignedRides.length > 1 ? 's' : ''}`
-                        }
-                    </CardDescription>
+                    <div className="flex items-start justify-between">
+                        <div>
+                            <CardTitle className="flex items-center gap-2">
+                                <Car className="h-5 w-5 text-primary" />
+                                Assigned Rides
+                            </CardTitle>
+                            <CardDescription>
+                                {loading
+                                    ? 'Loading...'
+                                    : assignedRides.length === 0
+                                    ? 'No assigned rides'
+                                    : `${assignedRides.length} active ride${assignedRides.length > 1 ? 's' : ''}`
+                                }
+                            </CardDescription>
+                        </div>
+                        {/* Status Legend */}
+                        <div className="hidden lg:flex flex-col gap-2 text-xs">
+                            <div className="font-semibold text-muted-foreground mb-1">Status Legend:</div>
+                            <div className="flex flex-wrap gap-2">
+                                <div className="flex items-center gap-1.5">
+                                    <div className="h-2 w-2 rounded-full bg-blue-600"></div>
+                                    <span className="text-muted-foreground">Confirmed</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                    <div className="h-2 w-2 rounded-full bg-purple-600"></div>
+                                    <span className="text-muted-foreground">In Progress</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                    <div className="h-2 w-2 rounded-full bg-indigo-600"></div>
+                                    <span className="text-muted-foreground">En Route</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                    <div className="h-2 w-2 rounded-full bg-teal-600"></div>
+                                    <span className="text-muted-foreground">Dropped Off</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </CardHeader>
                 <CardContent>
                     {/* Mobile View - Cards */}
@@ -842,6 +910,189 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                                                                 SMS
                                                             </Button>
                                                         </div>
+                                                    </TableCell>
+                                                </TableRow>
+                                        ))
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Completed Rides Card */}
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <CheckCircle2 className="h-5 w-5 text-green-600" />
+                        Completed Rides
+                    </CardTitle>
+                    <CardDescription>
+                        {loading
+                            ? 'Loading...'
+                            : completedRides.length === 0
+                            ? 'No completed rides'
+                            : `${completedRides.length} completed ride${completedRides.length > 1 ? 's' : ''}`
+                        }
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {/* Mobile View - Cards */}
+                    <div className="md:hidden space-y-4">
+                        {loading ? (
+                            <>
+                                <SkeletonCard />
+                                <SkeletonCard />
+                            </>
+                        ) : (
+                            completedRides.map((ride) => (
+                            <div key={ride.uuid} className="space-y-2">
+                                <Card className="border-2 border-green-200 bg-green-50/30">
+                                    <CardContent className="pt-6">
+                                        <div className="space-y-3">
+                                            <div className="flex items-start justify-between">
+                                                <div>
+                                                    <p className="text-sm font-medium text-muted-foreground">Rider</p>
+                                                    {getRider(ride) ? (
+                                                        <button
+                                                            onClick={() => openUserDetailModal(getRider(ride) as any, 'rider')}
+                                                            className="text-base font-semibold text-primary hover:underline cursor-pointer text-left"
+                                                        >
+                                                            {getRider(ride)?.fullName}
+                                                        </button>
+                                                    ) : (
+                                                        <span className="text-base font-semibold">Unknown</span>
+                                                    )}
+                                                </div>
+                                                <AssignedRideStatus
+                                                    onClickFn={() => {}}
+                                                    rideRequestStatus={ride.rideRequestStatus}
+                                                    rideStatus={ride.rideStatus}
+                                                />
+                                            </div>
+
+                                            <Separator />
+
+                                            <div className="space-y-2">
+                                                <div className="flex items-start gap-2">
+                                                    <MapPin className="h-4 w-4 mt-1 text-green-600 flex-shrink-0" />
+                                                    <div>
+                                                        <p className="text-xs text-muted-foreground">Pickup</p>
+                                                        <p className="text-sm">{ride.pickupAddress}</p>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex items-start gap-2">
+                                                    <MapPin className="h-4 w-4 mt-1 text-red-600 flex-shrink-0" />
+                                                    <div>
+                                                        <p className="text-xs text-muted-foreground">Dropoff</p>
+                                                        <p className="text-sm">{ride.dropOffAddress}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <Separator />
+
+                                            <div>
+                                                <p className="text-sm font-medium text-muted-foreground mb-1">Driver</p>
+                                                {getDriver(ride) ? (
+                                                    <button
+                                                        onClick={() => openUserDetailModal(getDriver(ride) as any, 'driver')}
+                                                        className="text-sm font-semibold text-primary hover:underline cursor-pointer text-left"
+                                                    >
+                                                        {getDriver(ride)?.fullName}
+                                                    </button>
+                                                ) : (
+                                                    <span className="text-sm font-semibold">Unassigned</span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </div>
+                            ))
+                        )}
+                    </div>
+
+                    {/* Desktop View - Table */}
+                    <div className="hidden md:block overflow-x-auto">
+                        <div className="rounded-md border max-h-[600px] overflow-y-auto">
+                            <Table>
+                                <TableHeader className="sticky top-0 bg-background z-10">
+                                    <TableRow>
+                                        <TableHead className="whitespace-nowrap">Request Time</TableHead>
+                                        <TableHead className="whitespace-nowrap">Rider</TableHead>
+                                        <TableHead className="whitespace-nowrap">Driver</TableHead>
+                                        <TableHead className="whitespace-nowrap">Pickup Location</TableHead>
+                                        <TableHead className="whitespace-nowrap">Dropoff Location</TableHead>
+                                        <TableHead className="whitespace-nowrap">Status</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {loading ? (
+                                        <>
+                                            <SkeletonTableRowAssigned />
+                                            <SkeletonTableRowAssigned />
+                                        </>
+                                    ) : completedRides.length === 0 ? (
+                                        <TableRow>
+                                            <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                                                No completed rides
+                                            </TableCell>
+                                        </TableRow>
+                                    ) : (
+                                        completedRides.map((ride) => (
+                                                <TableRow key={ride.uuid} className="bg-green-50/30">
+                                                    <TableCell className="font-medium text-sm whitespace-nowrap">
+                                                        {ride.createdAt 
+                                                            ? new Date(ride.createdAt).toLocaleString('en-US', {
+                                                                month: 'short',
+                                                                day: 'numeric',
+                                                                hour: '2-digit',
+                                                                minute: '2-digit'
+                                                            })
+                                                            : ride.uuid 
+                                                            ? new Date(Number(ride.uuid)).toLocaleString('en-US', {
+                                                                month: 'short',
+                                                                day: 'numeric',
+                                                                hour: '2-digit',
+                                                                minute: '2-digit'
+                                                            })
+                                                            : 'N/A'}
+                                                    </TableCell>
+                                                    <TableCell className="font-medium whitespace-nowrap">
+                                                        {getRider(ride) ? (
+                                                            <button
+                                                                onClick={() => openUserDetailModal(getRider(ride) as any, 'rider')}
+                                                                className="text-primary hover:underline cursor-pointer text-left"
+                                                            >
+                                                                {getRider(ride)?.fullName}
+                                                            </button>
+                                                        ) : (
+                                                            <span>Unknown</span>
+                                                        )}
+                                                    </TableCell>
+                                                    <TableCell className="font-medium whitespace-nowrap">
+                                                        {getDriver(ride) ? (
+                                                            <button
+                                                                onClick={() => openUserDetailModal(getDriver(ride) as any, 'driver')}
+                                                                className="text-primary hover:underline cursor-pointer text-left"
+                                                            >
+                                                                {getDriver(ride)?.fullName}
+                                                            </button>
+                                                        ) : (
+                                                            <span>Unassigned</span>
+                                                        )}
+                                                    </TableCell>
+                                                    <TableCell className="whitespace-nowrap">{ride.pickupAddress}</TableCell>
+                                                    <TableCell className="whitespace-nowrap">{ride.dropOffAddress}</TableCell>
+                                                    <TableCell className="whitespace-nowrap">
+                                                        <AssignedRideStatus
+                                                            onClickFn={() => {}}
+                                                            rideRequestStatus={ride.rideRequestStatus}
+                                                            rideStatus={ride.rideStatus}
+                                                        />
                                                     </TableCell>
                                                 </TableRow>
                                         ))
