@@ -43,6 +43,10 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
 
     let fetchInterval: NodeJS.Timeout;
 
+    // Helpers to guard optional rider/driver
+    const getRider = (ride: RideRequest) => ride?.rider && ride.rider.length > 0 ? ride.rider[0] : undefined;
+    const getDriver = (ride: RideRequest) => ride?.driver && ride.driver.length > 0 ? ride.driver[0] : undefined;
+
     async function startRide(assignedRide: RideRequest) {
         try {
             await updateDocument("riderequests", assignedRide.uuid, { rideStatus: 200 });
@@ -221,7 +225,7 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                                         <div className="flex items-start justify-between">
                                             <div>
                                                 <p className="text-sm font-medium text-muted-foreground">Rider</p>
-                                                <p className="text-base font-semibold">{rideRequest.rider[0].fullName}</p>
+                                                <p className="text-base font-semibold">{getRider(rideRequest)?.fullName || 'Unknown'}</p>
                                             </div>
                                             <Badge variant="secondary">Pending</Badge>
                                         </div>
@@ -336,7 +340,7 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                                                     })
                                                     : 'N/A'}
                                             </TableCell>
-                                            <TableCell className="font-medium whitespace-nowrap">{rideRequest.rider[0].fullName}</TableCell>
+                                            <TableCell className="font-medium whitespace-nowrap">{getRider(rideRequest)?.fullName || 'Unknown'}</TableCell>
                                             <TableCell className="whitespace-nowrap">
                                                 <a
                                                     href={`https://www.google.com/maps/search/${rideRequest.pickupAddress}`}
@@ -418,12 +422,16 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                                             <div className="flex items-start justify-between">
                                                 <div>
                                                     <p className="text-sm font-medium text-muted-foreground">Rider</p>
-                                                    <button
-                                                        onClick={() => openUserDetailModal(ride.rider[0], 'rider')}
-                                                        className="text-base font-semibold text-primary hover:underline cursor-pointer text-left"
-                                                    >
-                                                        {ride.rider[0].fullName}
-                                                    </button>
+                                                    {getRider(ride) ? (
+                                                        <button
+                                                            onClick={() => openUserDetailModal(getRider(ride) as any, 'rider')}
+                                                            className="text-base font-semibold text-primary hover:underline cursor-pointer text-left"
+                                                        >
+                                                            {getRider(ride)?.fullName}
+                                                        </button>
+                                                    ) : (
+                                                        <span className="text-base font-semibold">Unknown</span>
+                                                    )}
                                                 </div>
                                                 <AssignedRideStatus
                                                     onClickFn={() => startRide(ride)}
@@ -493,12 +501,16 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
 
                                             <div>
                                                 <p className="text-sm font-medium text-muted-foreground mb-1">Driver</p>
-                                                <button
-                                                    onClick={() => openUserDetailModal(ride.driver[0], 'driver')}
-                                                    className="text-sm font-semibold text-primary hover:underline cursor-pointer text-left"
-                                                >
-                                                    {ride.driver[0].fullName}
-                                                </button>
+                                                {getDriver(ride) ? (
+                                                    <button
+                                                        onClick={() => openUserDetailModal(getDriver(ride) as any, 'driver')}
+                                                        className="text-sm font-semibold text-primary hover:underline cursor-pointer text-left"
+                                                    >
+                                                        {getDriver(ride)?.fullName}
+                                                    </button>
+                                                ) : (
+                                                    <span className="text-sm font-semibold">Unassigned</span>
+                                                )}
                                             </div>
 
                                             <Button
@@ -567,20 +579,28 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                                                             : 'N/A'}
                                                     </TableCell>
                                                     <TableCell className="font-medium whitespace-nowrap">
-                                                        <button
-                                                            onClick={() => openUserDetailModal(ride.rider[0], 'rider')}
-                                                            className="text-primary hover:underline cursor-pointer text-left"
-                                                        >
-                                                            {ride.rider[0].fullName}
-                                                        </button>
+                                                        {getRider(ride) ? (
+                                                            <button
+                                                                onClick={() => openUserDetailModal(getRider(ride) as any, 'rider')}
+                                                                className="text-primary hover:underline cursor-pointer text-left"
+                                                            >
+                                                                {getRider(ride)?.fullName}
+                                                            </button>
+                                                        ) : (
+                                                            <span>Unknown</span>
+                                                        )}
                                                     </TableCell>
                                                     <TableCell className="font-medium whitespace-nowrap">
-                                                        <button
-                                                            onClick={() => openUserDetailModal(ride.driver[0], 'driver')}
-                                                            className="text-primary hover:underline cursor-pointer text-left"
-                                                        >
-                                                            {ride.driver[0].fullName}
-                                                        </button>
+                                                        {getDriver(ride) ? (
+                                                            <button
+                                                                onClick={() => openUserDetailModal(getDriver(ride) as any, 'driver')}
+                                                                className="text-primary hover:underline cursor-pointer text-left"
+                                                            >
+                                                                {getDriver(ride)?.fullName}
+                                                            </button>
+                                                        ) : (
+                                                            <span>Unassigned</span>
+                                                        )}
                                                     </TableCell>
                                                     <TableCell className="whitespace-nowrap">{ride.pickupAddress}</TableCell>
                                                     <TableCell className="whitespace-nowrap">{ride.dropOffAddress}</TableCell>
@@ -630,12 +650,12 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                                 <div className="flex items-center gap-4 mt-2 text-sm">
                                     <span className="flex items-center gap-1.5 font-medium">
                                         <User className="h-4 w-4" />
-                                        {selectedRideForSms.rider[0].fullName}
+                                        {getRider(selectedRideForSms)?.fullName || 'Unknown'}
                                     </span>
                                     <Separator orientation="vertical" className="h-4" />
                                     <span className="flex items-center gap-1.5">
                                         <Phone className="h-4 w-4" />
-                                        {selectedRideForSms.rider[0].phone}
+                                        {getRider(selectedRideForSms)?.phone || 'N/A'}
                                     </span>
                                 </div>
                             ) : (
@@ -647,9 +667,9 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                         {selectedRideForSms && (
                             <SMSConversationModal
                                 rideUuid={selectedRideForSms.uuid}
-                                riderPhone={selectedRideForSms.rider[0].phone}
-                                driverPhone={selectedRideForSms.driver[0].mobilePhone}
-                                riderName={selectedRideForSms.rider[0].fullName}
+                                riderPhone={getRider(selectedRideForSms)?.phone || ''}
+                                driverPhone={getDriver(selectedRideForSms)?.mobilePhone || ''}
+                                riderName={getRider(selectedRideForSms)?.fullName || ''}
                             />
                         )}
                     </div>
