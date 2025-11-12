@@ -13,6 +13,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { PhoneInput } from "@/components/ui/phone-input";
+import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 import { userFormSchema, type UserFormData, ServiceUserRoles } from "@shared/schemas";
 import type { FormComponentProps, ServiceUserRole } from "@/types";
 
@@ -40,8 +41,8 @@ export default function UserForm({ setShowBaseForm, setShowUserForm }: FormCompo
             race: '',
             maritalStatus: '',
             residence: {
-                current: '',
-                last: ''
+                current: null,
+                last: null
             },
             income: {
                 current: '',
@@ -59,7 +60,22 @@ export default function UserForm({ setShowBaseForm, setShowUserForm }: FormCompo
         setSubmitSuccess(false);
 
         try {
-            const response = await createDocument("users", data);
+            // Helper to extract address string from AddressType or string
+            const getAddressString = (location: any): string => {
+                if (!location) return '';
+                return typeof location === 'string' ? location : location.formattedAddress;
+            };
+
+            // Convert address objects to strings for backend
+            const submitData = {
+                ...data,
+                residence: {
+                    current: getAddressString(data.residence.current),
+                    last: getAddressString(data.residence.last)
+                }
+            };
+
+            const response = await createDocument("users", submitData);
 
             if (response.ok) {
                 // If SMS consent was given, record it
@@ -274,31 +290,39 @@ export default function UserForm({ setShowBaseForm, setShowUserForm }: FormCompo
                     <div className="space-y-4">
                         <h3 className="text-lg font-semibold">Residence Information</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-2">
-                                <Label htmlFor="residence.current">
-                                    Current Residence <span className="text-muted-foreground text-xs">(optional)</span>
-                                </Label>
-                                <Input
-                                    id="residence.current"
-                                    {...register('residence.current')}
-                                    placeholder="Enter current residence"
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="residence.last">
-                                    Last Residence <span className="text-destructive">*</span>
-                                </Label>
-                                <Input
-                                    id="residence.last"
-                                    {...register('residence.last')}
-                                    placeholder="Enter last residence"
-                                    className={errors.residence?.last ? 'border-destructive' : ''}
-                                />
-                                {errors.residence?.last && (
-                                    <p className="text-sm text-destructive">{String(errors.residence.last.message)}</p>
+                            <Controller
+                                name="residence.current"
+                                control={control}
+                                render={({ field }) => (
+                                    <AddressAutocomplete
+                                        value={field.value}
+                                        onChange={field.onChange}
+                                        label="Current Residence"
+                                        placeholder="Search for current residence..."
+                                        required={false}
+                                        error={!!errors.residence?.current}
+                                        errorMessage={errors.residence?.current?.message as string}
+                                        includedRegionCodes={["US"]}
+                                    />
                                 )}
-                            </div>
+                            />
+
+                            <Controller
+                                name="residence.last"
+                                control={control}
+                                render={({ field }) => (
+                                    <AddressAutocomplete
+                                        value={field.value}
+                                        onChange={field.onChange}
+                                        label="Last Residence"
+                                        placeholder="Search for last residence..."
+                                        required
+                                        error={!!errors.residence?.last}
+                                        errorMessage={errors.residence?.last?.message as string}
+                                        includedRegionCodes={["US"]}
+                                    />
+                                )}
+                            />
                         </div>
                     </div>
 

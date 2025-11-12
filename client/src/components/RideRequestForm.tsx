@@ -20,6 +20,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { MapPin, User, Phone, Building2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { PhoneInput } from "@/components/ui/phone-input";
+import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 import { rideRequestFormSchema, type RideRequestFormData } from "@/schemas/validation";
 import type { RideRequestFormProps } from "@/types/form";
 
@@ -49,8 +50,8 @@ export default function RideRequestForm({
             caseManagerPhone: '',
             riderFullName: selectedUser?.fullName || '',
             riderMobilePhone: selectedUser?.phone || '',
-            pickupLocation: '',
-            dropoffLocation: '',
+            pickupLocation: null,
+            dropoffLocation: null,
             roundtrip: false,
             pickupRequestedDate: '',
             pickupRequestedTime: '',
@@ -70,8 +71,8 @@ export default function RideRequestForm({
                 caseManagerPhone: '',
                 riderFullName: selectedUser.fullName,
                 riderMobilePhone: selectedUser.phone || '',
-                pickupLocation: '',
-                dropoffLocation: '',
+                pickupLocation: null,
+                dropoffLocation: null,
                 roundtrip: false,
                 pickupRequestedDate: '',
                 pickupRequestedTime: '',
@@ -91,11 +92,17 @@ export default function RideRequestForm({
         setSubmitSuccess(false);
 
         try {
+            // Helper to extract address string from AddressType or string
+            const getAddressString = (location: any): string => {
+                if (!location) return '';
+                return typeof location === 'string' ? location : location.formattedAddress;
+            };
+
             const rideRequestData = {
                 serviceUserUuid: selectedUser?.uuid || '',
                 serviceUserRole: 'rider',
-                pickupAddress: data.pickupLocation,
-                dropOffAddress: data.dropoffLocation,
+                pickupAddress: getAddressString(data.pickupLocation),
+                dropOffAddress: getAddressString(data.dropoffLocation),
                 roundTrip: data.roundtrip || false,
                 pickupRequestedTime: `${data.pickupRequestedDate}T${data.pickupRequestedTime}`,
                 dropOffRequestedTime: `${data.pickupRequestedDate}T${data.pickupRequestedTime}`,
@@ -136,7 +143,6 @@ export default function RideRequestForm({
                 });
             }
         } catch (error) {
-            console.error('Error submitting form:', error);
             const errorMessage = 'Please try again or contact support.';
             setSubmitError(errorMessage);
             toast.error('Error submitting form', {
@@ -303,38 +309,39 @@ export default function RideRequestForm({
                         <Separator />
                         
                         <div className="space-y-4">
-                            {/* TODO: Add address validation/autocomplete (Google Places API, Mapbox, etc.)
-                                to prevent invalid addresses. Also need edit capability for dispatchers/case managers
-                                to correct addresses after submission. */}
-                            <div className="space-y-2">
-                                <Label htmlFor="pickupLocation">
-                                    Pickup Location <span className="text-destructive">*</span>
-                                </Label>
-                                <Input
-                                    id="pickupLocation"
-                                    {...register('pickupLocation')}
-                                    placeholder="Enter pickup address"
-                                    className={errors.pickupLocation ? 'border-destructive' : ''}
-                                />
-                                {errors.pickupLocation && (
-                                    <p className="text-sm text-destructive">{errors.pickupLocation.message}</p>
+                            <Controller
+                                name="pickupLocation"
+                                control={control}
+                                render={({ field }) => (
+                                    <AddressAutocomplete
+                                        value={typeof field.value === 'string' ? null : field.value}
+                                        onChange={field.onChange}
+                                        label="Pickup Location"
+                                        placeholder="Search for pickup address..."
+                                        required
+                                        error={!!errors.pickupLocation}
+                                        errorMessage={errors.pickupLocation?.message}
+                                        includedRegionCodes={["US"]}
+                                    />
                                 )}
-                            </div>
+                            />
 
-                            <div className="space-y-2">
-                                <Label htmlFor="dropoffLocation">
-                                    Drop-off Location <span className="text-destructive">*</span>
-                                </Label>
-                                <Input
-                                    id="dropoffLocation"
-                                    {...register('dropoffLocation')}
-                                    placeholder="Enter drop-off address"
-                                    className={errors.dropoffLocation ? 'border-destructive' : ''}
-                                />
-                                {errors.dropoffLocation && (
-                                    <p className="text-sm text-destructive">{errors.dropoffLocation.message}</p>
+                            <Controller
+                                name="dropoffLocation"
+                                control={control}
+                                render={({ field }) => (
+                                    <AddressAutocomplete
+                                        value={typeof field.value === 'string' ? null : field.value}
+                                        onChange={field.onChange}
+                                        label="Drop-off Location"
+                                        placeholder="Search for drop-off address..."
+                                        required
+                                        error={!!errors.dropoffLocation}
+                                        errorMessage={errors.dropoffLocation?.message}
+                                        includedRegionCodes={["US"]}
+                                    />
                                 )}
-                            </div>
+                            />
 
                             <div className="flex items-center space-x-2">
                                 <Controller

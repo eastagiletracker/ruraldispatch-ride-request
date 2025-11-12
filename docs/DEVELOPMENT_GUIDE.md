@@ -114,6 +114,11 @@ VONAGE_API_KEY=
 VONAGE_API_SECRET=
 VONAGE_FROM_NUMBER=
 VONAGE_WEBHOOK_URL=http://localhost:5000/api/notifications/webhook/vonage
+
+# Google Maps API Configuration
+# Get your API key from: https://console.cloud.google.com/google/maps-apis
+# Enable: Places API (New), Maps JavaScript API, Distance Matrix API
+VITE_GOOGLE_MAPS_API_KEY=
 ```
 
 ### 2. Get API Keys
@@ -128,6 +133,21 @@ VONAGE_WEBHOOK_URL=http://localhost:5000/api/notifications/webhook/vonage
 1. Sign up at [Vonage Dashboard](https://dashboard.nexmo.com/)
 2. Get API Key and Secret from Settings
 3. Copy credentials to `.env`
+
+#### Google Maps API Setup
+1. Go to [Google Cloud Console](https://console.cloud.google.com/google/maps-apis)
+2. Create a new project or select existing one
+3. Enable the following APIs:
+   - **Places API (New)** - For address autocomplete
+   - **Maps JavaScript API** - For map display
+   - **Distance Matrix API** - For future route calculations
+4. Create credentials:
+   - APIs & Services → Credentials → Create Credentials → API Key
+5. (Optional) Restrict the API key:
+   - Application restrictions: HTTP referrers
+   - Add: `http://localhost:3001/*` (development)
+   - API restrictions: Select the 3 APIs listed above
+6. Copy the API key to `.env` as `VITE_GOOGLE_MAPS_API_KEY`
 
 ---
 
@@ -458,10 +478,13 @@ mongosh "your-mongodb-uri"
 ```bash
 # Error: Google Maps API key missing
 # Solutions:
-1. Check VITE_GOOGLE_MAPS_API_KEY in client/.env
+1. Check VITE_GOOGLE_MAPS_API_KEY in root .env file
 2. Verify API key is valid
 3. Check API restrictions in Google Cloud Console
-4. Enable required APIs
+4. Enable required APIs:
+   - Places API (New)
+   - Maps JavaScript API
+   - Distance Matrix API (for future use)
 5. Restart dev server after adding key
 ```
 

@@ -35,3 +35,5 @@ services:
         sync: false
       - key: VONAGE_WEBHOOK_URL
         sync: false
+      - key: VITE_GOOGLE_MAPS_API_KEY
+        sync: false

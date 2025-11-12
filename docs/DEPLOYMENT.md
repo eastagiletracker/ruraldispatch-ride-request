@@ -41,6 +41,9 @@ Railway offers the easiest deployment with automatic environment detection.
      VONAGE_API_SECRET=your-vonage-api-secret
      VONAGE_FROM_NUMBER=your-vonage-number
      VONAGE_WEBHOOK_URL=https://your-app.up.railway.app/api/notifications/webhook/vonage
+     
+     # Google Maps API Configuration
+     VITE_GOOGLE_MAPS_API_KEY=your-google-maps-api-key
      ```
 
 5. **Configure GitHub Actions (Optional)**
@@ -118,6 +121,9 @@ Render provides excellent free tier options and good PostgreSQL support.
      VONAGE_API_SECRET=your-vonage-api-secret
      VONAGE_FROM_NUMBER=your-vonage-number
      VONAGE_WEBHOOK_URL=https://your-app.onrender.com/api/notifications/webhook/vonage
+     
+     # Google Maps API Configuration
+     VITE_GOOGLE_MAPS_API_KEY=your-google-maps-api-key
      ```
 
 5. **Configure GitHub Actions (Optional)**
@@ -161,6 +167,17 @@ Required for both platforms:
 | `VONAGE_API_SECRET` | Vonage API Secret | From Vonage dashboard |
 | `VONAGE_FROM_NUMBER` | Vonage Sender ID | Format: `+1234567890` or alphanumeric |
 | `VONAGE_WEBHOOK_URL` | Webhook URL for inbound SMS | `https://your-app.com/api/notifications/webhook/vonage` |
+
+### Google Maps Configuration:
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `VITE_GOOGLE_MAPS_API_KEY` | Google Maps API Key | Get from [Google Cloud Console](https://console.cloud.google.com/google/maps-apis) |
+
+**Note**: Enable the following APIs in Google Cloud Console:
+- Places API (New)
+- Maps JavaScript API
+- Distance Matrix API (for future use)
 
 **Note**: Configure both SMS providers for automatic fallback capability. If only one is configured, the system will use only that provider.
 

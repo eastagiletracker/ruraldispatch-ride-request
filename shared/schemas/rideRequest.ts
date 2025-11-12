@@ -7,6 +7,24 @@ import { z } from 'zod/v4';
 import { isValidPhoneNumber } from 'react-phone-number-input';
 
 /**
+ * Address Type for Google Places Autocomplete
+ * Used in frontend forms with address autocomplete
+ */
+export const AddressTypeSchema = z.object({
+  address1: z.string(),
+  address2: z.string().optional(),
+  formattedAddress: z.string(),
+  city: z.string(),
+  region: z.string(),
+  postalCode: z.string(),
+  country: z.string(),
+  lat: z.number(),
+  lng: z.number(),
+});
+
+export type AddressTypeForForm = z.infer<typeof AddressTypeSchema>;
+
+/**
  * Ride Request Type Options
  */
 export const RideRequestTypes = [
@@ -71,13 +89,27 @@ export const rideRequestFormSchema = z.object({
     .min(1, "Rider's mobile phone number is required")
     .refine(isValidPhoneNumber, { message: "Invalid phone number" }),
 
-  // Ride Details
-  pickupLocation: z.string()
-    .min(1, 'Pickup location is required')
-    .trim(),
-  dropoffLocation: z.string()
-    .min(1, 'Drop-off location is required')
-    .trim(),
+  // Ride Details - Accepts either string or AddressType (from autocomplete)
+  pickupLocation: z.union([
+    z.string().min(1, 'Pickup location is required').trim(),
+    AddressTypeSchema
+  ]).refine(
+    (val) => {
+      if (typeof val === 'string') return val.trim().length > 0;
+      return val.formattedAddress && val.formattedAddress.length > 0;
+    },
+    { message: 'Pickup location is required' }
+  ),
+  dropoffLocation: z.union([
+    z.string().min(1, 'Drop-off location is required').trim(),
+    AddressTypeSchema
+  ]).refine(
+    (val) => {
+      if (typeof val === 'string') return val.trim().length > 0;
+      return val.formattedAddress && val.formattedAddress.length > 0;
+    },
+    { message: 'Drop-off location is required' }
+  ),
   roundtrip: z.boolean().optional(),
   pickupRequestedDate: z.string()
     .min(1, 'Pickup date is required'),

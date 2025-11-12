@@ -5,6 +5,7 @@
 
 import { z } from 'zod/v4';
 import { isValidPhoneNumber } from 'react-phone-number-input';
+import { AddressTypeSchema } from './rideRequest';
 
 /**
  * Enums for User Select Options
@@ -105,9 +106,21 @@ export const userFormSchema = z.object({
   maritalStatus: z.string()
     .min(1, 'Marital status is required'),
   residence: z.object({
-    current: z.string().optional(),
-    last: z.string()
-      .min(1, 'Last residence is required')
+    current: z.union([
+      z.string(),
+      AddressTypeSchema,
+      z.null()
+    ]).optional(),
+    last: z.union([
+      z.string().min(1, 'Last residence is required'),
+      AddressTypeSchema
+    ]).refine(
+      (val) => {
+        if (typeof val === 'string') return val.trim().length > 0;
+        return val.formattedAddress && val.formattedAddress.length > 0;
+      },
+      { message: 'Last residence is required' }
+    )
   }),
   income: z.object({
     current: z.string().optional(),
