@@ -1,6 +1,7 @@
 require('dotenv').config({ path: '../.env' });
 const express = require('express');
 const notificationService = require('../services/notificationService');
+const scheduler = require('../services/scheduler');
 const { checkPermission } = require('../middleware/permissions');
 
 
@@ -63,6 +64,19 @@ function createRouter(api)
                 }
             }
 
+            // Import ride status utilities
+            const { RIDE_STATUSES, isClosingStatus } = require('../constants/rideStatuses');
+            const { RIDE_REQUEST_STATUSES } = require('../constants/rideRequestStatuses');
+
+            // Check if updating ride status to a closing status
+            if (req.body.rideStatus !== undefined && isClosingStatus(req.body.rideStatus)) {
+                console.log(`🔒 Auto-closing ride request #${rideUuid} due to status ${req.body.rideStatus}`);
+                req.body.requestStatus = RIDE_REQUEST_STATUSES.CLOSED.code;
+
+                // Cancel all scheduled tasks for this ride
+                scheduler.cancelRideTasks(rideUuid);
+            }
+
             // Update the ride
             const updateResult = await api.updateRideRequest(rideUuid, req.body);
 
@@ -98,8 +112,8 @@ function createRouter(api)
 
             // Trigger notifications based on status changes
             console.log('=== SMS NOTIFICATION DEBUG ===');
-            console.log('Old status:', oldRide?.rideRequestStatus);
-            console.log('New status:', updatedRide.rideRequestStatus);
+            console.log('Old rideStatus:', oldRide?.rideStatus, '→ New rideStatus:', updatedRide.rideStatus);
+            console.log('Old requestStatus:', oldRide?.rideRequestStatus, '→ New requestStatus:', updatedRide.rideRequestStatus);
             console.log('Rider:', userData.rider?.fullName, userData.rider?.phone);
             console.log('Driver:', userData.driver?.fullName);
             console.log('Driver contact:', userData.driver?.mobilePhone || userData.driver?.phone || 'No phone');
@@ -112,15 +126,55 @@ function createRouter(api)
                 userData
             );
 
-            console.log('Notifications returned:', notifications.length);
+            console.log('Notifications sent:', notifications.length);
             console.log('=============================');
 
+            // Schedule tasks based on status changes
+            if (updatedRide.rideStatus === RIDE_STATUSES.RIDE_CONFIRMED &&
+                oldRide.rideStatus !== RIDE_STATUSES.RIDE_CONFIRMED) {
+                // Ride just confirmed - schedule all initial tasks
+                console.log(`📅 Ride confirmed - scheduling tasks for ride #${rideUuid}`);
+                if (userData.rider && userData.driver) {
+                    scheduler.scheduleRideConfirmationTasks(
+                        updatedRide,
+                        userData.rider,
+                        userData.driver,
+                        async (uuid, updates) => await api.updateRideRequest(uuid, updates)
+                    );
+                }
+            }
+
+            if (updatedRide.rideStatus === RIDE_STATUSES.RIDER_PICKED_UP &&
+                oldRide.rideStatus !== RIDE_STATUSES.RIDER_PICKED_UP) {
+                // Rider just picked up - schedule pickup tasks
+                console.log(`📅 Rider picked up - scheduling pickup tasks for ride #${rideUuid}`);
+                if (userData.driver) {
+                    scheduler.schedulePickupTasks(
+                        updatedRide,
+                        userData.driver,
+                        async (uuid, updates) => await api.updateRideRequest(uuid, updates)
+                    );
+                }
+            }
+
+            if (updatedRide.rideStatus === RIDE_STATUSES.RIDER_DROPPED_OFF &&
+                oldRide.rideStatus !== RIDE_STATUSES.RIDER_DROPPED_OFF &&
+                updatedRide.roundTrip) {
+                // Rider dropped off on roundtrip - schedule return tasks
+                console.log(`📅 Roundtrip dropoff - scheduling return tasks for ride #${rideUuid}`);
+                if (userData.driver) {
+                    scheduler.scheduleDropoffTasks(updatedRide, userData.driver);
+                }
+            }
+
             // Auto-close session when ride is complete
-            const rideStatuses = require('../constants/rideStatuses');
-            if (updatedRide.rideStatus === rideStatuses.RIDE_COMPLETE ||
-                updatedRide.rideStatus === rideStatuses.ROUNDTRIP_COMPLETE) {
+            if (updatedRide.rideStatus === RIDE_STATUSES.RIDE_COMPLETE ||
+                updatedRide.rideStatus === RIDE_STATUSES.ROUNDTRIP_COMPLETE) {
                 await api.closeRideSession(rideUuid);
-                console.log(`Auto-closed SMS session for ride #${rideUuid}`);
+                console.log(`✅ Auto-closed SMS session for ride #${rideUuid}`);
+
+                // Cancel any remaining scheduled tasks
+                scheduler.cancelRideTasks(rideUuid);
             }
 
             // Save notification records to database
@@ -292,6 +346,29 @@ function createRouter(api)
         }
     });
 
+    // Helper function to determine sender role
+    function determineSenderRole(ride, phoneNumber) {
+        // Check if sender is rider
+        if (ride.rider && ride.rider[0]?.phone === phoneNumber) {
+            return 'rider';
+        }
+
+        // Check if sender is driver
+        if (ride.driver && ride.driver[0]) {
+            const driverPhone = ride.driver[0].mobilePhone || ride.driver[0].phone;
+            if (driverPhone === phoneNumber) {
+                return 'driver';
+            }
+        }
+
+        // Check if sender is case manager (creator)
+        if (ride.createdBy?.phone === phoneNumber) {
+            return 'case_manager';
+        }
+
+        return 'unknown';
+    }
+
     // Twilio webhook for incoming SMS responses
     router.post(`/notifications/webhook/twilio`, async (req, res) => {
         try {
@@ -340,63 +417,142 @@ function createRouter(api)
                 console.log(`✅ Found active ride: #${activeRide.uuid}`);
                 console.log(`   Rider: ${activeRide.rider?.[0]?.fullName} (${activeRide.rider?.[0]?.phone})`);
                 console.log(`   Driver: ${activeRide.driver?.[0]?.fullName} (${activeRide.driver?.[0]?.mobilePhone || activeRide.driver?.[0]?.phone})`);
+                console.log(`   Current Status: ${activeRide.rideStatus}`);
             } else {
                 console.log('❌ No active ride found for this sender');
             }
 
-            // Generate unique notification ID
-            const notificationUuid = Date.now();
+            // Determine sender role
+            const senderRole = activeRide ? determineSenderRole(activeRide, senderPhone) : 'unknown';
+            console.log(`👤 Sender role: ${senderRole}`);
 
-            // Determine sender role and recipient
-            let senderRole = 'unknown';
-            let recipientPhone = null;
-            let recipientName = null;
+            // Process interactive SMS response
+            if (activeRide && senderRole !== 'unknown') {
+                // Try to process as interactive response (1, 2, 3)
+                const action = await notificationService.processIncomingSMS(
+                    senderPhone,
+                    Body,
+                    activeRide,
+                    senderRole
+                );
 
-            if (activeRide) {
-                const isRider = activeRide.rider && activeRide.rider.length > 0 &&
-                               activeRide.rider[0].phone === senderPhone;
-                const isDriver = activeRide.driver && activeRide.driver.length > 0 &&
-                                (activeRide.driver[0].mobilePhone === senderPhone ||
-                                 activeRide.driver[0].phone === senderPhone);
+                console.log('🔄 Processing result:', action);
 
-                if (isRider) {
-                    senderRole = 'rider';
-                    // Forward to driver
-                    if (activeRide.driver && activeRide.driver.length > 0) {
-                        recipientPhone = activeRide.driver[0].mobilePhone || activeRide.driver[0].phone;
-                        recipientName = activeRide.driver[0].fullName;
+                if (action.success) {
+                    // Execute status updates
+                    const updates = {};
 
-                        const senderName = activeRide.rider[0].fullName;
-                        const forwardMessage = `Message from ${senderName} (Rider):\n${Body}`;
-
-                        console.log(`📤 Forwarding rider message to driver: ${recipientPhone}`);
-                        const result = await notificationService.sendSMS(recipientPhone, forwardMessage);
-                        console.log(`✅ Forward result:`, result.success ? 'SUCCESS' : 'FAILED');
+                    if (action.newRideStatus !== undefined) {
+                        updates.rideStatus = action.newRideStatus;
+                        console.log(`📝 Updating ride status to: ${action.newRideStatus}`);
                     }
-                } else if (isDriver) {
-                    senderRole = 'driver';
-                    // Forward to rider
-                    if (activeRide.rider && activeRide.rider.length > 0) {
-                        recipientPhone = activeRide.rider[0].phone;
-                        recipientName = activeRide.rider[0].fullName;
 
-                        const senderName = activeRide.driver[0].fullName;
-                        const forwardMessage = `Message from ${senderName} (Driver):\n${Body}`;
+                    if (action.newRequestStatus !== undefined) {
+                        updates.requestStatus = action.newRequestStatus;
+                        console.log(`📝 Updating request status to: ${action.newRequestStatus}`);
+                    }
 
-                        console.log(`📤 Forwarding driver message to rider: ${recipientPhone}`);
-                        const result = await notificationService.sendSMS(recipientPhone, forwardMessage);
-                        console.log(`✅ Forward result:`, result.success ? 'SUCCESS' : 'FAILED');
+                    if (Object.keys(updates).length > 0) {
+                        await api.updateRideRequest(activeRide.uuid, updates);
+                        console.log(`✅ Ride #${activeRide.uuid} updated`);
+                    }
+
+                    // Send bulk notifications
+                    if (action.notifications && action.notifications.length > 0) {
+                        const data = {
+                            rider: activeRide.rider?.[0],
+                            driver: activeRide.driver?.[0],
+                            vehicle: activeRide.vehicle?.[0],
+                            caseManager: activeRide.createdBy,
+                            pickupLocation: activeRide.pickupLocation
+                        };
+
+                        console.log(`📨 Sending ${action.notifications.length} notifications`);
+                        const notifResults = await notificationService.sendBulkNotifications(
+                            activeRide,
+                            action.notifications,
+                            data
+                        );
+                        console.log(`✅ Notifications sent:`, notifResults);
+                    }
+
+                    // Schedule future notifications
+                    if (action.scheduleNotification) {
+                        const { recipient, template, delayMinutes } = action.scheduleNotification;
+                        console.log(`⏰ Scheduling ${template} notification to ${recipient} in ${delayMinutes} minutes`);
+
+                        const data = {
+                            rider: activeRide.rider?.[0],
+                            driver: activeRide.driver?.[0],
+                            vehicle: activeRide.vehicle?.[0],
+                            caseManager: activeRide.createdBy,
+                            pickupLocation: activeRide.pickupLocation
+                        };
+
+                        scheduler.scheduleNotification(
+                            activeRide,
+                            recipient,
+                            template,
+                            delayMinutes,
+                            data
+                        );
+                    }
+
+                    // Schedule status change
+                    if (action.scheduleStatusChange) {
+                        const { status, delayMinutes } = action.scheduleStatusChange;
+                        console.log(`⏰ Scheduling status change to ${status} in ${delayMinutes} minutes`);
+
+                        scheduler.scheduleStatusChange(
+                            activeRide,
+                            status,
+                            delayMinutes,
+                            async (uuid, updates) => await api.updateRideRequest(uuid, updates)
+                        );
+                    }
+                } else {
+                    // Not an interactive response - forward as conversation
+                    console.log('💬 Not an interactive response, forwarding as conversation');
+
+                    let recipientPhone = null;
+                    let recipientName = null;
+
+                    if (senderRole === 'rider') {
+                        // Forward to driver
+                        if (activeRide.driver && activeRide.driver.length > 0) {
+                            recipientPhone = activeRide.driver[0].mobilePhone || activeRide.driver[0].phone;
+                            recipientName = activeRide.driver[0].fullName;
+
+                            const senderName = activeRide.rider[0].fullName;
+                            const forwardMessage = `Message from ${senderName} (Rider):\n${Body}`;
+
+                            console.log(`📤 Forwarding rider message to driver: ${recipientPhone}`);
+                            await notificationService.sendSMS(recipientPhone, forwardMessage);
+                        }
+                    } else if (senderRole === 'driver') {
+                        // Forward to rider
+                        if (activeRide.rider && activeRide.rider.length > 0) {
+                            recipientPhone = activeRide.rider[0].phone;
+                            recipientName = activeRide.rider[0].fullName;
+
+                            const senderName = activeRide.driver[0].fullName;
+                            const forwardMessage = `Message from ${senderName} (Driver):\n${Body}`;
+
+                            console.log(`📤 Forwarding driver message to rider: ${recipientPhone}`);
+                            await notificationService.sendSMS(recipientPhone, forwardMessage);
+                        }
                     }
                 }
             } else {
-                console.log('⚠️  No active ride found for sender:', senderPhone);
+                console.log('⚠️  No active ride or unknown sender - ignoring message');
             }
 
             // Create notification record for incoming message
+            const notificationUuid = Date.now();
             const notification = {
                 uuid: notificationUuid,
                 rideRequestUuid: activeRide ? parseInt(activeRide.uuid) : 0,
-                notificationType: 'incoming_sms',
+                notificationType: senderRole !== 'unknown' ? 'sms_response' : 'incoming_sms',
                 direction: 'inbound',
                 recipientPhone: To,
                 recipientRole: senderRole,
@@ -678,6 +834,21 @@ function createRouter(api)
             res.json({ success: true, status });
         } catch (error) {
             console.error('Error getting provider status:', error);
+            res.status(500).json({ success: false, error: error.message });
+        }
+    });
+
+    // Get scheduler status (admin/debugging)
+    router.get(`/notifications/scheduler-status`, async (req, res) => {
+        try {
+            const status = scheduler.getStatus();
+            res.json({
+                success: true,
+                scheduler: status,
+                timestamp: new Date().toISOString()
+            });
+        } catch (error) {
+            console.error('Error getting scheduler status:', error);
             res.status(500).json({ success: false, error: error.message });
         }
     });

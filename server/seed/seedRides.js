@@ -14,32 +14,9 @@ require('dotenv').config({ path: '../../.env' });
 const generateApi = require('../database/api');
 const { v4: uuidv4 } = require('uuid');
 
-// Import ride status constants
-const RIDE_STATUSES = {
-  REQUEST_IN_PROGRESS: 0,
-  RIDE_CONFIRMED: 100,
-  RIDE_CANCELED_BY_RIDER: 109,
-  RIDE_STARTED: 200,
-  RIDER_PICKED_UP: 300,
-  RIDER_DROPPED_OFF: 400,
-  RIDE_COMPLETE: 500,
-  RIDE_INCOMPLETE: 509
-};
-
-const RIDE_REQUEST_STATUSES = {
-  ALL_RIDE_REQUEST_OPEN: 100,
-  DRIVER_NEEDED: 200,
-  VEHICLE_NEEDED: 300,
-  RIDE_CONFIRMATION_NEEDED: 400,
-  READY_FOR_PICKUP: 500,
-  EN_ROUTE_TO_PICKUP: 510,
-  RIDER_PICKED_UP_CONFIRMED: 600,
-  EN_ROUTE_TO_DROPOFF: 610,
-  RIDER_DROPPED_OFF_CONFIRMED: 700,
-  RIDE_COMPLETED_SUCCESSFULLY: 800,
-  ALL_RIDE_REQUEST_READY_TO_RIDE: 1000,
-  ALL_RIDE_REQUEST_CLOSED: 1100
-};
+// Import ride status constants from source of truth
+const { RIDE_STATUSES } = require('../constants/rideStatuses');
+const { RIDE_REQUEST_STATUSES } = require('../constants/rideRequestStatuses');
 
 /**
  * Demo rides organized by status
@@ -69,7 +46,7 @@ const demoRides = [
     rideCompleteRequestedTime: createDateTime(17, 15),
     rideCompleteActualTime: null,
     rideStatus: RIDE_STATUSES.RIDE_CONFIRMED,
-    rideRequestStatus: RIDE_REQUEST_STATUSES.ALL_RIDE_REQUEST_READY_TO_RIDE,
+    rideRequestStatus: RIDE_REQUEST_STATUSES.ALL_RIDE_REQUEST_READY_TO_RIDE.code,
     purpose: 'Physical Therapy Appointment',
     notes: 'Driver assigned and ride confirmed. Ready to start when driver clicks "Start Ride".'
   },
@@ -91,7 +68,7 @@ const demoRides = [
     rideCompleteRequestedTime: createDateTime(18, 45),
     rideCompleteActualTime: null,
     rideStatus: RIDE_STATUSES.RIDE_CONFIRMED,
-    rideRequestStatus: RIDE_REQUEST_STATUSES.ALL_RIDE_REQUEST_READY_TO_RIDE,
+    rideRequestStatus: RIDE_REQUEST_STATUSES.ALL_RIDE_REQUEST_READY_TO_RIDE.code,
     purpose: 'Grocery Shopping',
     notes: 'Driver assigned. Wheelchair accessible vehicle required.'
   },
@@ -114,7 +91,7 @@ const demoRides = [
     rideCompleteRequestedTime: createDateTime(11, 45),
     rideCompleteActualTime: null,
     rideStatus: RIDE_STATUSES.RIDER_PICKED_UP,
-    rideRequestStatus: RIDE_REQUEST_STATUSES.EN_ROUTE_TO_DROPOFF,
+    rideRequestStatus: RIDE_REQUEST_STATUSES.ALL_RIDE_REQUEST_READY_TO_RIDE.code,
     purpose: 'Medical Appointment',
     notes: 'Driver en route to drop-off location. Estimated arrival in 15 minutes.'
   },
@@ -136,7 +113,7 @@ const demoRides = [
     rideCompleteRequestedTime: createDateTime(13, 30),
     rideCompleteActualTime: null,
     rideStatus: RIDE_STATUSES.RIDE_STARTED,
-    rideRequestStatus: RIDE_REQUEST_STATUSES.EN_ROUTE_TO_PICKUP,
+    rideRequestStatus: RIDE_REQUEST_STATUSES.ALL_RIDE_REQUEST_READY_TO_RIDE.code,
     purpose: 'Doctor Visit',
     notes: 'Driver en route to pick up location. ETA 5 minutes.'
   },
@@ -158,7 +135,7 @@ const demoRides = [
     rideCompleteRequestedTime: createDateTime(17, 0),
     rideCompleteActualTime: null,
     rideStatus: RIDE_STATUSES.RIDER_DROPPED_OFF,
-    rideRequestStatus: RIDE_REQUEST_STATUSES.RIDER_DROPPED_OFF_CONFIRMED,
+    rideRequestStatus: RIDE_REQUEST_STATUSES.ALL_RIDE_REQUEST_READY_TO_RIDE.code,
     purpose: 'Shopping Trip',
     notes: 'Round trip. Waiting for return trip. Will pick up at 4:00 PM.'
   },
@@ -182,7 +159,7 @@ const demoRides = [
     rideCompleteRequestedTime: createDateTime(9, 0),
     rideCompleteActualTime: createDateTime(8, 58),
     rideStatus: RIDE_STATUSES.RIDE_COMPLETE,
-    rideRequestStatus: RIDE_REQUEST_STATUSES.RIDE_COMPLETED_SUCCESSFULLY,
+    rideRequestStatus: RIDE_REQUEST_STATUSES.ALL_RIDE_REQUEST_CLOSED.code,
     purpose: 'Breakfast Meeting',
     notes: 'Ride completed successfully. No issues.'
   },
@@ -204,7 +181,7 @@ const demoRides = [
     rideCompleteRequestedTime: createDateTime(10, 0),
     rideCompleteActualTime: createDateTime(9, 58),
     rideStatus: RIDE_STATUSES.RIDE_COMPLETE,
-    rideRequestStatus: RIDE_REQUEST_STATUSES.RIDE_COMPLETED_SUCCESSFULLY,
+    rideRequestStatus: RIDE_REQUEST_STATUSES.ALL_RIDE_REQUEST_CLOSED.code,
     purpose: 'Work Commute',
     notes: 'Completed on time. Rider very satisfied.'
   },
@@ -226,7 +203,7 @@ const demoRides = [
     rideCompleteRequestedTime: createDateTime(8, 0),
     rideCompleteActualTime: createDateTime(7, 58),
     rideStatus: RIDE_STATUSES.RIDE_COMPLETE,
-    rideRequestStatus: RIDE_REQUEST_STATUSES.RIDE_COMPLETED_SUCCESSFULLY,
+    rideRequestStatus: RIDE_REQUEST_STATUSES.ALL_RIDE_REQUEST_CLOSED.code,
     purpose: 'Doctor Appointment',
     notes: 'Early morning appointment completed successfully.'
   },
@@ -248,7 +225,7 @@ const demoRides = [
     rideCompleteRequestedTime: createDateTime(15, 0),
     rideCompleteActualTime: createDateTime(14, 59),
     rideStatus: RIDE_STATUSES.RIDE_COMPLETE,
-    rideRequestStatus: RIDE_REQUEST_STATUSES.RIDE_COMPLETED_SUCCESSFULLY,
+    rideRequestStatus: RIDE_REQUEST_STATUSES.ALL_RIDE_REQUEST_CLOSED.code,
     purpose: 'Legal Appointment',
     notes: 'Completed successfully. On time.'
   }

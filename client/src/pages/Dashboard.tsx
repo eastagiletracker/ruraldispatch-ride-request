@@ -1,10 +1,21 @@
 import RideRequests from '../components/RideRequests';
-import {useState} from "react";
+import {useState, useEffect} from "react";
 import AssignDriver from "../components/AssignDriver";
+import SchedulerStatus from "../components/SchedulerStatus";
+import { hasAnyRole, getCurrentUserRole } from "../utils/permissions";
 
 export default function Dashboard() {
-
     const [selectedRideRequestId, setSelectedRideRequestId] = useState(null);
+
+    // Only show scheduler for admin and dispatcher roles
+    const canViewScheduler = hasAnyRole(['admin', 'dispatcher']);
+
+    // Debug logging
+    useEffect(() => {
+        const currentRole = getCurrentUserRole();
+        console.log('Dashboard - User role:', currentRole);
+        console.log('Dashboard - Can view scheduler:', canViewScheduler);
+    }, [canViewScheduler]);
 
     function closeAssignDriverPanel()
     {
@@ -26,6 +37,13 @@ export default function Dashboard() {
 
                 {/* Content */}
                 <RideRequests callbackFn={setSelectedRideRequestId} />
+
+                {/* Scheduled Tasks Status - Admin/Dispatcher Only - Bottom of Page */}
+                {canViewScheduler && (
+                    <div className="mt-8">
+                        <SchedulerStatus />
+                    </div>
+                )}
 
                 {/* Assign Driver Dialog */}
                 {selectedRideRequestId && (

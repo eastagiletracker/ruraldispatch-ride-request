@@ -70,6 +70,41 @@ const getStatusConfig = (rideStatus: number | undefined) => {
                 variant: "default" as const,
                 className: "bg-teal-100 text-teal-700 border-teal-300"
             };
+        case RIDE_STATUSES.RIDER_NOT_DROPPED_OFF: // 409
+            return {
+                label: "Not Dropped Off",
+                icon: XCircle,
+                variant: "destructive" as const,
+                className: "bg-red-100 text-red-700 border-red-300"
+            };
+        case RIDE_STATUSES.ROUNDTRIP_RETURNING: // 450
+            return {
+                label: "Returning",
+                icon: Navigation,
+                variant: "default" as const,
+                className: "bg-purple-100 text-purple-700 border-purple-300"
+            };
+        case RIDE_STATUSES.ROUNDTRIP_RETURN_INTERRUPTED: // 459
+            return {
+                label: "Return Interrupted",
+                icon: AlertTriangle,
+                variant: "destructive" as const,
+                className: "bg-orange-100 text-orange-700 border-orange-300"
+            };
+        case RIDE_STATUSES.ROUNDTRIP_COMPLETE: // 475
+            return {
+                label: "Roundtrip Complete",
+                icon: CheckCircle2,
+                variant: "default" as const,
+                className: "bg-green-100 text-green-700 border-green-300"
+            };
+        case RIDE_STATUSES.ROUNDTRIP_COMPLETION_INTERRUPTED: // 479
+            return {
+                label: "Completion Interrupted",
+                icon: XCircle,
+                variant: "destructive" as const,
+                className: "bg-red-100 text-red-700 border-red-300"
+            };
         case RIDE_STATUSES.RIDE_COMPLETE: // 500
             return {
                 label: "Complete",

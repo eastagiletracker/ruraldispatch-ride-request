@@ -19,6 +19,7 @@ import {
     Activity
 } from "lucide-react";
 import { getCurrentUser } from '@/utils/permissions';
+import { formatRideId } from '@/utils/formatters';
 
 interface RideRequest {
     uuid: string;
@@ -314,7 +315,7 @@ export default function DispatcherHub() {
                                     <div key={ride.uuid} className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent/50 transition-colors">
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2">
-                                                <span className="font-medium">Ride #{ride.uuid}</span>
+                                                <span className="font-medium">Ride {formatRideId(ride.uuid)}</span>
                                                 {urgentRides.some(ur => ur.uuid === ride.uuid) && (
                                                     <Badge variant="destructive" className="text-xs">
                                                         Urgent

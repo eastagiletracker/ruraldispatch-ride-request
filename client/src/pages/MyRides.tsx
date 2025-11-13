@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Car, Calendar, MapPin, User, Clock } from "lucide-react";
 import { getCurrentUser } from '@/utils/permissions';
+import { formatRideId } from '@/utils/formatters';
 
 interface RideRequest {
     uuid: string;
@@ -108,7 +109,7 @@ export default function MyRides() {
                     <div>
                         <CardTitle className="text-lg flex items-center gap-2">
                             <Car className="h-5 w-5 text-primary" />
-                            Ride #{ride.uuid}
+                            Ride {formatRideId(ride.uuid)}
                         </CardTitle>
                         <CardDescription className="mt-1">
                             {ride.rider && ride.rider.length > 0 && (

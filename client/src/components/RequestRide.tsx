@@ -5,6 +5,7 @@ import RideRequestForm from './RideRequestForm';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { UserPlus, Search } from "lucide-react";
+import { formatShortId } from "@/utils/formatters";
 import type { User } from "@/types";
 
 export default function RequestRide() {
@@ -79,7 +80,7 @@ export default function RequestRide() {
                             <div className='space-y-3 pt-4 border-t'>
                                 <div className='bg-muted p-3 rounded-md'>
                                     <p className='text-sm font-medium'>Selected User: {selectedUser.fullName}</p>
-                                    <p className='text-xs text-muted-foreground'>UUID: {selectedUser.uuid}</p>
+                                    <p className='text-xs text-muted-foreground'>ID: {formatShortId(selectedUser.uuid)}</p>
                                 </div>
                                 <div className='flex flex-col sm:flex-row gap-3'>
                                     <Button

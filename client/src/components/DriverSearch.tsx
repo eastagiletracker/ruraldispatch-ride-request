@@ -1,5 +1,6 @@
 import Search from './Search';
 import { fetchTopProviderMatches } from "../utils/database";
+import { formatShortId } from "@/utils/formatters";
 import type { ServiceProvider } from "@/types";
 
 interface DriverSearchProps {
@@ -29,7 +30,7 @@ export default function DriverSearch({ onDriverSelect }: DriverSearchProps) {
             >
                 <div className="font-medium text-gray-900">{driver.fullName}</div>
                 <div className="text-sm text-gray-500">
-                    UUID: {driver.uuid} • Phone: {driver.mobilePhone}
+                    ID: {formatShortId(driver.uuid)} • Phone: {driver.mobilePhone}
                 </div>
             </div>
         )

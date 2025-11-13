@@ -1,10 +1,13 @@
 const SMSProviderManager = require('./smsProviders/SMSProviderManager');
 const rideStatuses = require('../constants/rideStatuses');
 const { RIDE_REQUEST_STATUSES } = require('../constants/rideRequestStatuses');
+const smsTemplates = require('./smsTemplates');
+const { processSMSResponse } = require('./smsResponseHandler');
 
 /**
  * Notification Service
  * Handles SMS notifications via multiple providers (Twilio primary, Vonage fallback)
+ * Integrated with SMS templates and interactive response handling
  */
 class NotificationService {
   constructor() {
@@ -134,9 +137,9 @@ Check the dashboard for details.`;
     const notifications = [];
 
     try {
-      // When driver is assigned (status moves to RIDE_CONFIRMATION_NEEDED)
-      console.log('Checking notification condition:');
-      console.log('  newStatus === 400?', newStatus === RIDE_REQUEST_STATUSES.RIDE_CONFIRMATION_NEEDED.code, newStatus, RIDE_REQUEST_STATUSES.RIDE_CONFIRMATION_NEEDED.code);
+      // When driver is assigned (request status moves to RIDE_CONFIRMATION_NEEDED = 400)
+      console.log('Checking assignment notification:');
+      console.log('  requestStatus === 400 (RIDE_CONFIRMATION_NEEDED)?', newStatus === RIDE_REQUEST_STATUSES.RIDE_CONFIRMATION_NEEDED.code, `(${newStatus} === ${RIDE_REQUEST_STATUSES.RIDE_CONFIRMATION_NEEDED.code})`);
       console.log('  Has rider?', !!userData.rider);
       console.log('  Has driver?', !!userData.driver);
 
@@ -172,41 +175,23 @@ Check the dashboard for details.`;
         }
       }
 
-      // When ride starts (RIDE_STARTED)
-      if (ride.rideStatus === rideStatuses.RIDE_STARTED &&
-          userData.rider && userData.driver) {
-        const notif = await this.notifyRideStarted(
-          ride,
-          userData.rider,
-          userData.driver
-        );
-        notifications.push({ type: 'ride_started', ...notif });
-      }
+      // Status 200 (RIDE_STARTED) - Per CSV spec, NO SMS should be sent
+      // This status happens automatically 5 min after pickup (status 300)
+      // If manual "Start Ride" button is used, it also shouldn't trigger SMS
+      console.log('Status 200 (RIDE_STARTED) - No SMS per CSV spec');
 
-      // When rider is picked up
-      if (ride.rideStatus === rideStatuses.RIDER_PICKED_UP &&
-          userData.rider && userData.driver) {
-        const notif = await this.notifyRiderPickedUp(
-          ride,
-          userData.rider,
-          userData.driver
-        );
-        notifications.push({ type: 'rider_picked_up', ...notif });
-      }
+      // Legacy notification checks - These are now handled by the SMS flow system
+      // via smsResponseHandler.js and router.js webhook processing
+      // Keeping them commented out in case manual status updates need fallback notifications
 
-      // When rider is dropped off
-      if (ride.rideStatus === rideStatuses.RIDER_DROPPED_OFF &&
-          userData.rider) {
-        const notif = await this.notifyRiderDroppedOff(ride, userData.rider);
-        notifications.push({ type: 'rider_dropped_off', ...notif });
-      }
+      // Status 300 (RIDER_PICKED_UP) - Handled by SMS flow
+      console.log('Status 300 (RIDER_PICKED_UP) - Handled by SMS flow system');
 
-      // When ride is complete
-      if (ride.rideStatus === rideStatuses.RIDE_COMPLETE &&
-          userData.rider) {
-        const notif = await this.notifyRideComplete(ride, userData.rider);
-        notifications.push({ type: 'ride_complete', ...notif });
-      }
+      // Status 400 (RIDER_DROPPED_OFF) - Handled by SMS flow
+      console.log('Status 400 (RIDER_DROPPED_OFF) - Handled by SMS flow system');
+
+      // Status 500 (RIDE_COMPLETE) - Handled by SMS flow
+      console.log('Status 500 (RIDE_COMPLETE) - Handled by SMS flow system');
 
       return notifications;
     } catch (error) {
@@ -240,6 +225,226 @@ Check the dashboard for details.`;
     console.log(`Closing ride session for ride #${rideUuid}`);
     // Add any cleanup logic here (e.g., mark notifications as closed, archive, etc.)
     return { success: true, message: `Session closed for ride #${rideUuid}` };
+  }
+
+  /**
+   * Send template-based SMS notification
+   * @param {string} phoneNumber - Recipient phone number
+   * @param {string} template - Template identifier or status code
+   * @param {object} data - Data for template (ride, rider, driver, vehicle, etc.)
+   * @returns {Promise<object>} SMS result
+   */
+  async sendTemplateSMS(phoneNumber, template, recipient, data) {
+    const message = smsTemplates.getSMSTemplate(template, recipient, data);
+
+    if (!message) {
+      console.warn(`⚠️ No SMS template found for template=${template}, recipient=${recipient}`);
+      return {
+        success: false,
+        error: 'No template found',
+        timestamp: new Date()
+      };
+    }
+
+    console.log(`📤 Sending ${template} SMS to ${recipient}: ${phoneNumber}`);
+    console.log(`   Message preview: ${message.substring(0, 100)}...`);
+
+    return await this.sendSMS(phoneNumber, message);
+  }
+
+  /**
+   * Process incoming SMS response from rider/driver/case manager
+   * @param {string} fromPhone - Sender phone number
+   * @param {string} messageBody - SMS message text
+   * @param {object} ride - Current ride object
+   * @param {string} senderRole - 'driver', 'rider', or 'case_manager'
+   * @returns {Promise<object>} Processing result with actions to take
+   */
+  async processIncomingSMS(fromPhone, messageBody, ride, senderRole) {
+    console.log('📥 Processing incoming SMS:', {
+      from: fromPhone,
+      role: senderRole,
+      rideUuid: ride.uuid,
+      message: messageBody.substring(0, 50)
+    });
+
+    const action = processSMSResponse(ride, senderRole, messageBody);
+
+    if (!action.success) {
+      // Invalid response - send error message back
+      if (action.requiresResponse && action.error) {
+        await this.sendSMS(fromPhone, action.error);
+      }
+      return action;
+    }
+
+    // Return the action object for the API to execute
+    // (status updates, notifications, scheduling)
+    return action;
+  }
+
+  /**
+   * Send notifications to multiple recipients for a ride status change
+   * @param {object} ride - The ride object
+   * @param {array} notifications - Array of {recipient, template, message} objects
+   * @param {object} data - Data context (rider, driver, vehicle, etc.)
+   * @returns {Promise<array>} Array of notification results
+   */
+  async sendBulkNotifications(ride, notifications, data) {
+    const results = [];
+
+    for (const notif of notifications) {
+      try {
+        const phoneNumber = this.getRecipientPhone(notif.recipient, data);
+
+        if (!phoneNumber) {
+          console.warn(`⚠️ No phone number for recipient: ${notif.recipient}`);
+          results.push({
+            recipient: notif.recipient,
+            success: false,
+            error: 'No phone number'
+          });
+          continue;
+        }
+
+        let result;
+        if (notif.message) {
+          // Custom message provided
+          result = await this.sendSMS(phoneNumber, notif.message);
+        } else if (notif.template) {
+          // Use template
+          result = await this.sendTemplateSMS(
+            phoneNumber,
+            notif.template,
+            notif.recipient,
+            { ride, ...data }
+          );
+        }
+
+        results.push({
+          recipient: notif.recipient,
+          ...result
+        });
+      } catch (error) {
+        console.error(`❌ Error sending notification to ${notif.recipient}:`, error);
+        results.push({
+          recipient: notif.recipient,
+          success: false,
+          error: error.message
+        });
+      }
+    }
+
+    return results;
+  }
+
+  /**
+   * Get phone number for recipient role
+   * @param {string} recipient - 'rider', 'driver', 'case_manager', or 'dispatcher'
+   * @param {object} data - Context data with rider, driver, etc.
+   * @returns {string|null} Phone number
+   */
+  getRecipientPhone(recipient, data) {
+    switch (recipient) {
+      case 'rider':
+        return data.rider?.phone;
+
+      case 'driver':
+        return data.driver?.mobilePhone || data.driver?.phone;
+
+      case 'case_manager':
+        // Case manager is the creator of the ride
+        return data.caseManager?.phone || data.createdBy?.phone;
+
+      case 'dispatcher':
+        // TODO: Get dispatcher phone from system config or admin user
+        return process.env.DISPATCHER_PHONE || data.dispatcher?.phone;
+
+      default:
+        return null;
+    }
+  }
+
+  /**
+   * Send driver assignment notification (when ride matched to driver)
+   * Uses new template system
+   */
+  async sendDriverAssignment(ride, driver, rider) {
+    const message = smsTemplates.getDriverAssignmentMessage(ride, rider);
+    const driverPhone = driver.mobilePhone || driver.phone;
+
+    if (!driverPhone) {
+      console.error('❌ Driver has no phone number!', { driver });
+      return {
+        success: false,
+        error: 'Driver has no phone number configured',
+        timestamp: new Date()
+      };
+    }
+
+    console.log('📱 Sending driver assignment to:', driverPhone);
+
+    return await this.sendSMS(driverPhone, message);
+  }
+
+  /**
+   * Send 1 hour prior reminder to rider
+   * @param {object} ride - The ride object
+   * @param {object} rider - The rider object
+   * @returns {Promise<object>} SMS result
+   */
+  async sendOneHourPriorReminder(ride, rider) {
+    return await this.sendTemplateSMS(
+      rider.phone,
+      'ONE_HOUR_PRIOR',
+      'rider',
+      { ride, rider }
+    );
+  }
+
+  /**
+   * Send driver arrival check (at pickup time)
+   * @param {object} ride - The ride object
+   * @param {object} driver - The driver object
+   * @returns {Promise<object>} SMS result
+   */
+  async sendDriverArrivalCheck(ride, driver) {
+    return await this.sendTemplateSMS(
+      driver.mobilePhone || driver.phone,
+      'DRIVER_ARRIVAL_CHECK',
+      'driver',
+      { ride, driver }
+    );
+  }
+
+  /**
+   * Send dropoff check to driver (at estimated dropoff time)
+   * @param {object} ride - The ride object
+   * @param {object} driver - The driver object
+   * @returns {Promise<object>} SMS result
+   */
+  async sendDropoffCheck(ride, driver) {
+    return await this.sendTemplateSMS(
+      driver.mobilePhone || driver.phone,
+      'DROPOFF_CHECK',
+      'driver',
+      { ride, driver }
+    );
+  }
+
+  /**
+   * Send roundtrip return check to driver
+   * @param {object} ride - The ride object
+   * @param {object} driver - The driver object
+   * @returns {Promise<object>} SMS result
+   */
+  async sendRoundtripReturnCheck(ride, driver) {
+    return await this.sendTemplateSMS(
+      driver.mobilePhone || driver.phone,
+      'ROUNDTRIP_RETURN_CHECK',
+      'driver',
+      { ride, driver }
+    );
   }
 }
 

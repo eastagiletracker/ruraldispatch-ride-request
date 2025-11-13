@@ -1,0 +1,52 @@
+,,,SMS Notification,,,,
+Trigger,New Event,New Dashboard State,To Rider,To Case Manager,To Driver ,Comments,
+Ride Request Form is Submitted by Case Manager,Update Ride Statuses,0 - Ride Request in Progress,N/A,N/A,N/A,,
+Dispatcher sees ride request in dashboard and matches it to driver and vehicle,Update Ride Statuses,400 - Ride Confirmation Needed,N/A,N/A,N/A,,Red Text: Out of Scope for MVP
+Driver sees assignment,SMS notification,,,,"New ride assigned to you!
+Rider: Johan Guse
+Pickup: State Island St
+11/7, 2:45:00 PM
+Drop off: 5193 Windsome Ave
+R
+Accept? 1=Yes, 2=No", ,
+Driver does NOT accept ride assignment 2-No,Update Ride Statuses,200 - Driver Needed,N/A,N/A,N/A,,
+-->Dispatcher starts over assigning new Driver,,,,,,,
+"Driver accepts Ride Assignement, 1-Yes = Ride Confirmed",SMS Notification,100 - Ride Confirmed,"Ride Confirmed!
+Driver: Guse
+Vehicle: Sedan
+11/7, 2:55:00 PM
+Pickup: State Island St
+Drop off: 5193 Windsome Ave
+R
+To Cancel ride, type 3","Ride Confirmed!
+Driver: Guse
+Vehicle: Sedan
+11/7, 2:55:00 PM
+Pickup: State Island St
+Drop off: 5193 Windsome Ave
+R
+To Cancel ride, type 3",N/A,,
+1 hour prior to start of ride,SMS Notification,,Your driver will arrive in 1 hour. Reply 1 to confirm ride. Reply 2 to cancel ride.,,,,
+Rider / Case Manager cancels ride,"Update Ride Statuses, SMS Notification",109 - Ride Canceled by Rider,Ride has been canceled,,Ride has been canceled,,
+Pickup time,SMS Notification,,,,"Have you arrived at pick up location? Reply 1 for yes, 2 for no.",,
+Pickup time - driver responds 2-No,SMS Notification,,Driver is en route,,,,
+Pickup time - driver responds 1-Yes,SMS Notification,,Driver has arrived,Driver has arrived,"Have you picked up the rider and started the ride? 1-yes, 2-no",,
+Rider pick up - driver responds 2-No,SMS Notification,,Driver is waiting. Driver will wait up to 5 minute before canceling ride. To cancel ride reply 2.,Driver is waiting. Driver will wait up to 5 minute before canceling ride. To cancel ride reply 2.,,,
+Rider pick up - rider / case worker replies 2-Cancel,"Update Ride Statuses, SMS Notification",109 - Ride Canceled by Rider,Ride has been canceled,Ride has been canceled,Ride has been canceled,,
+Rider pick up - 5 min after driver responds 2-No,SMS Notification,,,,"Have you picked up the rider and started the ride? 1-yes, 2-no",,
+Rider pick up - driver again responds 2-No,"Update Ride Statuses, SMS Notification",,Ride has been canceled.,Ride has been canceled,Ride has been canceled,,
+Rider pick up - driver responds 1-Yes,Update Ride Statuses,300- Rider Pickup,,,,,
+5 minutes after Rider Pickup,Update Ride Statuses,200 - Ride Started,,,,,
+Rider drop-off = rider pickup time + estimated travel time,SMS Notification,,,,"Have you dropped off rider? 1-yes, 2-no",,
+Rider dropoff - driver responds 1-Yes,"Update Ride Statuses, SMS Notification to Rider & Case Manager",400 - Rider dropoff,You have been dropped off,Rider has been dropped off,,,
+Rider dropoff - driver responds 2-No,Update Ride Statuses,409 - Rider Not Dropped off,,,,Requires intervention by dispatcher,
+Roundtrip returning = rider dropoff time + estimated waiting time,SMS Notification,,,,"Have you picked up the rider and started the return ride? 1-yes, 2-no",,
+Roundtrip returning - driver responds 1-Yes,Update Ride Statuses,450 - roundtrip returning,,,,,
+Roundtrip returning - driver responds 2-No,SMS Notification,,"Driver is waiting to return you to [pickup location]. Driver will wait up to another 15 minutes. To cancel return ride, reply 2- Cancel.","Driver is waiting to return you to [pickup location]. Driver will wait up to another 15 minutes. To cancel return ride, reply 2- Cancel.",,,
+Roundtrip returning + 15min,SMS Notification,,,,"Have you picked up the rider and started the return ride? 1-yes, 2-no",,
+Roundtrip returning + 15min - driver responds 2-No,"Update Ride Statuses, SMS Notification",479 - roundtrip completion interrupted,Return ride has been canceled.,Return ride has been canceled.,Return ride has been canceled.,Requires intervention by dispatcher,
+Roundtrip returning + 15min - driver responds 1-Yes,Update Ride Statuses,450 - roundtrip returning,,,,,
+Roundtrip completed = roundtrip returning start time + estimated travel time,SMS Notification,,,,"Have you dropped off rider? 1-yes, 2-no",,
+Roundtrip completed - driver responds 1-Yes,"Update Ride Statuses, SMS Notification",475 - Roundtrip Completed,Your roundtrip is completed. Thank you for riding with EastConn,Your roundtrip is completed. Thank you for riding with EastConn,,,
+Roundtrip completed - driver responds 2-No,"Update Ride Statuses, SMS Notification",479 - roundtrip completion interrupted,Return ride has been canceled.,Return ride has been canceled.,Return ride has been canceled.,Requires intervention by dispatcher,
+"Dispatcher reviews ride statuses and confirms by clicking on ""Ride Completed"" button on dashboard ",Update Ride Statuses,500 - Ride Completed,,,,,

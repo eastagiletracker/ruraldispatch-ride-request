@@ -1,5 +1,6 @@
 import Search from './Search';
 import { fetchTopVehicleMatches } from "../utils/database";
+import { formatShortId } from "@/utils/formatters";
 import type { Vehicle } from "@/types";
 
 interface VehicleSearchProps {
@@ -29,7 +30,7 @@ export default function VehicleSearch({ onVehicleSelect }: VehicleSearchProps) {
             >
                 <div className="font-medium text-gray-900">{vehicle.displayName}</div>
                 <div className="text-sm text-gray-500">
-                    UUID: {vehicle.uuid}
+                    ID: {formatShortId(vehicle.uuid)}
                 </div>
             </div>
         )

@@ -11,6 +11,7 @@ import { Users, Trash2, Search, AlertCircle, Briefcase, Truck, Clipboard } from 
 import { toast } from 'sonner';
 import StatusToggleButton from "@/components/StatusToggleButton";
 import DeleteConfirmationModal from "@/components/DeleteConfirmationModal";
+import { formatShortId } from "@/utils/formatters";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -465,7 +466,7 @@ export default function Manager() {
                                     <TableBody>
                                         {filteredRiders.map((rider) => (
                                             <TableRow key={rider.uuid}>
-                                                <TableCell className="font-medium">{rider.uuid}</TableCell>
+                                                <TableCell className="font-medium">{formatShortId(rider.uuid)}</TableCell>
                                                 <TableCell>{rider.fullName || 'N/A'}</TableCell>
                                                 <TableCell>{rider.phone || 'N/A'}</TableCell>
                                                 <TableCell>{rider.email || 'N/A'}</TableCell>
@@ -520,7 +521,7 @@ export default function Manager() {
                                     <TableBody>
                                         {filteredProviders.map((provider) => (
                                             <TableRow key={provider.uuid}>
-                                                <TableCell className="font-medium">{provider.uuid}</TableCell>
+                                                <TableCell className="font-medium">{formatShortId(provider.uuid)}</TableCell>
                                                 <TableCell className="font-semibold">{provider.fullName || 'N/A'}</TableCell>
                                                 <TableCell>{provider.title || 'N/A'}</TableCell>
                                                 <TableCell>{provider.organization || 'N/A'}</TableCell>
@@ -642,7 +643,7 @@ export default function Manager() {
                                     <TableBody>
                                         {filteredDispatchers.map((dispatcher) => (
                                             <TableRow key={dispatcher.uuid}>
-                                                <TableCell className="font-medium">{dispatcher.uuid}</TableCell>
+                                                <TableCell className="font-medium">{formatShortId(dispatcher.uuid)}</TableCell>
                                                 <TableCell className="font-mono">{dispatcher.username}</TableCell>
                                                 <TableCell>{dispatcher.fullName || 'N/A'}</TableCell>
                                                 <TableCell>{dispatcher.email || 'N/A'}</TableCell>
@@ -715,7 +716,7 @@ export default function Manager() {
                                     <TableBody>
                                         {filteredCaseManagers.map((manager) => (
                                             <TableRow key={manager.uuid}>
-                                                <TableCell className="font-medium">{manager.uuid}</TableCell>
+                                                <TableCell className="font-medium">{formatShortId(manager.uuid)}</TableCell>
                                                 <TableCell className="font-mono">{manager.username}</TableCell>
                                                 <TableCell>{manager.fullName || 'N/A'}</TableCell>
                                                 <TableCell>{manager.email || 'N/A'}</TableCell>

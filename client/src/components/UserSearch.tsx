@@ -1,5 +1,6 @@
 import Search from './Search';
 import { fetchTopUserMatches } from "../utils/database";
+import { formatShortId } from "@/utils/formatters";
 import type { User } from "@/types";
 
 interface UserSearchProps {
@@ -29,7 +30,7 @@ export default function UserSearch({ onUserSelect }: UserSearchProps) {
             >
                 <div className="font-medium text-gray-900">{user.fullName}</div>
                 <div className="text-sm text-gray-500">
-                    UUID: {user.uuid} • Phone: {user.phone}
+                    ID: {formatShortId(user.uuid)} • Phone: {user.phone}
                 </div>
             </div>
         )

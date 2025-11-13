@@ -268,15 +268,20 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                 else {
                     nonActiveRideReqs = rideReqsSortedByRrStatus.slice(0, pivotIndex);
                     const assignedRides = rideReqsSortedByRrStatus.slice(pivotIndex, length);
-                    
+
                     // Separate assigned rides into active and completed
-                    // Completed: rideStatus >= RIDER_DROPPED_OFF (400) or complete (500)
-                    completedRides = assignedRides.filter(ride => 
-                        ride.rideStatus !== undefined && parseInt(ride.rideStatus.toString()) >= RIDE_STATUSES.RIDER_DROPPED_OFF
-                    );
-                    activeRides = assignedRides.filter(ride => 
-                        ride.rideStatus === undefined || parseInt(ride.rideStatus.toString()) < RIDE_STATUSES.RIDER_DROPPED_OFF
-                    );
+                    // Active: status < 400 OR status = 450 (roundtrip returning - still in progress)
+                    // Completed: status >= 400 but NOT 450 (roundtrip returning)
+                    activeRides = assignedRides.filter(ride => {
+                        const status = parseInt(ride.rideStatus?.toString() || '0');
+                        return status < RIDE_STATUSES.RIDER_DROPPED_OFF ||
+                               status === RIDE_STATUSES.ROUNDTRIP_RETURNING;  // Keep returning rides in active
+                    });
+                    completedRides = assignedRides.filter(ride => {
+                        const status = parseInt(ride.rideStatus?.toString() || '0');
+                        return status >= RIDE_STATUSES.RIDER_DROPPED_OFF &&
+                               status !== RIDE_STATUSES.ROUNDTRIP_RETURNING;  // Move returning rides to active
+                    });
                 }
 
                 // Sort by uuid (timestamp) - most recent first
