@@ -54,9 +54,7 @@ const demoRiders = [
         veteranStatus: 'not veteran',
         disabilityStatus: 'no',
         smsConsent: {
-            given: true,
-            timestamp: new Date(),
-            ipAddress: '192.168.1.2'
+            given: false
         }
     }
 ];

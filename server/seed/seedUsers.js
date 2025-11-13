@@ -60,9 +60,7 @@ const demoUsers = [
         veteranStatus: 'veteran',
         disabilityStatus: 'yes',
         smsConsent: {
-            given: true,
-            timestamp: new Date(),
-            ipAddress: '192.168.1.2'
+            given: false
         }
     },
 
@@ -108,9 +106,7 @@ const demoUsers = [
         veteranStatus: 'not veteran',
         disabilityStatus: 'no',
         smsConsent: {
-            given: true,
-            timestamp: new Date(),
-            ipAddress: '192.168.1.4'
+            given: false
         }
     }
 ];

@@ -26,7 +26,7 @@ A complete TCPA-compliant SMS consent system with proper opt-in tracking, user c
 ### Components Built
 
 ### 1. SMS Consent Page
-**URL**: `https://ruraldispatch.org/sms-consent`
+**URL**: `https://ruraldispatch.swarmnyc.com/sms-consent`
 
 Features:
 - ✅ Professional branding ("Rural Dispatch")
@@ -375,7 +375,7 @@ ngrok http 5000
 
 ## 📸 Step 1: Take Screenshot
 
-1. Visit: `https://ruraldispatch.org/sms-consent`
+1. Visit: `https://ruraldispatch.swarmnyc.com/sms-consent`
 2. Take a **full-page screenshot** showing:
    - Rural Dispatch branding/logo
    - Complete consent text
@@ -467,12 +467,12 @@ toll-free number. Upon receiving STOP:
 4. User can resubscribe by replying START
 
 Users can also manage SMS preferences in their account settings at 
-https://ruraldispatch.org/dashboard
+https://ruraldispatch.swarmnyc.com/dashboard
 ```
 
 ### Contact Information
 
-**Company Website**: `https://ruraldispatch.org`  
+**Company Website**: `https://ruraldispatch.swarmnyc.com`  
 **Support Email**: your-support-email@domain.com  
 **Support Phone**: +1 877 780 4236 (same toll-free number)
 
@@ -505,7 +505,7 @@ Ensure these are set in your Render dashboard:
 TWILIO_ACCOUNT_SID=AC726636032481f7e8b01d76b2d4d05b84
 TWILIO_AUTH_TOKEN=6d5cefdd597e9e2d80c75c636214f91b
 TWILIO_PHONE_NUMBER=+18777804236
-TWILIO_WEBHOOK_URL=https://ruraldispatch.org/api/notifications/webhook
+TWILIO_WEBHOOK_URL=https://ruraldispatch.swarmnyc.com/api/notifications/webhook
 ```
 
 ---
