@@ -12,12 +12,12 @@ function getDatabaseName() {
 
     switch (env) {
         case 'production':
-            return process.env.MONGODB_DB_PROD || 'prod-ruraldispatch';
+            return (process.env.MONGODB_DB_PROD || 'prod-ruraldispatch').trim();
         case 'staging':
-            return process.env.MONGODB_DB_STAGING || 'staging-ruraldispatch';
+            return (process.env.MONGODB_DB_STAGING || 'staging-ruraldispatch').trim();
         case 'development':
         default:
-            return process.env.MONGODB_DB_DEV || 'dev-ruraldispatch';
+            return (process.env.MONGODB_DB_DEV || 'dev-ruraldispatch').trim();
     }
 }
 

@@ -23,7 +23,7 @@ const { MongoClient } = require('mongodb');
 
 async function resetDatabase() {
     const mongoUri = process.env.MONGODB_URI;
-    const dbName = process.env.MONGODB_DB_DEV || 'dev-ruraldispatch';
+    const dbName = (process.env.MONGODB_DB_DEV || 'dev-ruraldispatch').trim();
     
     if (!mongoUri) {
         console.error('❌ Error: MONGODB_URI not set in .env');

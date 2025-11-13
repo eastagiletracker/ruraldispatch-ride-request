@@ -3,15 +3,16 @@
 /**
  * Master seed script - Runs all database seeds in sequence
  *
- * This script seeds user collections ONLY (no vehicles or ride data):
+ * This script seeds user and vehicle collections:
  * 1. Admins (admin role - system management)
  * 2. Dispatchers (dispatcher role - ride coordination)
  * 3. Case Managers (case_manager role - ride requests)
  * 4. Riders (service users - requesting transportation)
  * 5. Caregivers (service users - managing rides for others)
  * 6. Drivers (service providers - providing transportation)
+ * 7. Vehicles (fleet of vehicles with capabilities)
  *
- * NOTE: Vehicles and ride requests are NOT seeded - add manually as needed.
+ * NOTE: Ride requests are NOT seeded - add manually via web interface
  *
  * Usage:
  *   npm run seed              # Run all seeds in sequence
@@ -21,7 +22,7 @@
  *   npm run seed:riders       # Run only riders seed
  *   npm run seed:caregivers   # Run only caregivers seed
  *   npm run seed:drivers      # Run only drivers seed
- *   npm run seed:vehicles     # Run only vehicles seed (if needed)
+ *   npm run seed:vehicles     # Run only vehicles seed
  *   npm run seed:rides        # Run only rides seed (if needed)
  */
 
@@ -65,14 +66,14 @@ const seeds = [
         script: 'seedDrivers.js',
         description: 'Service providers (transportation)',
         role: 'driver'
+    },
+    {
+        name: 'Vehicles',
+        script: 'seedVehicles.js',
+        description: 'Fleet of vehicles with capabilities',
+        role: 'vehicle'
     }
-    // Vehicles and Ride Requests removed - no seed data
-    // {
-    //     name: 'Vehicles',
-    //     script: 'seedVehicles.js',
-    //     description: 'Fleet of vehicles with capabilities',
-    //     role: 'vehicle'
-    // },
+    // Ride Requests removed - no seed data
     // {
     //     name: 'Ride Requests',
     //     script: 'seedRides.js',
@@ -114,7 +115,7 @@ function runSeed(seedIndex) {
         console.log('  - Patricia Smith (Medical appointments, Senior care)');
         console.log('  - David Martinez (Medical appointments, Bilingual)\n');
 
-        console.log('NOTE: No vehicles or ride requests seeded - add manually as needed.\n');
+        console.log('NOTE: No ride requests seeded - add manually via the web interface.\n');
         console.log('For full details, check AUTHENTICATION.md\n');
         process.exit(0);
         return;
@@ -155,7 +156,7 @@ function main() {
     console.log('╔' + '═'.repeat(78) + '╗');
     console.log('║' + ' '.repeat(20) + '🌱 DATABASE SEEDING SCRIPT 🌱' + ' '.repeat(29) + '║');
     console.log('╚' + '═'.repeat(78) + '╝');
-    console.log('\nThis script will seed user collections (NO vehicles or ride data):\n');
+    console.log('\nThis script will seed user and vehicle collections (NO ride data):\n');
 
     seeds.forEach((seed, index) => {
         console.log(`${index + 1}. ${seed.name.padEnd(20)} - ${seed.description}`);
