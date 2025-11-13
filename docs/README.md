@@ -61,7 +61,14 @@ New to the project? Start here:
 | File | Type | Description |
 |------|------|-------------|
 | **[SMS Flow Diagram](./SMS_Flow_Diagram.excalidraw)** | Excalidraw | Visual SMS flow (open at excalidraw.com) |
-| **[Ride Statuses & SMS Flow](./Ride%20Statuses%20&%20SMS%20Flow.csv)** | CSV | Original specification |
+| **[Ride Statuses & SMS Flow](./RideStatusesSMSFlow.csv)** | CSV | Original specification |
+
+### Presentation Materials
+
+| File | Type | Description |
+|------|------|-------------|
+| **[SMS Flow Presentation Guide](./SMS_FLOW_PRESENTATION_GUIDE.md)** | Guide | How to present SMS flow to your team |
+| **[SMS Flow Team Handout](./SMS_FLOW_TEAM_HANDOUT.md)** | Handout | Quick reference for team members |
 
 ---
 
@@ -132,9 +139,13 @@ If you only read 3 documents, read these:
 │   ├── ZOD_VALIDATION.md
 │   └── SHARED_SCHEMAS.md
 │
+├── Presentation
+│   ├── SMS_FLOW_PRESENTATION_GUIDE.md
+│   └── SMS_FLOW_TEAM_HANDOUT.md
+│
 └── Reference
     ├── SMS_Flow_Diagram.excalidraw
-    └── Ride Statuses & SMS Flow.csv
+    └── RideStatusesSMSFlow.csv
 ```
 
 ---
