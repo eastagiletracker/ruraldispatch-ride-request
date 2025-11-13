@@ -247,7 +247,7 @@ function createRouter(api)
             // If newly given consent, send confirmation SMS (verbal/web).
             if (consentGiven) {
                 try {
-                    await notificationService.sendSMS(phoneNumber, 'Rural Dispatch: You have been signed up for ride updates by text as you requested. Reply STOP to cancel, HELP for help. Msg&data rates may apply.');
+                    await notificationService.sendSMS(phoneNumber, 'SWARM LLC: Welcome! You\'re signed up for ride notifications (1-5 msgs/ride). Msg&data rates may apply. Reply STOP to opt-out, HELP for support. Terms: https://www.swarmnyc.com/sms-terms');
                 } catch (e) {
                     console.error('Failed to send confirmation SMS:', e.message);
                 }

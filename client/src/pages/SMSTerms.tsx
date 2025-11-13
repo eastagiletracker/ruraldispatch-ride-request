@@ -11,13 +11,13 @@ const SMSTerms = () => {
           <section>
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">1. SMS Service Overview</h2>
             <p>
-              Rural Dispatch offers SMS text message notifications to keep you informed about your rides. By 
+              SWARM LLC offers SMS text message notifications to keep you informed about your rides. By 
               opting in, you agree to receive automated text messages about ride confirmations, driver 
               updates, ETAs, and important service notifications.
             </p>
             <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mt-4">
               <p className="text-blue-800">
-                <strong>Important:</strong> Consent to receive SMS is NOT required to use Rural Dispatch services. 
+                <strong>Important:</strong> Consent to receive SMS is NOT required to use SWARM LLC services. 
                 You can still request and receive rides without SMS notifications.
               </p>
             </div>
@@ -30,7 +30,7 @@ const SMSTerms = () => {
               <Link to="/sms-consent" className="text-blue-600 hover:underline"> SMS consent page</Link>, you:
             </p>
             <ul className="list-disc ml-6 space-y-2">
-              <li>Authorize Rural Dispatch to send you SMS text messages</li>
+              <li>Authorize SWARM LLC to send you SMS text messages</li>
               <li>Provide express written consent under the Telephone Consumer Protection Act (TCPA)</li>
               <li>Agree to receive messages at the phone number you provided</li>
               <li>Acknowledge that your consent is being recorded with a timestamp</li>
@@ -99,7 +99,7 @@ const SMSTerms = () => {
           <section>
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">5. Message and Data Rates</h2>
             <p>
-              Message and data rates may apply based on your mobile carrier's plan. Rural Dispatch does not charge 
+              Message and data rates may apply based on your mobile carrier's plan. SWARM LLC does not charge 
               for SMS notifications, but standard rates from your carrier may apply. Contact your mobile 
               carrier for details about your messaging plan.
             </p>
@@ -122,7 +122,7 @@ const SMSTerms = () => {
                 <div>
                   <p className="font-semibold">Reply STOP</p>
                   <p className="text-sm text-gray-600">
-                    Reply with the word <strong>STOP</strong> to any SMS message from Rural Dispatch
+                    Reply with the word <strong>STOP</strong> to any SMS message from SWARM LLC
                   </p>
                 </div>
               </div>
@@ -143,7 +143,7 @@ const SMSTerms = () => {
                 <div>
                   <p className="font-semibold">Account Settings</p>
                   <p className="text-sm text-gray-600">
-                    Manage SMS preferences in your Rural Dispatch account dashboard
+                    Manage SMS preferences in your SWARM LLC account dashboard
                   </p>
                 </div>
               </div>
@@ -152,8 +152,8 @@ const SMSTerms = () => {
             <p className="mt-4">
               After opting out, you will receive a confirmation message: 
               <em className="block mt-2 p-3 bg-gray-100 rounded text-sm">
-                "You have been unsubscribed from Rural Dispatch SMS notifications. You will not receive further 
-                messages. Reply START to resubscribe or visit ruraldispatch.org/sms-consent"
+                "You have been unsubscribed from SWARM LLC SMS notifications. You will not receive further 
+                messages. Reply START to resubscribe or visit www.swarmnyc.com/sms-consent"
               </em>
             </p>
           </section>
@@ -164,19 +164,19 @@ const SMSTerms = () => {
               For assistance with SMS notifications, reply <strong>HELP</strong> to any message or contact us:
             </p>
             <div className="bg-gray-50 p-4 rounded-lg mt-3">
-              <p className="font-semibold">SWARM LLC - SMS Support</p>
-              <p className="font-semibold">Rural Dispatch</p>
-              <p>333 Hudson St</p>
-              <p>New York, NY 10013</p>
+              <p className="font-semibold">SWARM LLC</p>
+              <p>333 Hudson St, New York, NY 10013</p>
               <p>Phone: <a href="tel:+18313251472" className="text-blue-600 hover:underline">+1 (831) 325-1472</a></p>
-              <p>SMS Support: <a href="tel:+18313251472" className="text-blue-600 hover:underline">+1 (831) 325-1472</a></p>
-              <p>Hours: Monday-Friday, 9am-6pm EST</p>
+              <p>SMS: <a href="tel:+18669017244" className="text-blue-600 hover:underline">+1 (866) 901-7244</a></p>
+              <p>Email: <a href="mailto:hello@swarmnyc.com" className="text-blue-600 hover:underline">hello@swarmnyc.com</a></p>
+              <p>Web: <a href="https://www.swarmnyc.com" className="text-blue-600 hover:underline">https://www.swarmnyc.com</a></p>
+              <p className="text-xs text-gray-500 mt-1">Monday-Friday, 9am-6pm EST</p>
             </div>
             <p className="mt-3 text-sm">
               When you reply HELP, you will receive:
               <em className="block mt-2 p-3 bg-gray-100 rounded text-sm">
-                "Rural Dispatch SMS Help: Get ride updates via text. Msg&Data rates may apply. Reply STOP to 
-                opt-out. Support: +1 (831) 325-1472 or hello@swarmnyc.com"
+                "SWARM LLC SMS Help: Get ride updates via text. Msg&Data rates may apply. Reply STOP to 
+                opt-out. Support: +1 (831) 325-1472 or hello@swarmnyc.com. Terms: https://www.swarmnyc.com/sms-terms"
               </em>
             </p>
           </section>
@@ -187,7 +187,7 @@ const SMSTerms = () => {
               If you previously opted out and want to resume SMS notifications:
             </p>
             <ul className="list-disc ml-6 space-y-2">
-              <li>Reply <strong>START</strong> to any previous Rural Dispatch message</li>
+              <li>Reply <strong>START</strong> to any previous SWARM LLC message</li>
               <li>Visit our <Link to="/sms-consent" className="text-blue-600 hover:underline">SMS consent page</Link></li>
               <li>Enable SMS in your account settings</li>
             </ul>
@@ -199,7 +199,7 @@ const SMSTerms = () => {
           <section>
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">9. Privacy and Data</h2>
             <p>
-              Your phone number and SMS preferences are stored securely and used only for Rural Dispatch 
+              Your phone number and SMS preferences are stored securely and used only for SWARM LLC 
               notifications. We:
             </p>
             <ul className="list-disc ml-6 space-y-2">
@@ -221,14 +221,14 @@ const SMSTerms = () => {
               <li>A mobile phone with SMS capability</li>
               <li>A U.S. phone number</li>
               <li>Service with a compatible carrier</li>
-              <li>An active Rural Dispatch account</li>
+              <li>An active SWARM LLC account</li>
             </ul>
           </section>
 
           <section>
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">11. SMS Service Providers</h2>
             <p>
-              Rural Dispatch uses the following third-party SMS providers:
+              SWARM LLC uses the following third-party SMS providers:
             </p>
             <ul className="list-disc ml-6 space-y-2">
               <li><strong>Twilio</strong> - Primary SMS delivery (toll-free: +1 (831) 325-1472)</li>
@@ -242,7 +242,7 @@ const SMSTerms = () => {
           <section>
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">12. Liability</h2>
             <p>
-              Rural Dispatch is not liable for:
+              SWARM LLC is not liable for:
             </p>
             <ul className="list-disc ml-6 space-y-2">
               <li>Delayed or undelivered messages due to carrier issues</li>
@@ -286,12 +286,12 @@ const SMSTerms = () => {
               Questions about our SMS service? Contact us:
             </p>
             <div className="bg-gray-50 p-4 rounded-lg mt-3">
-              <p className="font-semibold">SWARM LLC - SMS Support</p>
-              <p className="font-semibold">Rural Dispatch</p>
+              <p className="font-semibold">SWARM LLC</p>
               <p>333 Hudson St, New York, NY 10013</p>
               <p>Phone: <a href="tel:+18313251472" className="text-blue-600 hover:underline">+1 (831) 325-1472</a></p>
-              <p>SMS: <a href="tel:+18313251472" className="text-blue-600 hover:underline">+1 (831) 325-1472</a></p>
-              <p>Web: <Link to="/sms-consent" className="text-blue-600 hover:underline">https://ruraldispatch.org/sms-consent</Link></p>
+              <p>SMS: <a href="tel:+18669017244" className="text-blue-600 hover:underline">+1 (866) 901-7244</a></p>
+              <p>Email: <a href="mailto:hello@swarmnyc.com" className="text-blue-600 hover:underline">hello@swarmnyc.com</a></p>
+              <p>Web: <a href="https://www.swarmnyc.com" className="text-blue-600 hover:underline">https://www.swarmnyc.com</a></p>
             </div>
           </section>
         </div>

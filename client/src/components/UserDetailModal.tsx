@@ -244,14 +244,26 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                       )}
                     </div>
                   ) : (
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       <Badge variant="destructive" className="w-fit">Not Opted-In</Badge>
                       <p className="text-xs text-muted-foreground max-w-sm">User has not provided SMS consent. Obtain explicit verbal permission before enabling.</p>
                       <Button size="sm" onClick={handleRecordVerbalConsent}>
                         <MessageSquarePlus className="h-4 w-4 mr-2" />
                         Record Verbal Consent
                       </Button>
-                      <p className="text-[10px] text-muted-foreground leading-snug">Script: “Our service sends ride updates by text message. Do you agree to receive text messages about your rides from Rural Dispatch? Reply STOP to cancel.”</p>
+                      <div className="text-xs text-muted-foreground space-y-2 bg-blue-50 p-3 rounded border border-blue-200">
+                        <p className="font-semibold text-blue-900">📋 VERBAL OPT-IN SCRIPT (Read Verbatim):</p>
+                        <div className="space-y-1 text-[11px] leading-relaxed">
+                          <p>"This is [Your Name] from <strong>SWARM LLC</strong>."</p>
+                          <p>"As part of our transportation service, we would like to send you automated text message notifications about your ride confirmations, driver updates, estimated arrival times, and important service notifications."</p>
+                          <p>"You will receive approximately <strong>1 to 5 messages per active ride</strong>. Message and data rates may apply depending on your mobile phone service plan."</p>
+                          <p>"At any time you can get more help by replying <strong>HELP</strong> to these texts, or you can opt out completely by replying <strong>STOP</strong>."</p>
+                          <p>"Our Mobile Terms of Service are available at <strong>swarmnyc.com/sms-terms</strong> and our Privacy Policy can be found at <strong>swarmnyc.com/privacy</strong>."</p>
+                          <p className="font-semibold text-blue-900 mt-2">"Do you agree to receive these text messages from SWARM LLC? Please say 'yes' or 'no'."</p>
+                          <p className="text-[10px] text-muted-foreground italic mt-2">[Wait for verbal "Yes", then click "Record Consent" button above]</p>
+                          <p className="text-[10px] text-muted-foreground">After recording: "Great! You'll receive a confirmation text shortly at [phone number]. Remember, you can reply STOP at any time."</p>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>

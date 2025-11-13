@@ -9,7 +9,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* About */}
           <div>
-            <h3 className="text-white font-semibold mb-3">Rural Dispatch</h3>
+            <h3 className="text-white font-semibold mb-3">SWARM LLC</h3>
             <p className="text-sm text-gray-400">
               Providing reliable transportation services to help you get where you need to go.
             </p>
@@ -79,7 +79,7 @@ const Footer = () => {
         <div className="border-t border-gray-700 mt-8 pt-6">
           <div className="text-center space-y-3">
             <p className="text-gray-400 text-sm">
-              © {currentYear} Rural Dispatch. All rights reserved.
+              © {currentYear} SWARM LLC. All rights reserved.
             </p>
           </div>
         </div>
