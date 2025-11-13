@@ -8,7 +8,7 @@
  */
 async function getNotificationsByRide(collection, rideRequestUuid) {
   const filter = { rideRequestUuid: parseInt(rideRequestUuid) };
-  return await collection.find(filter).sort({ createdAt: -1 }).toArray();
+  return await collection.find(filter).sort({ sentAt: 1 }).toArray();
 }
 
 /**
@@ -16,7 +16,7 @@ async function getNotificationsByRide(collection, rideRequestUuid) {
  */
 async function getNotificationsByPhone(collection, phone) {
   const filter = { recipientPhone: phone };
-  return await collection.find(filter).sort({ createdAt: -1 }).toArray();
+  return await collection.find(filter).sort({ sentAt: 1 }).toArray();
 }
 
 /**
@@ -27,7 +27,7 @@ async function getActiveSessionNotifications(collection, rideRequestUuid) {
     rideRequestUuid: parseInt(rideRequestUuid),
     sessionActive: true
   };
-  return await collection.find(filter).sort({ createdAt: -1 }).toArray();
+  return await collection.find(filter).sort({ sentAt: 1 }).toArray();
 }
 
 /**
@@ -75,7 +75,7 @@ async function getNotificationByMessageSid(collection, twilioMessageSid) {
  */
 async function getAllNotifications(collection, limit = 100) {
   return await collection.find({})
-    .sort({ createdAt: -1 })
+    .sort({ sentAt: -1 })
     .limit(limit)
     .toArray();
 }

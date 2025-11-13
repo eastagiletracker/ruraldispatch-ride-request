@@ -12,6 +12,15 @@ const { processSMSResponse } = require('./smsResponseHandler');
 class NotificationService {
   constructor() {
     this.smsProvider = new SMSProviderManager();
+    this.api = null; // Will be set by router after API initialization
+  }
+
+  /**
+   * Initialize the service with API reference for database operations
+   * @param {object} api - Database API instance
+   */
+  setApi(api) {
+    this.api = api;
   }
 
   /**
@@ -231,6 +240,7 @@ Check the dashboard for details.`;
    * Send template-based SMS notification
    * @param {string} phoneNumber - Recipient phone number
    * @param {string} template - Template identifier or status code
+   * @param {string} recipient - Recipient role (rider, driver, case_manager, etc.)
    * @param {object} data - Data for template (ride, rider, driver, vehicle, etc.)
    * @returns {Promise<object>} SMS result
    */
@@ -249,7 +259,35 @@ Check the dashboard for details.`;
     console.log(`📤 Sending ${template} SMS to ${recipient}: ${phoneNumber}`);
     console.log(`   Message preview: ${message.substring(0, 100)}...`);
 
-    return await this.sendSMS(phoneNumber, message);
+    const result = await this.sendSMS(phoneNumber, message);
+
+    // Save to database if API is available and SMS was sent successfully
+    if (this.api && result.success) {
+      try {
+        const notificationRecord = {
+          uuid: Date.now() + Math.random(), // Generate unique ID
+          rideRequestUuid: data.ride ? parseInt(data.ride.uuid) : 0,
+          notificationType: template,
+          direction: 'outbound',
+          recipientPhone: phoneNumber,
+          recipientName: data.rider?.fullName || data.driver?.fullName,
+          recipientRole: recipient,
+          messageBody: message,
+          twilioMessageSid: result.messageSid,
+          twilioStatus: result.status,
+          sentAt: result.timestamp,
+          sessionActive: true
+        };
+
+        await this.api.addNotification(notificationRecord);
+        console.log(`💾 Notification saved to database (SID: ${result.messageSid})`);
+      } catch (dbError) {
+        console.error('❌ Failed to save notification to database:', dbError);
+        // Don't fail the SMS send if DB save fails
+      }
+    }
+
+    return result;
   }
 
   /**

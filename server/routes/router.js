@@ -9,6 +9,10 @@ function createRouter(api)
 {
     const router = express.Router();
 
+    // Initialize notification service with database API
+    notificationService.setApi(api);
+    console.log('✅ Notification service initialized with database API');
+
     router.get(`/riderequests`, async (req, res) => {
         res.json(await api.getRideRequests());
     });
