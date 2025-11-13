@@ -449,10 +449,10 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                                                 <div>
                                                     <p className="text-xs text-muted-foreground">Pickup</p>
                                                     <a
-                                                        href={`https://www.google.com/maps/search/${rideRequest.pickupAddress}`}
+                                                        href={`https://www.google.com/maps/search/${encodeURIComponent(rideRequest.pickupAddress)}`}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
-                                                        className="text-sm text-primary hover:underline"
+                                                        className="text-sm text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
                                                     >
                                                         {rideRequest.pickupAddress}
                                                     </a>
@@ -464,10 +464,10 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                                                 <div>
                                                     <p className="text-xs text-muted-foreground">Dropoff</p>
                                                     <a
-                                                        href={`https://www.google.com/maps/search/${rideRequest.dropOffAddress}`}
+                                                        href={`https://www.google.com/maps/search/${encodeURIComponent(rideRequest.dropOffAddress)}`}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
-                                                        className="text-sm text-primary hover:underline"
+                                                        className="text-sm text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
                                                     >
                                                         {rideRequest.dropOffAddress}
                                                     </a>
@@ -574,10 +574,10 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                                             </TableCell>
                                             <TableCell className="whitespace-nowrap">
                                                 <a
-                                                    href={`https://www.google.com/maps/search/${rideRequest.pickupAddress}`}
+                                                    href={`https://www.google.com/maps/search/${encodeURIComponent(rideRequest.pickupAddress)}`}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
-                                                    className="text-primary hover:underline flex items-center gap-1"
+                                                    className="text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 cursor-pointer"
                                                 >
                                                     <MapPin className="h-3 w-3" />
                                                     {rideRequest.pickupAddress}
@@ -585,10 +585,10 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                                             </TableCell>
                                             <TableCell className="whitespace-nowrap">
                                                 <a
-                                                    href={`https://www.google.com/maps/search/${rideRequest.dropOffAddress}`}
+                                                    href={`https://www.google.com/maps/search/${encodeURIComponent(rideRequest.dropOffAddress)}`}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
-                                                    className="text-primary hover:underline flex items-center gap-1"
+                                                    className="text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 cursor-pointer"
                                                 >
                                                     <MapPin className="h-3 w-3" />
                                                     {rideRequest.dropOffAddress}
@@ -880,8 +880,28 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                                                             <span>Unassigned</span>
                                                         )}
                                                     </TableCell>
-                                                    <TableCell className="whitespace-nowrap">{ride.pickupAddress}</TableCell>
-                                                    <TableCell className="whitespace-nowrap">{ride.dropOffAddress}</TableCell>
+                                                    <TableCell className="whitespace-nowrap">
+                                                        <a
+                                                            href={`https://www.google.com/maps/search/${encodeURIComponent(ride.pickupAddress)}`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 cursor-pointer"
+                                                        >
+                                                            <MapPin className="h-3 w-3" />
+                                                            {ride.pickupAddress}
+                                                        </a>
+                                                    </TableCell>
+                                                    <TableCell className="whitespace-nowrap">
+                                                        <a
+                                                            href={`https://www.google.com/maps/search/${encodeURIComponent(ride.dropOffAddress)}`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 cursor-pointer"
+                                                        >
+                                                            <MapPin className="h-3 w-3" />
+                                                            {ride.dropOffAddress}
+                                                        </a>
+                                                    </TableCell>
                                                     <TableCell className="whitespace-nowrap">
                                                         {ride.pickupRequestedTime ?
                                                             new Date(ride.pickupRequestedTime).toLocaleString() :
@@ -1090,8 +1110,28 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                                                             <span>Unassigned</span>
                                                         )}
                                                     </TableCell>
-                                                    <TableCell className="whitespace-nowrap">{ride.pickupAddress}</TableCell>
-                                                    <TableCell className="whitespace-nowrap">{ride.dropOffAddress}</TableCell>
+                                                    <TableCell className="whitespace-nowrap">
+                                                        <a
+                                                            href={`https://www.google.com/maps/search/${encodeURIComponent(ride.pickupAddress)}`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 cursor-pointer"
+                                                        >
+                                                            <MapPin className="h-3 w-3" />
+                                                            {ride.pickupAddress}
+                                                        </a>
+                                                    </TableCell>
+                                                    <TableCell className="whitespace-nowrap">
+                                                        <a
+                                                            href={`https://www.google.com/maps/search/${encodeURIComponent(ride.dropOffAddress)}`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 cursor-pointer"
+                                                        >
+                                                            <MapPin className="h-3 w-3" />
+                                                            {ride.dropOffAddress}
+                                                        </a>
+                                                    </TableCell>
                                                     <TableCell className="whitespace-nowrap">
                                                         <AssignedRideStatus
                                                             onClickFn={() => {}}

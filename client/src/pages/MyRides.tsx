@@ -121,8 +121,9 @@ export default function MyRides() {
                         </CardDescription>
                     </div>
                     <AssignedRideStatus
-                        assignedRide={ride}
-                        handleStartRide={() => getRideRequests()}
+                        onClickFn={() => getRideRequests()}
+                        rideRequestStatus={ride.rideRequestStatus}
+                        rideStatus={ride.rideStatus}
                     />
                 </div>
             </CardHeader>
@@ -132,14 +133,28 @@ export default function MyRides() {
                         <MapPin className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
                         <div className="min-w-0">
                             <p className="text-xs text-muted-foreground">Pickup</p>
-                            <p className="text-sm font-medium truncate">{ride.pickupAddress}</p>
+                            <a
+                                href={`https://www.google.com/maps/search/${encodeURIComponent(ride.pickupAddress)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline break-words cursor-pointer"
+                            >
+                                {ride.pickupAddress}
+                            </a>
                         </div>
                     </div>
                     <div className="flex gap-2">
                         <MapPin className="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" />
                         <div className="min-w-0">
                             <p className="text-xs text-muted-foreground">Drop-off</p>
-                            <p className="text-sm font-medium truncate">{ride.dropOffAddress}</p>
+                            <a
+                                href={`https://www.google.com/maps/search/${encodeURIComponent(ride.dropOffAddress)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline break-words cursor-pointer"
+                            >
+                                {ride.dropOffAddress}
+                            </a>
                         </div>
                     </div>
                 </div>
