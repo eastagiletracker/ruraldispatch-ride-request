@@ -51,7 +51,7 @@ const SMSOptOut = () => {
               You've Been Unsubscribed
             </h1>
             <p className="text-gray-200 text-lg">
-              You will no longer receive SMS notifications from Rural Dispatch
+              You will no longer receive SMS notifications from SWARM LLC
             </p>
           </div>
 
@@ -71,7 +71,7 @@ const SMSOptOut = () => {
                 <li>You will NOT receive ride confirmation messages</li>
               <li>You will NOT receive driver update notifications</li>
               <li>You will NOT receive ETA or status updates via SMS</li>
-              <li>You can still use Rural Dispatch services normally</li>
+              <li>You can still use SWARM LLC services normally</li>
               <li>You'll need to check the app/website for ride updates</li>
             </ul>
             </div>
@@ -158,7 +158,7 @@ const SMSOptOut = () => {
 
             <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mt-4">
               <p className="text-blue-800">
-                <strong>Note:</strong> You can still use Rural Dispatch services. You'll just need to check 
+                <strong>Note:</strong> You can still use SWARM LLC services. You'll just need to check 
                 the app or website for ride updates instead of receiving SMS notifications.
               </p>
             </div>          {phoneNumber && (

@@ -8,7 +8,7 @@ const SMS = () => {
         <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-8 py-12 text-center">
           <div className="text-6xl mb-4">📱</div>
           <h1 className="text-3xl font-bold text-white mb-2">
-            Rural Dispatch SMS Consent
+            SWARM LLC SMS Consent
           </h1>
           <p className="text-blue-100 text-lg">
             Text Message Notifications for Your Rides
@@ -89,21 +89,21 @@ const SMS = () => {
               <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                 <p className="text-sm text-gray-600 mb-1">Ride Confirmation:</p>
                 <p className="text-gray-800 italic">
-                  "✅ Your ride request #1234 has been accepted. Driver will pick you up at 123 Main St on 11/09 at 2:00 PM."
+                  "SWARM LLC: Your ride request #1234 has been accepted. Driver will pick you up at 123 Main St on 11/09 at 2:00 PM. Reply STOP to opt-out, HELP for support."
                 </p>
               </div>
 
               <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                 <p className="text-sm text-gray-600 mb-1">Driver Info:</p>
                 <p className="text-gray-800 italic">
-                  "🚗 Your driver Sarah is on the way. Vehicle: Blue Honda Accord (ABC-123). Phone: (555) 123-4567"
+                  "SWARM LLC: Your driver Sarah is on the way. Vehicle: Blue Honda Accord (ABC-123). Phone: (555) 123-4567. Reply STOP to opt-out, HELP for support."
                 </p>
               </div>
 
               <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                 <p className="text-sm text-gray-600 mb-1">Arrival Notice:</p>
                 <p className="text-gray-800 italic">
-                  "📍 Driver arriving in 5 minutes. Please be ready at the pickup location."
+                  "SWARM LLC: Driver arriving in 5 minutes. Please be ready at the pickup location. Reply STOP to opt-out, HELP for support."
                 </p>
               </div>
             </div>
@@ -156,7 +156,7 @@ const SMS = () => {
         {/* Footer */}
         <div className="bg-gray-50 px-8 py-6 border-t border-gray-200">
           <p className="text-sm text-gray-600 text-center mb-3">
-            Rural Dispatch by SWARM LLC
+            SWARM LLC
           </p>
           <p className="text-sm text-center space-x-4">
             <Link to="/terms" className="text-blue-600 hover:underline">Terms of Service</Link>

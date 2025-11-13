@@ -258,7 +258,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                           <p>"As part of our transportation service, we would like to send you automated text message notifications about your ride confirmations, driver updates, estimated arrival times, and important service notifications."</p>
                           <p>"You will receive approximately <strong>1 to 5 messages per active ride</strong>. Message and data rates may apply depending on your mobile phone service plan."</p>
                           <p>"At any time you can get more help by replying <strong>HELP</strong> to these texts, or you can opt out completely by replying <strong>STOP</strong>."</p>
-                          <p>"Our Mobile Terms of Service are available at <strong>swarmnyc.com/sms-terms</strong> and our Privacy Policy can be found at <strong>swarmnyc.com/privacy</strong>."</p>
+                          <p>"Our Mobile Terms of Service are available at <strong>ruraldispatch.swarmnyc.com/sms-terms</strong> and our Privacy Policy can be found at <strong>ruraldispatch.swarmnyc.com/privacy</strong>."</p>
                           <p className="font-semibold text-blue-900 mt-2">"Do you agree to receive these text messages from SWARM LLC? Please say 'yes' or 'no'."</p>
                           <p className="text-[10px] text-muted-foreground italic mt-2">[Wait for verbal "Yes", then click "Record Consent" button above]</p>
                           <p className="text-[10px] text-muted-foreground">After recording: "Great! You'll receive a confirmation text shortly at [phone number]. Remember, you can reply STOP at any time."</p>

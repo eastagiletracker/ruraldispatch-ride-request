@@ -5,18 +5,18 @@ const Privacy = () => {
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Privacy Policy</h1>
-        <p className="text-sm text-gray-500 mb-8">Last Updated: November 9, 2025</p>
+        <p className="text-sm text-gray-500 mb-8">Last Updated: November 13, 2025</p>
 
         <div className="prose prose-blue max-w-none space-y-6 text-gray-700">
           <section>
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">1. Introduction</h2>
             <p>
-              Rural Dispatch ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy 
+              SWARM LLC ("we," "our," or "us") operates the Rural Dispatch service and is committed to protecting your privacy. This Privacy Policy 
               explains how we collect, use, disclose, and safeguard your information when you use our 
               ride-sharing services.
             </p>
             <p>
-              By using Rural Dispatch, you agree to the collection and use of information in accordance with 
+              By using our services, you agree to the collection and use of information in accordance with 
               this policy. If you do not agree with our policies and practices, please do not use our services.
             </p>
           </section>
@@ -82,7 +82,7 @@ const Privacy = () => {
                 <ul className="list-circle ml-6 mt-2">
                   <li>Render.com (hosting services)</li>
                   <li>MongoDB (database storage)</li>
-                  <li>Twilio/Vonage (SMS delivery)</li>
+                  <li>Twilio (SMS delivery)</li>
                 </ul>
               </li>
             </ul>
@@ -132,7 +132,7 @@ const Privacy = () => {
             </p>
             <ul className="list-disc ml-6 space-y-2">
               <li>We collect and store your phone number and consent timestamp</li>
-              <li>We send ride-related notifications via Twilio or Vonage</li>
+              <li>We send ride-related notifications via Twilio</li>
               <li>Message content includes ride details, driver information, and status updates</li>
               <li>You can opt-out anytime by replying STOP or visiting our <Link to="/sms-opt-out" className="text-blue-600 hover:underline">opt-out page</Link></li>
               <li>Your phone number is not shared with third parties for marketing</li>
@@ -177,7 +177,7 @@ const Privacy = () => {
           <section>
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">9. Children's Privacy</h2>
             <p>
-              Rural Dispatch is not intended for users under 18 years of age. We do not knowingly collect personal 
+              Our services are not intended for users under 18 years of age. We do not knowingly collect personal 
               information from children. If you believe we have collected information from a child, please 
               contact us immediately.
             </p>
@@ -218,7 +218,7 @@ const Privacy = () => {
               <li>Sending an email or SMS notification (for significant changes)</li>
             </ul>
             <p className="mt-3">
-              Your continued use of Rural Dispatch after changes constitutes acceptance of the updated policy.
+              Your continued use of our services after changes constitutes acceptance of the updated policy.
             </p>
           </section>
 
@@ -229,7 +229,6 @@ const Privacy = () => {
             </p>
             <div className="bg-gray-50 p-4 rounded-lg mt-3">
               <p className="font-semibold">SWARM LLC - Privacy Team</p>
-              <p className="font-semibold">Rural Dispatch</p>
               <p>333 Hudson St</p>
               <p>New York, NY 10013</p>
               <p>Phone: <a href="tel:+18313251472" className="text-blue-600 hover:underline">+1 (831) 325-1472</a></p>

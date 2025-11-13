@@ -5,7 +5,7 @@ const SMSTerms = () => {
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">SMS Terms & Conditions</h1>
-        <p className="text-sm text-gray-500 mb-8">Last Updated: November 9, 2025</p>
+        <p className="text-sm text-gray-500 mb-8">Last Updated: November 13, 2025</p>
 
         <div className="prose prose-blue max-w-none space-y-6 text-gray-700">
           <section>
@@ -45,35 +45,35 @@ const SMSTerms = () => {
               <div className="bg-gray-50 p-4 rounded-lg">
                 <h3 className="font-semibold text-gray-900 mb-2">Ride Confirmations</h3>
                 <p className="text-sm text-gray-600">
-                  Example: "✅ Ride #1234 has been accepted! Your driver will pick you up at 123 Main St."
+                  Example: "SWARM LLC: Ride #1234 confirmed! Pickup at 123 Main St on Nov 15 at 2:00 PM. Reply STOP to opt-out, HELP for support."
                 </p>
               </div>
 
               <div className="bg-gray-50 p-4 rounded-lg">
                 <h3 className="font-semibold text-gray-900 mb-2">Driver Updates</h3>
                 <p className="text-sm text-gray-600">
-                  Example: "🚗 Your driver Sarah is on the way. Vehicle: Blue Honda Accord (ABC-123)"
+                  Example: "SWARM LLC: Driver Sarah has been assigned to your ride. She will arrive in a Blue Honda Accord (ABC-123). Reply STOP to opt-out."
                 </p>
               </div>
 
               <div className="bg-gray-50 p-4 rounded-lg">
                 <h3 className="font-semibold text-gray-900 mb-2">ETA Notifications</h3>
                 <p className="text-sm text-gray-600">
-                  Example: "Driver arriving in 5 minutes. Please be ready at the pickup location."
+                  Example: "SWARM LLC: Your driver is on the way! ETA: 10 minutes. Please be ready at the pickup location. Reply STOP to opt-out."
                 </p>
               </div>
 
               <div className="bg-gray-50 p-4 rounded-lg">
                 <h3 className="font-semibold text-gray-900 mb-2">Ride Status Updates</h3>
                 <p className="text-sm text-gray-600">
-                  Example: "📍 Ride in progress. Estimated arrival at destination: 2:30 PM"
+                  Example: "SWARM LLC: Driver has arrived at your pickup location. Reply STOP to opt-out, HELP for support."
                 </p>
               </div>
 
               <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="font-semibold text-gray-900 mb-2">Service Notifications</h3>
+                <h3 className="font-semibold text-gray-900 mb-2">Ride Completion</h3>
                 <p className="text-sm text-gray-600">
-                  Example: "⚠️ Weather alert: Please allow extra travel time due to heavy rain."
+                  Example: "SWARM LLC: Ride #1234 completed. Thank you for using SWARM LLC! Reply STOP to opt-out, HELP for support."
                 </p>
               </div>
             </div>
@@ -133,7 +133,7 @@ const SMSTerms = () => {
                   <p className="font-semibold">Visit Opt-Out Page</p>
                   <p className="text-sm text-gray-600">
                     Go to <Link to="/sms-opt-out" className="text-blue-600 hover:underline">
-                    ruraldispatch.org/sms-opt-out</Link> and follow the instructions
+                    ruraldispatch.swarmnyc.com/sms-opt-out</Link> and follow the instructions
                   </p>
                 </div>
               </div>
@@ -153,7 +153,7 @@ const SMSTerms = () => {
               After opting out, you will receive a confirmation message: 
               <em className="block mt-2 p-3 bg-gray-100 rounded text-sm">
                 "You have been unsubscribed from SWARM LLC SMS notifications. You will not receive further 
-                messages. Reply START to resubscribe or visit www.swarmnyc.com/sms-consent"
+                messages. Reply START to resubscribe or visit ruraldispatch.swarmnyc.com/sms-consent"
               </em>
             </p>
           </section>
@@ -169,14 +169,14 @@ const SMSTerms = () => {
               <p>Phone: <a href="tel:+18313251472" className="text-blue-600 hover:underline">+1 (831) 325-1472</a></p>
               <p>SMS: <a href="tel:+18669017244" className="text-blue-600 hover:underline">+1 (866) 901-7244</a></p>
               <p>Email: <a href="mailto:hello@swarmnyc.com" className="text-blue-600 hover:underline">hello@swarmnyc.com</a></p>
-              <p>Web: <a href="https://www.swarmnyc.com" className="text-blue-600 hover:underline">https://www.swarmnyc.com</a></p>
+              <p>Web: <a href="https://ruraldispatch.swarmnyc.com" className="text-blue-600 hover:underline">https://ruraldispatch.swarmnyc.com</a></p>
               <p className="text-xs text-gray-500 mt-1">Monday-Friday, 9am-6pm EST</p>
             </div>
             <p className="mt-3 text-sm">
               When you reply HELP, you will receive:
               <em className="block mt-2 p-3 bg-gray-100 rounded text-sm">
                 "SWARM LLC SMS Help: Get ride updates via text. Msg&Data rates may apply. Reply STOP to 
-                opt-out. Support: +1 (831) 325-1472 or hello@swarmnyc.com. Terms: https://ruraldispatch.org/sms-terms"
+                opt-out. Support: +1 (831) 325-1472 or hello@swarmnyc.com. Terms: https://ruraldispatch.swarmnyc.com/sms-terms"
               </em>
             </p>
           </section>
@@ -291,7 +291,7 @@ const SMSTerms = () => {
               <p>Phone: <a href="tel:+18313251472" className="text-blue-600 hover:underline">+1 (831) 325-1472</a></p>
               <p>SMS: <a href="tel:+18669017244" className="text-blue-600 hover:underline">+1 (866) 901-7244</a></p>
               <p>Email: <a href="mailto:hello@swarmnyc.com" className="text-blue-600 hover:underline">hello@swarmnyc.com</a></p>
-              <p>Web: <a href="https://www.swarmnyc.com" className="text-blue-600 hover:underline">https://www.swarmnyc.com</a></p>
+              <p>Web: <a href="https://ruraldispatch.swarmnyc.com" className="text-blue-600 hover:underline">https://ruraldispatch.swarmnyc.com</a></p>
             </div>
           </section>
         </div>
