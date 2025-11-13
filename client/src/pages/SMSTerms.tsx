@@ -176,7 +176,7 @@ const SMSTerms = () => {
               When you reply HELP, you will receive:
               <em className="block mt-2 p-3 bg-gray-100 rounded text-sm">
                 "SWARM LLC SMS Help: Get ride updates via text. Msg&Data rates may apply. Reply STOP to 
-                opt-out. Support: +1 (831) 325-1472 or hello@swarmnyc.com. Terms: https://www.swarmnyc.com/sms-terms"
+                opt-out. Support: +1 (831) 325-1472 or hello@swarmnyc.com. Terms: https://ruraldispatch.org/sms-terms"
               </em>
             </p>
           </section>
