@@ -10,6 +10,22 @@ const pipelines = {
             }
         },
         {
+            // If rider lookup returns empty (user not in DB), create synthetic rider from embedded fields
+            '$addFields': {
+                'rider': {
+                    '$cond': {
+                        'if': { '$eq': [{ '$size': '$rider' }, 0] },
+                        'then': [{
+                            'fullName': { '$ifNull': ['$serviceUserName', 'Unknown'] },
+                            'phone': { '$ifNull': ['$serviceUserPhone', 'N/A'] },
+                            'uuid': '$serviceUserUuid'
+                        }],
+                        'else': '$rider'
+                    }
+                }
+            }
+        },
+        {
             '$lookup': {
                 'from': 'service-providers',
                 'localField': 'assignedDriverUuid',

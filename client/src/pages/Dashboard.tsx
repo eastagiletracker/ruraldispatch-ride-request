@@ -38,12 +38,12 @@ export default function Dashboard() {
                 {/* Content */}
                 <RideRequests callbackFn={setSelectedRideRequestId} />
 
-                {/* Scheduled Tasks Status - Admin/Dispatcher Only - Bottom of Page */}
+                {/* Scheduled Tasks Status - Admin/Dispatcher Only - Bottom of Page
                 {canViewScheduler && (
                     <div className="mt-8">
                         <SchedulerStatus />
                     </div>
-                )}
+                )} */}
 
                 {/* Assign Driver Dialog */}
                 {selectedRideRequestId && (

@@ -16,6 +16,14 @@ const rideRequestSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  serviceUserName: {
+    type: String,
+    required: false  // Optional for backward compatibility
+  },
+  serviceUserPhone: {
+    type: String,
+    required: false  // Optional for backward compatibility
+  },
   pickupAddress: {
     type: String,
     required: true

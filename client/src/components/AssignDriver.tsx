@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MapPin, Clock, User } from "lucide-react";
+import { MapPin, Clock, User, Phone } from "lucide-react";
 import { toast } from "sonner";
 
 interface AssignDriverProps {
@@ -279,6 +279,56 @@ export default function AssignDriver({ selectedRideRequestId, cancelFn }: Assign
                                         </div>
                                     </div>
                                 )}
+
+                                {selectedRideRequest.notes && selectedRideRequest.notes.includes('Rider Phone:') && (
+                                    <div className="flex items-start gap-2">
+                                        <Phone className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
+                                        <div className="flex-1">
+                                            <p className="text-xs text-muted-foreground">Rider Phone</p>
+                                            <p className="text-sm font-medium">
+                                                {selectedRideRequest.notes.split('Rider Phone:')[1]?.split('.')[0]?.trim() || 'Not provided'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {selectedRideRequest.notes && selectedRideRequest.notes.includes('Case Manager:') && (
+                                    <div className="flex items-start gap-2">
+                                        <User className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
+                                        <div className="flex-1">
+                                            <p className="text-xs text-muted-foreground">Case Manager</p>
+                                            <p className="text-sm font-medium">
+                                                {selectedRideRequest.notes.split('Case Manager:')[1]?.split('Rider Phone:')[0]?.trim() || 'Not provided'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Extract and display custom notes/comments */}
+                                {selectedRideRequest.notes && (() => {
+                                    // Get everything after "Wait time: ..." up to the end
+                                    const waitTimeSection = selectedRideRequest.notes.split('Wait time:')[1];
+                                    if (!waitTimeSection) return null;
+
+                                    // Skip the wait time value (up to the first period) and get the rest
+                                    const customNotes = waitTimeSection.split('.').slice(1).join('.').trim();
+
+                                    if (!customNotes || customNotes === '') return null;
+
+                                    return (
+                                        <div className="flex items-start gap-2 p-3 bg-yellow-50 dark:bg-yellow-950 rounded-md border border-yellow-200 dark:border-yellow-800">
+                                            <div className="h-4 w-4 mt-1 flex-shrink-0 flex items-center justify-center">
+                                                <div className="h-2 w-2 rounded-full bg-yellow-600" />
+                                            </div>
+                                            <div className="flex-1">
+                                                <p className="text-xs font-semibold text-yellow-900 dark:text-yellow-100 mb-1">Important Notes for Driver</p>
+                                                <p className="text-sm text-yellow-900 dark:text-yellow-100 whitespace-pre-wrap">
+                                                    {customNotes}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
                             </div>
                         )}
                     </div>

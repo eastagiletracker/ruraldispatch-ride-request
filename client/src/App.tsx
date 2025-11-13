@@ -13,6 +13,7 @@ import DispatcherHub from './pages/DispatcherHub'
 import MyRides from './pages/MyRides'
 import CreateRideRequest from './pages/CreateRideRequest'
 import CaseManagerRideRequest from './pages/CaseManagerRideRequest'
+import PublicRideRequest from './pages/PublicRideRequest'
 import Manager from './pages/Manager'
 import VehicleHome from "./pages/VehicleHome";
 import SMSOptOut from "./pages/SMSOptOut";
@@ -22,7 +23,23 @@ import SMSTerms from "./pages/SMSTerms";
 import SMS from "./pages/SMS";
 import { hasPermission, isPortalAuthValid, hasRole, type UserPermissions } from './utils/permissions';
 
-// Protected Route Component with Role-based Access Control
+// Simple Portal-Only Protected Route (for public demo - no user authentication)
+interface SimpleProtectedRouteProps {
+  children: React.ReactNode;
+}
+
+function SimpleProtectedRoute({ children }: SimpleProtectedRouteProps) {
+  // Only check portal authentication (hackct25 password)
+  const isAppAuthenticated = isPortalAuthValid();
+
+  if (!isAppAuthenticated) {
+    return <Navigate to="/portal-access" replace />;
+  }
+
+  return <>{children}</>;
+}
+
+// Full Protected Route Component with Role-based Access Control (for admin/dispatcher)
 interface ProtectedRouteProps {
   children: React.ReactNode;
   requiredPermission?: keyof UserPermissions;
@@ -65,20 +82,30 @@ function AppRoutes() {
         <Route path="/signin" element={<><SignIn /><Toaster /></>} />
         <Route path="/unauthorized" element={<><Unauthorized /><Toaster /></>} />
 
-        {/* Protected Routes - Require authentication and role-based permissions */}
-        {/* Admin/Dispatcher: Full ride request form with "Add a User" button */}
+        {/* Public Demo Route - Only requires portal password (hackct25) */}
+        {/* Simplified: No user authentication, no user search/add, no navbar */}
         <Route path="/" element={
-          <ProtectedRoute requiredPermission="canCreateInternalRideRequest">
+          <SimpleProtectedRoute>
             <div className="min-h-screen flex flex-col">
-              <Navbar />
+              {/* No Navbar for public demo - just branding */}
+              <header className="bg-white border-b shadow-sm">
+                <div className="mx-auto container px-4 sm:px-6 lg:px-8">
+                  <div className="flex justify-between items-center h-16">
+                    <span className="text-xl font-bold text-primary">
+                      Rural Dispatch
+                    </span>
+                  </div>
+                </div>
+              </header>
               <main className="container mx-auto px-4 py-8 flex-grow">
-                {hasRole('case_manager') ? <CaseManagerRideRequest /> : <CreateRideRequest />}
+                <PublicRideRequest />
               </main>
               <Footer />
             </div>
-          </ProtectedRoute>
+          </SimpleProtectedRoute>
         } />
-        {/* Case Manager: Simplified ride request form without "Add a User" */}
+
+        {/* Legacy routes kept for admin/dispatcher access (requires full authentication) */}
         <Route path="/ride-request" element={
           <ProtectedRoute requiredPermission="canCreateInternalRideRequest">
             <div className="min-h-screen flex flex-col">

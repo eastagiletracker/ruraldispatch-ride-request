@@ -56,7 +56,10 @@ export default function RideRequestForm({
             pickupRequestedDate: '',
             pickupRequestedTime: '',
             estimatedWaitTime: '',
-            accessibilityFeatures: '',
+            walkerAccessible: false,
+            wheelchairAccessible: false,
+            serviceAnimalFriendly: false,
+            oxygenTankAccessible: false,
             purposeOfTrip: '',
             notesComments: ''
         }
@@ -77,7 +80,10 @@ export default function RideRequestForm({
                 pickupRequestedDate: '',
                 pickupRequestedTime: '',
                 estimatedWaitTime: '',
-                accessibilityFeatures: '',
+                walkerAccessible: false,
+                wheelchairAccessible: false,
+                serviceAnimalFriendly: false,
+                oxygenTankAccessible: false,
                 purposeOfTrip: '',
                 notesComments: ''
             }, { keepDefaultValues: false });
@@ -98,9 +104,25 @@ export default function RideRequestForm({
                 return typeof location === 'string' ? location : location.formattedAddress;
             };
 
+            // Build accessibility features string from checkboxes
+            const accessibilityFeatures = [];
+            if (data.walkerAccessible) accessibilityFeatures.push('Walker Accessible');
+            if (data.wheelchairAccessible) accessibilityFeatures.push('Wheelchair Accessible');
+            if (data.serviceAnimalFriendly) accessibilityFeatures.push('Service Animal Friendly');
+            if (data.oxygenTankAccessible) accessibilityFeatures.push('Oxygen Tank/Medical Device Accessible');
+            const accessibilityString = accessibilityFeatures.length > 0
+                ? accessibilityFeatures.join(', ')
+                : 'None';
+
+            // Generate a temporary UUID for demo (user not in database)
+            // Using phone number as identifier since users aren't tracked in the system yet
+            const tempUserUuid = selectedUser?.uuid || `temp_${data.riderMobilePhone.replace(/\D/g, '')}`;
+
             const rideRequestData = {
-                serviceUserUuid: selectedUser?.uuid || '',
+                serviceUserUuid: tempUserUuid,
                 serviceUserRole: 'rider',
+                serviceUserName: data.riderFullName,  // Store rider name directly
+                serviceUserPhone: data.riderMobilePhone,  // Store rider phone directly
                 pickupAddress: getAddressString(data.pickupLocation),
                 dropOffAddress: getAddressString(data.dropoffLocation),
                 roundTrip: data.roundtrip || false,
@@ -116,7 +138,7 @@ export default function RideRequestForm({
                 rideRequestStatus: 100,
                 notes: `Case Manager: ${data.caseManagerFullName} (${data.caseManagerAgency}, ${data.caseManagerPhone}). ` +
                        `Rider Phone: ${data.riderMobilePhone}. ` +
-                       `Accessibility: ${data.accessibilityFeatures || 'None'}. ` +
+                       `Accessibility: ${accessibilityString}. ` +
                        `Wait time: ${data.estimatedWaitTime || 'Not specified'}. ` +
                        `${data.notesComments || ''}`
             };
@@ -410,18 +432,82 @@ export default function RideRequestForm({
                     {/* Accessibility Section */}
                     <div className="space-y-4">
                         <div className="space-y-2">
-                            <Label htmlFor="accessibilityFeatures">
+                            <Label className="text-base font-semibold">
                                 Accessibility Feature Type
                             </Label>
                             <p className="text-sm text-muted-foreground">
-                                Let us know about any accessibility needs (e.g., wheelchair accessible, walker, service animal, oxygen tank/medical device).
+                                Select any accessibility features needed for this ride.
                             </p>
-                            <Textarea
-                                id="accessibilityFeatures"
-                                {...register('accessibilityFeatures')}
-                                placeholder="Ex. I need a wheelchair accessible vehicle. Or I will have a service animal with me."
-                                rows={4}
-                            />
+                        </div>
+                        <Separator />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="flex items-center space-x-2">
+                                <Controller
+                                    name="walkerAccessible"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Checkbox
+                                            id="walkerAccessible"
+                                            checked={field.value}
+                                            onCheckedChange={field.onChange}
+                                        />
+                                    )}
+                                />
+                                <Label htmlFor="walkerAccessible" className="cursor-pointer font-normal">
+                                    Walker Accessible
+                                </Label>
+                            </div>
+
+                            <div className="flex items-center space-x-2">
+                                <Controller
+                                    name="wheelchairAccessible"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Checkbox
+                                            id="wheelchairAccessible"
+                                            checked={field.value}
+                                            onCheckedChange={field.onChange}
+                                        />
+                                    )}
+                                />
+                                <Label htmlFor="wheelchairAccessible" className="cursor-pointer font-normal">
+                                    Wheelchair Accessible
+                                </Label>
+                            </div>
+
+                            <div className="flex items-center space-x-2">
+                                <Controller
+                                    name="serviceAnimalFriendly"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Checkbox
+                                            id="serviceAnimalFriendly"
+                                            checked={field.value}
+                                            onCheckedChange={field.onChange}
+                                        />
+                                    )}
+                                />
+                                <Label htmlFor="serviceAnimalFriendly" className="cursor-pointer font-normal">
+                                    Service Animal Friendly
+                                </Label>
+                            </div>
+
+                            <div className="flex items-center space-x-2">
+                                <Controller
+                                    name="oxygenTankAccessible"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Checkbox
+                                            id="oxygenTankAccessible"
+                                            checked={field.value}
+                                            onCheckedChange={field.onChange}
+                                        />
+                                    )}
+                                />
+                                <Label htmlFor="oxygenTankAccessible" className="cursor-pointer font-normal">
+                                    Oxygen Tank/Medical Device Accessible
+                                </Label>
+                            </div>
                         </div>
                     </div>
 

@@ -28,7 +28,7 @@ export default function PasswordProtection() {
             
             localStorage.setItem('app_authenticated', authData);
             sessionStorage.setItem('app_authenticated', authData);
-            navigate('/signin');
+            navigate('/'); // Go directly to ride request form
         } else {
             setError('Incorrect password. Please try again.');
             setPassword('');
