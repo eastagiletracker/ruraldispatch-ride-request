@@ -21,9 +21,28 @@
 require('dotenv').config({ path: '.env' });
 const { MongoClient } = require('mongodb');
 
+/**
+ * Get the database name based on NODE_ENV
+ * Matches the logic in server/database/setup.js
+ */
+function getDatabaseName() {
+    const env = process.env.NODE_ENV || 'development';
+
+    switch (env) {
+        case 'production':
+            return (process.env.MONGODB_DB_PROD || 'prod-ruraldispatch').trim();
+        case 'staging':
+            return (process.env.MONGODB_DB_STAGING || 'staging-ruraldispatch').trim();
+        case 'development':
+        default:
+            return (process.env.MONGODB_DB_DEV || 'dev-ruraldispatch').trim();
+    }
+}
+
 async function resetDatabase() {
     const mongoUri = process.env.MONGODB_URI;
-    const dbName = (process.env.MONGODB_DB_DEV || 'dev-ruraldispatch').trim();
+    const dbName = getDatabaseName();
+    const env = process.env.NODE_ENV || 'development';
     
     if (!mongoUri) {
         console.error('❌ Error: MONGODB_URI not set in .env');
@@ -35,7 +54,7 @@ async function resetDatabase() {
     try {
         console.log('\n🗑️  DATABASE RESET\n');
         console.log('═'.repeat(90));
-        console.log(`Connecting to: ${dbName}`);
+        console.log(`📊 Connecting to database: "${dbName}" (${env} mode)`);
         console.log('═'.repeat(90));
 
         await client.connect();
