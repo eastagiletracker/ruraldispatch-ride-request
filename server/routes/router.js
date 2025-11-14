@@ -468,6 +468,7 @@ function createRouter(api)
                             driver: activeRide.driver?.[0],
                             vehicle: activeRide.vehicle?.[0],
                             caseManager: activeRide.createdBy,
+                            rideRequest: activeRide,
                             pickupLocation: activeRide.pickupLocation
                         };
 
@@ -490,6 +491,7 @@ function createRouter(api)
                             driver: activeRide.driver?.[0],
                             vehicle: activeRide.vehicle?.[0],
                             caseManager: activeRide.createdBy,
+                            rideRequest: activeRide,
                             pickupLocation: activeRide.pickupLocation
                         };
 

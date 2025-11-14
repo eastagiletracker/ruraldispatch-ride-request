@@ -28,6 +28,14 @@ const rideRequestSchema = new mongoose.Schema({
     type: Number,
     required: false  // UUID of the system user (case manager) who created this ride
   },
+  caseManagerName: {
+    type: String,
+    required: false  // Case manager name (for public/manual entries without system user)
+  },
+  caseManagerPhone: {
+    type: String,
+    required: false  // Case manager phone (for public/manual entries without system user)
+  },
   pickupAddress: {
     type: String,
     required: true

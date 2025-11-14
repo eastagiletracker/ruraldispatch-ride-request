@@ -131,6 +131,9 @@ export default function RideRequestForm({
                 serviceUserName: data.riderFullName,  // Store rider name directly
                 serviceUserPhone: data.riderMobilePhone,  // Store rider phone directly
                 ...(createdByUuid && { createdByUuid }),  // Only include if authenticated case manager
+                // Case manager info (for public requests or manual entry)
+                caseManagerName: data.caseManagerFullName || null,
+                caseManagerPhone: data.caseManagerPhone || null,
                 pickupAddress: getAddressString(data.pickupLocation),
                 dropOffAddress: getAddressString(data.dropoffLocation),
                 roundTrip: data.roundtrip || false,

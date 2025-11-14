@@ -333,7 +333,7 @@ Check the dashboard for details.`;
 
     for (const notif of notifications) {
       try {
-        const phoneNumber = this.getRecipientPhone(notif.recipient, data);
+        const phoneNumber = await this.getRecipientPhone(notif.recipient, data);
 
         if (!phoneNumber) {
           console.warn(`⚠️ No phone number for recipient: ${notif.recipient}`);
@@ -382,7 +382,7 @@ Check the dashboard for details.`;
    * @param {object} data - Context data with rider, driver, etc.
    * @returns {string|null} Phone number
    */
-  getRecipientPhone(recipient, data) {
+  async getRecipientPhone(recipient, data) {
     switch (recipient) {
       case 'rider':
         return data.rider?.phone;
@@ -391,12 +391,29 @@ Check the dashboard for details.`;
         return data.driver?.mobilePhone || data.driver?.phone;
 
       case 'case_manager':
-        // Case manager is the creator of the ride
-        return data.caseManager?.phone || data.createdBy?.phone;
+        // Check authenticated case manager first, then manually entered phone
+        return data.caseManager?.phone || data.createdBy?.phone || data.rideRequest?.caseManagerPhone;
 
       case 'dispatcher':
-        // TODO: Get dispatcher phone from system config or admin user
-        return process.env.DISPATCHER_PHONE || data.dispatcher?.phone;
+        // Check if specific dispatcher provided in data, otherwise get first active dispatcher
+        if (data.dispatcher?.phone) {
+          return data.dispatcher.phone;
+        }
+        
+        // Query database for active dispatcher
+        if (this.api) {
+          try {
+            const systemUsers = await this.api.getAllSystemUsers();
+            const activeDispatcher = systemUsers.find(u => u.role === 'dispatcher' && u.isActive && u.phone);
+            if (activeDispatcher) {
+              return activeDispatcher.phone;
+            }
+          } catch (error) {
+            console.error('❌ Error querying dispatcher:', error);
+          }
+        }
+        
+        return null;
 
       default:
         return null;
