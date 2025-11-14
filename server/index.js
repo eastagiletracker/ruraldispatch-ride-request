@@ -69,5 +69,14 @@ async function init()
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     console.log(`Environment: ${process.env.NODE_ENV}`);
+    const tz = process.env.TZ || 'UTC';
+    const now = new Date();
+    try {
+      console.log(`Current server time (${tz}): ${now.toLocaleString('en-US', { timeZone: tz })}`);
+    } catch (err) {
+      console.log(`Current server time (system locale): ${now.toString()}`);
+      console.warn(`Unable to format server time with timezone "${tz}":`, err.message);
+    }
+    console.log(`Current server time (ISO): ${now.toISOString()}`);
   });
 }
