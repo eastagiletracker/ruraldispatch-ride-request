@@ -64,15 +64,16 @@ class RideScheduler {
    */
   scheduleDriverArrivalCheck(ride, driver) {
     const pickupTime = new Date(ride.pickupRequestedTime);
-
     const now = new Date();
     const delay = pickupTime.getTime() - now.getTime();
 
+    // ✅ FIX: Don't send immediately if pickup time has passed
+    // Per user requirements: Only send at the actual pickup time
     if (delay <= 0) {
-      // Send immediately if pickup time has passed
-      console.log(`⏭️  Pickup time has passed for ride #${ride.uuid}, sending arrival check immediately`);
-      notificationService.sendDriverArrivalCheck(ride, driver);
-      return;
+      console.log(`⏭️  Pickup time (${pickupTime.toLocaleString()}) has passed for ride #${ride.uuid}`);
+      console.log(`     Current time: ${now.toLocaleString()}`);
+      console.log(`     ⚠️  Will NOT send arrival check - pickup time must be in future`);
+      return; // Don't schedule or send anything
     }
 
     console.log(`⏰ Scheduling driver arrival check for ride #${ride.uuid}`);
@@ -100,20 +101,31 @@ class RideScheduler {
    * @param {object} driver - The driver object
    */
   scheduleDropoffCheck(ride, driver) {
-    // Calculate estimated dropoff time
-    // pickupTime + estimatedTravelTime
+    // Calculate estimated dropoff time using Distance Matrix data
     const pickupTime = new Date(ride.pickupRequestedTime);
-    const travelTimeMinutes = ride.estimatedTravelTime || 30; // Default 30 min if not set
-    const dropoffTime = new Date(pickupTime.getTime() + travelTimeMinutes * 60 * 1000);
+
+    // Use estimatedDurationSeconds from Distance Matrix API if available
+    let travelTimeSeconds;
+    if (ride.estimatedDurationSeconds) {
+      travelTimeSeconds = ride.estimatedDurationSeconds;
+      console.log(`📍 Using Distance Matrix travel time: ${ride.estimatedDuration} (${travelTimeSeconds}s)`);
+    } else {
+      // Fallback to estimatedTravelTime field or default
+      const travelTimeMinutes = ride.estimatedTravelTime || 30;
+      travelTimeSeconds = travelTimeMinutes * 60;
+      console.log(`⚠️  No Distance Matrix data, using fallback: ${travelTimeMinutes} min`);
+    }
+
+    const dropoffTime = new Date(pickupTime.getTime() + (travelTimeSeconds * 1000));
 
     const now = new Date();
     const delay = dropoffTime.getTime() - now.getTime();
 
     if (delay <= 0) {
-      // Send immediately if dropoff time has passed
-      console.log(`⏭️  Dropoff time has passed for ride #${ride.uuid}, sending check immediately`);
-      notificationService.sendDropoffCheck(ride, driver);
-      return;
+      console.log(`⏭️  Dropoff time (${dropoffTime.toLocaleString()}) has passed for ride #${ride.uuid}`);
+      console.log(`     Current time: ${now.toLocaleString()}`);
+      console.log(`     ⚠️  Will NOT send dropoff check - dropoff time must be in future`);
+      return; // Don't schedule or send anything
     }
 
     console.log(`⏰ Scheduling dropoff check for ride #${ride.uuid}`);
@@ -141,25 +153,34 @@ class RideScheduler {
    * @param {object} driver - The driver object
    */
   scheduleRoundtripReturnCheck(ride, driver) {
-    // Calculate return pickup time
-    // dropoffTime + estimatedWaitingTime
+    // Calculate return pickup time using Distance Matrix data
     const pickupTime = new Date(ride.pickupRequestedTime);
-    const travelTimeMinutes = ride.estimatedTravelTime || 30;
+
+    // Use estimatedDurationSeconds from Distance Matrix API if available
+    let travelTimeSeconds;
+    if (ride.estimatedDurationSeconds) {
+      travelTimeSeconds = ride.estimatedDurationSeconds;
+    } else {
+      const travelTimeMinutes = ride.estimatedTravelTime || 30;
+      travelTimeSeconds = travelTimeMinutes * 60;
+    }
+
     const waitingTimeMinutes = ride.estimatedWaitingTime || 60; // Default 60 min wait
+    const waitingTimeSeconds = waitingTimeMinutes * 60;
 
     const returnPickupTime = new Date(
       pickupTime.getTime() +
-      (travelTimeMinutes + waitingTimeMinutes) * 60 * 1000
+      ((travelTimeSeconds + waitingTimeSeconds) * 1000)
     );
 
     const now = new Date();
     const delay = returnPickupTime.getTime() - now.getTime();
 
     if (delay <= 0) {
-      // Send immediately if return time has passed
-      console.log(`⏭️  Return pickup time has passed for ride #${ride.uuid}, sending check immediately`);
-      notificationService.sendRoundtripReturnCheck(ride, driver);
-      return;
+      console.log(`⏭️  Return pickup time (${returnPickupTime.toLocaleString()}) has passed for ride #${ride.uuid}`);
+      console.log(`     Current time: ${now.toLocaleString()}`);
+      console.log(`     ⚠️  Will NOT send return check - return time must be in future`);
+      return; // Don't schedule or send anything
     }
 
     console.log(`⏰ Scheduling roundtrip return check for ride #${ride.uuid}`);

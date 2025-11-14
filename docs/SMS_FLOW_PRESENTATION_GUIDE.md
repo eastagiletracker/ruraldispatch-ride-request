@@ -450,6 +450,12 @@ Just use `SMS_SYSTEM_GUIDE.md`:
 **Q: What languages are supported?**
 > A: Currently English only, but system is built to support multiple languages (just need to add translations).
 
+**Q: What happens if driver keeps saying they're waiting (replies "2" multiple times)?**
+> A: ⚠️ MVP Note: Currently, the system will continue asking every 5 minutes. Auto-cancel after 2nd "No" response is planned for a future release. For now, dispatchers can manually intervene and cancel the ride if needed.
+
+**Q: Does the interactive SMS (1/2/3) work with both Twilio and Vonage?**
+> A: ⚠️ MVP Note: Currently, interactive responses only work with Twilio webhook. Vonage webhook forwards messages but doesn't process 1/2/3 responses yet. We recommend using Twilio as your primary provider for full functionality.
+
 ---
 
 ## 📊 Success Metrics to Share

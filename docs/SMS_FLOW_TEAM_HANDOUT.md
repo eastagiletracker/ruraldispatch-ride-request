@@ -126,7 +126,7 @@ Have you picked up the rider and started the ride?
   before canceling ride. To cancel ride reply 2.
   ```
 - After 5 minutes, ask again
-- If driver replies **2** again → Ride canceled ❌
+- If driver replies **2** again → Ride canceled ❌ [*](#mvp-limitations)
 
 ---
 
@@ -441,3 +441,24 @@ Driver Assigned
 **Want to learn more?** See `/docs/SMS_SYSTEM_GUIDE.md`
 
 **Ready to test?** See `/docs/SMS_FLOW_PRESENTATION_GUIDE.md`
+
+---
+
+## 📝 MVP Limitations
+
+<a name="mvp-limitations"></a>
+
+**Current MVP Status**: The SMS system is fully functional with the following notes:
+
+### Auto-Cancel After Waiting
+- **Documented behavior**: After driver waits 5 minutes and responds "2=No" a second time, ride should auto-cancel
+- **Current behavior**: System will continue to ask every 5 minutes (manual dispatcher intervention required)
+- **Status**: Planned for future release
+
+### Interactive SMS Responses
+- **Current**: Interactive responses (1/2/3) only work with Twilio webhook
+- **Limitation**: If using Vonage as primary provider, interactive features will not work (messages are forwarded only)
+- **Recommendation**: Use Twilio as primary provider for full functionality
+- **Status**: Vonage interactive response support planned for future release
+
+**Impact**: These limitations do not affect core functionality. Dispatchers can manually cancel rides if needed, and Twilio (recommended primary provider) supports all interactive features.

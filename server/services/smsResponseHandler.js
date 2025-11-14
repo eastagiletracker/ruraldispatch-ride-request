@@ -154,9 +154,10 @@ function processSMSResponse(ride, senderRole, messageBody) {
 
     case 'DRIVER_ARRIVAL_CHECK':
       if (responseCode === 1) {
-        // Driver arrived
+        // Driver arrived - update status to RIDE_STARTED so next response is PICKUP_CHECK
         return {
           success: true,
+          newRideStatus: RIDE_STATUSES.RIDE_STARTED, // ✅ FIX: Update status so next context is PICKUP_CHECK
           notifications: [
             { recipient: 'rider', template: 'DRIVER_ARRIVED' },
             { recipient: 'case_manager', template: 'DRIVER_ARRIVED' },
@@ -179,14 +180,11 @@ function processSMSResponse(ride, senderRole, messageBody) {
 
     case 'DRIVER_PICKUP_CHECK':
       if (responseCode === 1) {
-        // Rider picked up
+        // Rider picked up - status already RIDE_STARTED from arrival, now update to RIDER_PICKED_UP
         return {
           success: true,
           newRideStatus: RIDE_STATUSES.RIDER_PICKED_UP,
-          scheduleStatusChange: {
-            status: RIDE_STATUSES.RIDE_STARTED,
-            delayMinutes: 5
-          },
+          // ✅ FIX: No need to schedule RIDE_STARTED change - already at that status
           metadata: { riderPickedUp: true }
         };
       } else if (responseCode === 2) {

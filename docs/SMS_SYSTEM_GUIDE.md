@@ -185,6 +185,7 @@ Reply 1 for yes, 2 for no.
 - **Reply "2"** → Waiting for Rider
   - Rider & case manager: "Driver is waiting"
   - Pickup check rescheduled (5 min)
+  - ⚠️ *MVP Note: Auto-cancel after 2nd "No" not yet implemented - dispatcher intervention may be needed*
 
 ---
 
@@ -361,6 +362,8 @@ DISPATCHER_PHONE=+1234567890
 #### Vonage
 1. Go to Vonage Dashboard → Settings
 2. Set Inbound Webhook: `https://yourdomain.com/api/notifications/webhook/vonage`
+
+> **⚠️ MVP Limitation**: Vonage webhook currently only forwards messages between rider/driver. Interactive responses (1/2/3) are only processed via Twilio webhook. For full functionality, use Twilio as your primary provider. Vonage interactive response support is planned for a future release.
 
 **Note**: Use ngrok for local testing:
 ```bash
@@ -640,6 +643,27 @@ Content-Type: application/json
 
 ---
 
-**Status**: ✅ Production Ready
-**Last Updated**: November 13, 2025
+---
+
+## ⚠️ Known Limitations (MVP)
+
+### Auto-Cancel After Driver Waiting
+**Expected**: After driver waits 5 minutes and responds "2=No" a second time, ride auto-cancels
+**Current**: System continues to ask every 5 minutes indefinitely
+**Workaround**: Dispatcher can manually cancel ride if needed
+**Status**: Planned for post-MVP release
+
+### Vonage Interactive Responses
+**Expected**: Both Twilio and Vonage webhooks process interactive responses (1/2/3)
+**Current**: Only Twilio webhook processes interactive responses; Vonage webhook only forwards messages
+**Recommendation**: Use Twilio as primary provider for full functionality
+**Status**: Vonage interactive support planned for post-MVP release
+
+### Impact
+These limitations do not prevent the system from functioning. Core SMS flow works correctly with Twilio. Dispatchers have manual controls for edge cases.
+
+---
+
+**Status**: ✅ Production Ready (with noted MVP limitations)
+**Last Updated**: November 14, 2025
 **Maintainer**: Development Team
