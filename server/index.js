@@ -73,5 +73,14 @@ async function init()
     console.log(`🌍 Server Timezone: ${getTimezoneInfo()}`);
     console.log(`🕐 Current Time nowET (ET): ${formatET(nowET())}`);
     console.log(`⚠️  Note: All ride scheduling uses Eastern Time (America/New_York)`);
+    const tz = process.env.TZ || 'UTC';
+    const now = new Date();
+    try {
+      console.log(`Current server time (${tz}): ${now.toLocaleString('en-US', { timeZone: tz })}`);
+    } catch (err) {
+      console.log(`Current server time (system locale): ${now.toString()}`);
+      console.warn(`Unable to format server time with timezone "${tz}":`, err.message);
+    }
+    console.log(`Current server time (ISO): ${now.toISOString()}`);
   });
 }
