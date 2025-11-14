@@ -39,6 +39,7 @@
     "express-validator": "^7.0.1",
     "helmet": "^7.0.0",
     "jsonwebtoken": "^9.0.2",
+    "moment-timezone": "^0.6.0",
     "mongoose": "^7.5.0",
     "morgan": "^1.10.0",
     "twilio": "^5.10.4"

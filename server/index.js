@@ -8,6 +8,7 @@ require('dotenv').config({ path: '../.env' });
 
 const createRouter = require('./routes/router');
 const generateApi = require("./database/api");
+const { nowET, formatET, getTimezoneInfo } = require('./utils/timezone');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -69,5 +70,8 @@ async function init()
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     console.log(`Environment: ${process.env.NODE_ENV}`);
+    console.log(`🌍 Server Timezone: ${getTimezoneInfo()}`);
+    console.log(`🕐 Current Time nowET (ET): ${formatET(nowET())}`);
+    console.log(`⚠️  Note: All ride scheduling uses Eastern Time (America/New_York)`);
   });
 }
