@@ -23,6 +23,7 @@ import { PhoneInput } from "@/components/ui/phone-input";
 import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 import { rideRequestFormSchema, type RideRequestFormData } from "@/schemas/validation";
 import type { RideRequestFormProps } from "@/types/form";
+import { getCurrentUser } from "@/utils/permissions";
 
 export default function RideRequestForm({
     selectedUser,
@@ -118,11 +119,18 @@ export default function RideRequestForm({
             // Using phone number as identifier since users aren't tracked in the system yet
             const tempUserUuid = selectedUser?.uuid || `temp_${data.riderMobilePhone.replace(/\D/g, '')}`;
 
+            // Get the logged-in case manager's UUID (only if authenticated)
+            const currentUser = getCurrentUser();
+            const createdByUuid = currentUser?.uuid && currentUser.isAuthenticated 
+                ? parseInt(currentUser.uuid) 
+                : undefined;
+
             const rideRequestData = {
                 serviceUserUuid: tempUserUuid,
                 serviceUserRole: 'rider',
                 serviceUserName: data.riderFullName,  // Store rider name directly
                 serviceUserPhone: data.riderMobilePhone,  // Store rider phone directly
+                ...(createdByUuid && { createdByUuid }),  // Only include if authenticated case manager
                 pickupAddress: getAddressString(data.pickupLocation),
                 dropOffAddress: getAddressString(data.dropoffLocation),
                 roundTrip: data.roundtrip || false,

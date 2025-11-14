@@ -24,6 +24,10 @@ const rideRequestSchema = new mongoose.Schema({
     type: String,
     required: false  // Optional for backward compatibility
   },
+  createdByUuid: {
+    type: Number,
+    required: false  // UUID of the system user (case manager) who created this ride
+  },
   pickupAddress: {
     type: String,
     required: true

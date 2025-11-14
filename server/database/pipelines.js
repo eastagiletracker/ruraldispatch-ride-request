@@ -40,6 +40,26 @@ const pipelines = {
                 'foreignField': 'uuid',
                 'as': 'vehicle'
             }
+        },
+        {
+            '$lookup': {
+                'from': 'system-users',
+                'localField': 'createdByUuid',
+                'foreignField': 'uuid',
+                'as': 'createdBy'
+            }
+        },
+        {
+            // Flatten createdBy array to single object (or null if not found)
+            '$addFields': {
+                'createdBy': {
+                    '$cond': {
+                        'if': { '$gt': [{ '$size': '$createdBy' }, 0] },
+                        'then': { '$arrayElemAt': ['$createdBy', 0] },
+                        'else': null
+                    }
+                }
+            }
         }
     ],
 
