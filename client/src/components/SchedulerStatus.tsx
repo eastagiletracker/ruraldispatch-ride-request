@@ -6,10 +6,6 @@ import { Clock, Calendar, Bell, RefreshCw, ChevronDown, ChevronUp } from "lucide
 import { Button } from "@/components/ui/button";
 import { formatRideId } from "@/utils/formatters";
 
-interface SchedulerTask {
-    taskName: string;
-}
-
 interface ScheduledRide {
     rideUuid: string;
     taskCount: number;

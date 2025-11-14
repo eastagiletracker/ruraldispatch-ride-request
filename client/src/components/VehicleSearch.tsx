@@ -18,7 +18,7 @@ export default function VehicleSearch({ onVehicleSelect }: VehicleSearchProps) {
         />
     )
 
-    function renderVehicle(vehicle: Vehicle, handleElementSelect: (vehicle: Vehicle) => void): JSX.Element {
+    function renderVehicle(vehicle: Vehicle, handleElementSelect: (vehicle: Vehicle) => void): React.JSX.Element {
         return (
             <div
                 key={vehicle.uuid}

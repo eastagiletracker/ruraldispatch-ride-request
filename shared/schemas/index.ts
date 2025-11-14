@@ -23,3 +23,6 @@ export * from './rideStatuses';
 
 // Ride Request Status constants and types
 export * from './rideRequestStatuses';
+
+// Google Places API types
+export * from './places';

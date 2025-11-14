@@ -6,91 +6,13 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   getAutocompletePredictions,
-  PlacePrediction,
   PlacesSessionToken,
 } from '@/lib/places-api';
-
-export interface UsePlacesAutocompleteOptions {
-  /**
-   * Debounce delay in milliseconds (default: 500ms)
-   */
-  debounce?: number;
-
-  /**
-   * Minimum input length before making API requests (default: 3)
-   */
-  minLength?: number;
-
-  /**
-   * Optional location bias for results
-   */
-  locationBias?: {
-    circle?: {
-      center: {
-        latitude: number;
-        longitude: number;
-      };
-      radius: number;
-    };
-  };
-
-  /**
-   * Restrict results to specific countries (e.g., ['US'])
-   */
-  includedRegionCodes?: string[];
-
-  /**
-   * Callback when predictions are fetched
-   */
-  onPredictionsUpdate?: (predictions: PlacePrediction[]) => void;
-
-  /**
-   * Callback when an error occurs
-   */
-  onError?: (error: Error) => void;
-}
-
-export interface UsePlacesAutocompleteReturn {
-  /**
-   * Current input value
-   */
-  value: string;
-
-  /**
-   * Set the input value
-   */
-  setValue: (value: string) => void;
-
-  /**
-   * Array of prediction suggestions
-   */
-  predictions: PlacePrediction[];
-
-  /**
-   * Whether predictions are being fetched
-   */
-  isLoading: boolean;
-
-  /**
-   * Error if one occurred
-   */
-  error: Error | null;
-
-  /**
-   * Clear all predictions
-   */
-  clearPredictions: () => void;
-
-  /**
-   * Refresh the session token (call after place selection)
-   */
-  refreshSessionToken: () => void;
-
-  /**
-   * Get the current session token
-   */
-  getSessionToken: () => string;
-}
+import type {
+  PlacePrediction,
+  UsePlacesAutocompleteOptions,
+  UsePlacesAutocompleteReturn,
+} from '@shared/schemas';
 
 export function usePlacesAutocomplete(
   options: UsePlacesAutocompleteOptions = {}

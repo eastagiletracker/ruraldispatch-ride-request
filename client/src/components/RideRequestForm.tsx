@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { MapPin, User, Phone, Building2, AlertCircle } from "lucide-react";
+import { MapPin, User, Building2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { AddressAutocomplete } from "@/components/ui/address-autocomplete";

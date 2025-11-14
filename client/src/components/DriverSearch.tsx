@@ -18,7 +18,7 @@ export default function DriverSearch({ onDriverSelect }: DriverSearchProps) {
         />
     )
 
-    function renderDriver(driver: ServiceProvider, handleElementSelect: (driver: ServiceProvider) => void): JSX.Element {
+    function renderDriver(driver: ServiceProvider, handleElementSelect: (driver: ServiceProvider) => void): React.JSX.Element {
         return (
             <div
                 key={driver.uuid}

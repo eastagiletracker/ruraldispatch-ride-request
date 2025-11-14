@@ -295,7 +295,7 @@ export default function UserForm({ setShowBaseForm, setShowUserForm }: FormCompo
                                 control={control}
                                 render={({ field }) => (
                                     <AddressAutocomplete
-                                        value={field.value}
+                                        value={typeof field.value === 'string' ? null : field.value}
                                         onChange={field.onChange}
                                         label="Current Residence"
                                         placeholder="Search for current residence..."
@@ -312,7 +312,7 @@ export default function UserForm({ setShowBaseForm, setShowUserForm }: FormCompo
                                 control={control}
                                 render={({ field }) => (
                                     <AddressAutocomplete
-                                        value={field.value}
+                                        value={typeof field.value === 'string' ? null : field.value}
                                         onChange={field.onChange}
                                         label="Last Residence"
                                         placeholder="Search for last residence..."

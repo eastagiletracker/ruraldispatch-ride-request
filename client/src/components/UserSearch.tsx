@@ -18,7 +18,7 @@ export default function UserSearch({ onUserSelect }: UserSearchProps) {
         />
     )
 
-    function renderUser(user: User, handleUserSelect: (user: User) => void): JSX.Element {
+    function renderUser(user: User, handleUserSelect: (user: User) => void): React.JSX.Element {
         return (
             <div
                 key={user.uuid}

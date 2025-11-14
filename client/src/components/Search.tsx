@@ -5,7 +5,7 @@ interface SearchProps<T extends SearchableElement> {
     searchElementName: string;
     fetchMatchesFn: (searchTerm: string) => Promise<T[]>;
     placeHolderText: string;
-    renderElementFn: (element: T, handleElementSelect: (element: T) => void) => JSX.Element;
+    renderElementFn: (element: T, handleElementSelect: (element: T) => void) => React.JSX.Element;
 }
 
 export default function Search<T extends SearchableElement>({

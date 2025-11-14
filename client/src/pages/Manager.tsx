@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Users, Trash2, Search, AlertCircle, Briefcase, Truck, Clipboard } from "lucide-react";
 import { toast } from 'sonner';
 import StatusToggleButton from "@/components/StatusToggleButton";
@@ -23,6 +23,32 @@ const getAuthHeaders = () => {
         'x-user-role': userRole || ''
     };
 };
+
+// Skeleton loader for tables
+const TableSkeleton = ({ rows = 5, cols = 6 }: { rows?: number; cols?: number }) => (
+    <Table>
+        <TableHeader>
+            <TableRow>
+                {Array.from({ length: cols }).map((_, i) => (
+                    <TableHead key={i}>
+                        <Skeleton className="h-4 w-20" />
+                    </TableHead>
+                ))}
+            </TableRow>
+        </TableHeader>
+        <TableBody>
+            {Array.from({ length: rows }).map((_, rowIndex) => (
+                <TableRow key={rowIndex}>
+                    {Array.from({ length: cols }).map((_, colIndex) => (
+                        <TableCell key={colIndex}>
+                            <Skeleton className="h-4 w-full" />
+                        </TableCell>
+                    ))}
+                </TableRow>
+            ))}
+        </TableBody>
+    </Table>
+);
 
 interface Rider {
     uuid: number;
@@ -448,7 +474,7 @@ export default function Manager() {
                         </CardHeader>
                         <CardContent>
                             {loading ? (
-                                <p className="text-center py-8 text-muted-foreground">Loading...</p>
+                                <TableSkeleton rows={5} cols={6} />
                             ) : filteredRiders.length === 0 ? (
                                 <p className="text-center py-8 text-muted-foreground">No riders found</p>
                             ) : (
@@ -502,7 +528,7 @@ export default function Manager() {
                         </CardHeader>
                         <CardContent>
                             {loading ? (
-                                <p className="text-center py-8 text-muted-foreground">Loading...</p>
+                                <TableSkeleton rows={5} cols={7} />
                             ) : filteredProviders.length === 0 ? (
                                 <p className="text-center py-8 text-muted-foreground">No service providers found</p>
                             ) : (
@@ -560,7 +586,7 @@ export default function Manager() {
                         </CardHeader>
                         <CardContent>
                             {loading ? (
-                                <p className="text-center py-8 text-muted-foreground">Loading...</p>
+                                <TableSkeleton rows={5} cols={6} />
                             ) : filteredVehicles.length === 0 ? (
                                 <p className="text-center py-8 text-muted-foreground">No vehicles found</p>
                             ) : (
@@ -624,7 +650,7 @@ export default function Manager() {
                                 </AlertDescription>
                             </Alert>
                             {loading ? (
-                                <p className="text-center py-8 text-muted-foreground">Loading...</p>
+                                <TableSkeleton rows={5} cols={7} />
                             ) : filteredDispatchers.length === 0 ? (
                                 <p className="text-center py-8 text-muted-foreground">No dispatchers found</p>
                             ) : (
@@ -697,7 +723,7 @@ export default function Manager() {
                                 </AlertDescription>
                             </Alert>
                             {loading ? (
-                                <p className="text-center py-8 text-muted-foreground">Loading...</p>
+                                <TableSkeleton rows={5} cols={7} />
                             ) : filteredCaseManagers.length === 0 ? (
                                 <p className="text-center py-8 text-muted-foreground">No case managers found</p>
                             ) : (

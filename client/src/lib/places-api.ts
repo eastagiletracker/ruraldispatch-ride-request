@@ -7,53 +7,13 @@
  * - https://github.com/wellyshen/use-places-autocomplete/issues/137
  */
 
-export interface PlacePrediction {
-  placePrediction?: {
-    place: string; // Resource name (e.g., "places/ChIJ...")
-    placeId: string;
-    text: {
-      text: string;
-    };
-    structuredFormat: {
-      mainText: {
-        text: string;
-      };
-      secondaryText: {
-        text: string;
-      };
-    };
-  };
-}
-
-export interface AutocompleteResponse {
-  suggestions: PlacePrediction[];
-}
-
-export interface PlaceDetails {
-  id: string;
-  formattedAddress: string;
-  displayName: {
-    text: string;
-  };
-  location: {
-    latitude: number;
-    longitude: number;
-  };
-  addressComponents?: Array<{
-    longText: string;
-    shortText: string;
-    types: string[];
-  }>;
-}
-
-export interface AddressComponents {
-  address1?: string;
-  address2?: string;
-  city?: string;
-  state?: string;
-  postalCode?: string;
-  country?: string;
-}
+import type {
+  PlacePrediction,
+  AutocompleteResponse,
+  PlaceDetails,
+  AddressComponents,
+  AutocompleteOptions,
+} from '@shared/schemas';
 
 /**
  * SessionToken manager for cost optimization
@@ -111,18 +71,7 @@ const PLACE_DETAILS_URL = 'https://places.googleapis.com/v1';
 export async function getAutocompletePredictions(
   input: string,
   sessionToken: string,
-  options?: {
-    locationBias?: {
-      circle?: {
-        center: {
-          latitude: number;
-          longitude: number;
-        };
-        radius: number;
-      };
-    };
-    includedRegionCodes?: string[]; // e.g., ['US']
-  }
+  options?: AutocompleteOptions
 ): Promise<PlacePrediction[]> {
   if (!API_KEY) {
     throw new Error('Google Maps API key is not configured');
