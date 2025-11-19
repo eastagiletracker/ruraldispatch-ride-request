@@ -134,8 +134,8 @@ function processSMSResponse(ride, senderRole, messageBody) {
           success: true,
           newRideStatus: RIDE_STATUSES.RIDE_CONFIRMED,
           notifications: [
-            { recipient: 'rider', template: 'RIDE_CONFIRMED' },
-            { recipient: 'case_manager', template: 'RIDE_CONFIRMED' }
+            { recipient: 'rider', template: RIDE_STATUSES.RIDE_CONFIRMED },
+            { recipient: 'case_manager', template: RIDE_STATUSES.RIDE_CONFIRMED }
           ],
           metadata: { driverAccepted: true }
         };
