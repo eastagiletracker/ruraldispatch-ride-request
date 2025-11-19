@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MapPin, Clock, User, Phone } from "lucide-react";
 import { toast } from "sonner";
+import { formatLocalDateTime } from "@/utils/dateUtils";
 
 interface AssignDriverProps {
     selectedRideRequestId: string;
@@ -206,10 +207,7 @@ export default function AssignDriver({ selectedRideRequestId, cancelFn }: Assign
                                     <div className="flex-1">
                                         <p className="text-xs text-muted-foreground">Pickup Time</p>
                                         <p className="text-sm font-medium">
-                                            {selectedRideRequest.pickupRequestedTime
-                                                ? new Date(selectedRideRequest.pickupRequestedTime).toLocaleString()
-                                                : 'Not specified'
-                                            }
+                                            {formatLocalDateTime(selectedRideRequest.pickupRequestedTime) || 'Not specified'}
                                         </p>
                                     </div>
                                 </div>

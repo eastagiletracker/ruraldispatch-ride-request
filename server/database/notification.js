@@ -7,7 +7,8 @@
  * Get all notifications for a specific ride request
  */
 async function getNotificationsByRide(collection, rideRequestUuid) {
-  const filter = { rideRequestUuid: parseInt(rideRequestUuid) };
+  // UUIDs are now strings (UUIDv7 format)
+  const filter = { rideRequestUuid: rideRequestUuid };
   return await collection.find(filter).sort({ sentAt: 1 }).toArray();
 }
 
@@ -23,8 +24,9 @@ async function getNotificationsByPhone(collection, phone) {
  * Get active session notifications
  */
 async function getActiveSessionNotifications(collection, rideRequestUuid) {
+  // UUIDs are now strings (UUIDv7 format)
   const filter = {
-    rideRequestUuid: parseInt(rideRequestUuid),
+    rideRequestUuid: rideRequestUuid,
     sessionActive: true
   };
   return await collection.find(filter).sort({ sentAt: 1 }).toArray();
@@ -50,8 +52,9 @@ async function updateNotificationStatus(collection, twilioMessageSid, statusData
  * Close all notifications for a ride session
  */
 async function closeRideSession(collection, rideRequestUuid) {
+  // UUIDs are now strings (UUIDv7 format)
   const filter = {
-    rideRequestUuid: parseInt(rideRequestUuid),
+    rideRequestUuid: rideRequestUuid,
     sessionActive: true
   };
   const update = {
@@ -84,8 +87,9 @@ async function getAllNotifications(collection, limit = 100) {
  * Get notification statistics for a ride
  */
 async function getRideNotificationStats(collection, rideRequestUuid) {
+  // UUIDs are now strings (UUIDv7 format)
   const pipeline = [
-    { $match: { rideRequestUuid: parseInt(rideRequestUuid) } },
+    { $match: { rideRequestUuid: rideRequestUuid } },
     {
       $group: {
         _id: '$notificationType',

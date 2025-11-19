@@ -32,7 +32,7 @@ async function generateApi()
     const api = {
         getRideRequest: async(uuid) => await database.getRideRequestWithUserAndProviderData(rideRequestCollection, uuid),
         getRideRequests: async() => await database.getRideRequestsWithUserAndProviderData(rideRequestCollection),
-        addRideRequest: async(rideReq) => await database.add(rideRequestCollection, rideReq),
+        addRideRequest: async(rideReq) => await database.addRideRequest(rideRequestCollection, rideReq),
         updateRideRequest: async(uuid, replacementFields) => await database.update(rideRequestCollection, uuid, replacementFields),
         getUser: async(uuid) => await database.getByUuidString(userCollection, uuid),
         getSpecifiedFieldsOfUser: async(uuid, fields) => await database.getSpecifiedFieldsOfDocument(userCollection, uuid, fields),

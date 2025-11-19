@@ -10,6 +10,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { AlertCircle, CheckCircle2, Clock, XCircle, Phone, User, AlertTriangle, HelpCircle } from "lucide-react";
 import { toast } from "sonner";
 import type { Notification, TwilioStatus } from "@/types";
+import { formatLocalTime, formatLocalDate } from "@/utils/dateUtils";
 
 interface SMSConversationModalProps {
   rideUuid: string;
@@ -80,19 +81,13 @@ const SMSConversationModal: React.FC<SMSConversationModalProps> = ({
     }
   };
 
+  // Using imported formatLocalTime and formatLocalDate from @/utils/dateUtils
   const formatTime = (timestamp: string | Date): string => {
-    return new Date(timestamp).toLocaleString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    return formatLocalTime(String(timestamp));
   };
 
   const formatDate = (timestamp: string | Date): string => {
-    return new Date(timestamp).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
+    return formatLocalDate(String(timestamp));
   };
 
   const getStatusIcon = (status: TwilioStatus) => {

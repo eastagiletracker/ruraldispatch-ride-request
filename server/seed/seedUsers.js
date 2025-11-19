@@ -11,7 +11,7 @@
 
 require('dotenv').config({ path: '../../.env' });
 const generateApi = require('../database/api');
-const { v4: uuidv4 } = require('uuid');
+const { v7: uuidv7 } = require('uuid');
 
 /**
  * Demo service users organized by role
@@ -143,10 +143,10 @@ async function seedUsers() {
 
         for (const userData of demoUsers) {
             try {
-                // Add UUID
+                // Add UUIDv7 (timestamp-ordered for optimal B-Tree performance)
                 const userWithUuid = {
                     ...userData,
-                    uuid: uuidv4()
+                    uuid: uuidv7()
                 };
 
                 // Create the user

@@ -24,6 +24,7 @@ import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 import { rideRequestFormSchema, type RideRequestFormData } from "@/schemas/validation";
 import type { RideRequestFormProps } from "@/types/form";
 import { getCurrentUser } from "@/utils/permissions";
+import { dateTimeLocalToUTC } from "@/utils/dateUtils";
 
 export default function RideRequestForm({
     selectedUser,
@@ -137,8 +138,9 @@ export default function RideRequestForm({
                 pickupAddress: getAddressString(data.pickupLocation),
                 dropOffAddress: getAddressString(data.dropoffLocation),
                 roundTrip: data.roundtrip || false,
-                pickupRequestedTime: `${data.pickupRequestedDate}T${data.pickupRequestedTime}`,
-                dropOffRequestedTime: `${data.pickupRequestedDate}T${data.pickupRequestedTime}`,
+                // Convert local date+time to UTC ISO string for backend
+                pickupRequestedTime: dateTimeLocalToUTC(`${data.pickupRequestedDate}T${data.pickupRequestedTime}`),
+                dropOffRequestedTime: dateTimeLocalToUTC(`${data.pickupRequestedDate}T${data.pickupRequestedTime}`),
                 rideStartedActualTime: new Date(),
                 pickupActualTime: new Date(),
                 dropOffActualTime: new Date(),

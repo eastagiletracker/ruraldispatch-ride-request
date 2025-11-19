@@ -39,6 +39,7 @@ export const RideRequestTypes = [
  */
 export const rideRequestSchema = z.object({
   uuid: z.union([z.number(), z.string()]),
+  displayId: z.string().optional(), // Human-readable ID (e.g., RIDE-X7K9)
   serviceUserUuid: z.string(),
   serviceUserRole: z.string(),
   pickupAddress: z.string()

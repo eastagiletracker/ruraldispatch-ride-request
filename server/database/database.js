@@ -1,5 +1,7 @@
 require('dotenv').config({ path: '../.env' });
 const {pipelineGenerators, pipelines} = require("./pipelines");
+const { generateUuid } = require("../utils/uuid");
+const { generateRideDisplayId } = require("../utils/displayId");
 
 async function getCollection(collection)
 {
@@ -8,16 +10,19 @@ async function getCollection(collection)
 
 async function add(collection, document)
 {
-    // Auto-generate UUID if not provided
+    // Auto-generate UUIDv7 if not provided
+    // UUIDv7 provides sequential ordering for optimal B-Tree performance
+    // while maintaining global uniqueness and unpredictability
     if (!document.uuid) {
-        document.uuid = Date.now();
+        document.uuid = generateUuid();
     }
     return await collection.insertOne(document);
 }
 
 async function update(collection, uuid, replacementFields){
     const replacementDoc = {$set: replacementFields};
-    const filter = {uuid: parseInt(uuid)};
+    // UUIDs are now strings (UUIDv7 format)
+    const filter = {uuid: uuid};
     return await collection.updateOne(filter, replacementDoc);
 }
 
@@ -60,14 +65,16 @@ async function getRideRequestsWithUserAndProviderData(collection)
 
 async function getRideRequestWithUserAndProviderData(collection, uuid)
 {
-    const pipeline = pipelineGenerators.matchUuid(parseInt(uuid)).concat(pipelines.userAndProviderDataAggregation);
+    // UUIDs are now strings (UUIDv7 format)
+    const pipeline = pipelineGenerators.matchUuid(uuid).concat(pipelines.userAndProviderDataAggregation);
     const results = await collection.aggregate(pipeline).toArray();
     return results[0];
 }
 
 async function getByUuidString(collection, uuid)
 {
-    return await collection.findOne({uuid: parseInt(uuid)})
+    // UUIDs are now strings (UUIDv7 format)
+    return await collection.findOne({uuid: uuid})
 }
 
 async function getSpecifiedFieldsOfDocument(collection, uuid, fields)
@@ -96,14 +103,32 @@ async function updateUserSMSConsent(collection, phone, consentData) {
 }
 
 async function deleteByUuid(collection, uuid) {
-    const filter = { uuid: parseInt(uuid) };
+    // UUIDs are now strings (UUIDv7 format)
+    const filter = { uuid: uuid };
     const result = await collection.deleteOne(filter);
     return result;
+}
+
+/**
+ * Add a ride request with auto-generated display ID
+ * @param {object} collection - MongoDB collection
+ * @param {object} document - Ride request document
+ * @returns {object} Insert result
+ */
+async function addRideRequest(collection, document) {
+    // Auto-generate display ID if not provided
+    if (!document.displayId) {
+        document.displayId = generateRideDisplayId();
+    }
+
+    // Auto-generate UUID if not provided (handled by add function)
+    return await add(collection, document);
 }
 
 module.exports = {
     getCollection,
     add,
+    addRideRequest,
     update,
     deleteByUuid,
     fuzzyUserSearch,

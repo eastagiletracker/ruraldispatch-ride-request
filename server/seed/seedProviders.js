@@ -13,7 +13,7 @@
 
 require('dotenv').config({ path: '../../.env' });
 const generateApi = require('../database/api');
-const { v4: uuidv4 } = require('uuid');
+const { v7: uuidv7 } = require('uuid');
 const bcrypt = require('bcryptjs');
 
 /**
@@ -102,10 +102,10 @@ async function seedProviders() {
                 // Hash password
                 const hashedPassword = await bcrypt.hash(providerData.password, 10);
 
-                // Add UUID and hashed password
+                // Add UUIDv7 (timestamp-ordered for optimal B-Tree performance) and hashed password
                 const providerWithUuid = {
                     ...providerData,
-                    uuid: uuidv4(),
+                    uuid: uuidv7(),
                     password: hashedPassword
                 };
 

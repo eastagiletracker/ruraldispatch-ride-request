@@ -2,6 +2,7 @@
 // This is separate from the "users" collection which stores service users (riders, etc.)
 
 const bcrypt = require('bcryptjs');
+const { generateUuid } = require('../utils/uuid');
 
 /**
  * System User Schema
@@ -18,7 +19,7 @@ class SystemUser {
      * Create a new system user object
      */
     constructor({uuid, username, passwordHash, role, fullName, email, phone, createdAt, updatedAt, lastLogin, isActive}) {
-        this.uuid = uuid || Date.now();
+        this.uuid = uuid || generateUuid();
         this.username = username;
         this.passwordHash = passwordHash;
         this.role = role; // 'admin', 'dispatcher', 'driver', 'case_manager'
@@ -65,7 +66,7 @@ class SystemUser {
         const passwordHash = await this.hashPassword(password);
 
         return new SystemUser({
-            uuid: Date.now(),
+            uuid: generateUuid(),
             username,
             passwordHash,
             role,
