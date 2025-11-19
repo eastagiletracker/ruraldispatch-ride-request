@@ -18,8 +18,8 @@ export type RecipientRole = "rider" | "driver" | "dispatcher" | "staff" | "unkno
 export type TwilioStatus = "queued" | "sending" | "sent" | "delivered" | "undelivered" | "failed" | "received";
 
 export interface Notification {
-  uuid: number;
-  rideRequestUuid: number;
+  uuid: string;
+  rideRequestUuid: string;
   notificationType: NotificationType;
   direction: MessageDirection;
   recipientPhone: string;
