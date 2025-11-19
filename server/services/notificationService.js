@@ -106,12 +106,11 @@ Thank you for using our service! If you have any feedback, please contact us.`;
    * Send driver assignment notification to driver
    */
   async notifyDriverAssigned(ride, driver, rider) {
-    const message = `New ride assigned to you!
-Rider: ${rider.fullName}
-Pickup: ${ride.pickupAddress}
-Time: ${new Date(ride.pickupRequestedTime).toLocaleString()}
-Dropoff: ${ride.dropOffAddress}
-Check the dashboard for details.`;
+    // Use template for consistent messaging with "Accept? 1=Yes, 2=No"
+    const message = smsTemplates.getSMSTemplate('DRIVER_ASSIGNMENT', 'driver', {
+      ride,
+      rider
+    });
 
     const driverPhone = driver.mobilePhone || driver.phone;
 
@@ -124,7 +123,8 @@ Check the dashboard for details.`;
       };
     }
 
-    console.log('📱 Sending driver notification to:', driverPhone);
+    console.log('📱 Sending driver assignment SMS to:', driverPhone);
+    console.log('📨 Message:', message);
 
     return await this.sendSMS(driverPhone, message);
   }

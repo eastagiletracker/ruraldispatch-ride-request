@@ -142,17 +142,17 @@ export const rideRequestFormSchema = z.object({
   notesComments: z.string().optional()
 }).refine(
   (data) => {
-    // Validate pickup date/time is at least 30 minutes from now
+    // Validate pickup date/time is at least 15 minutes from now
     if (!data.pickupRequestedDate || !data.pickupRequestedTime) return true; // Let individual field validations handle empty fields
 
     const pickupDateTime = new Date(`${data.pickupRequestedDate}T${data.pickupRequestedTime}`);
     const now = new Date();
-    const minAllowedTime = new Date(now.getTime() + 30 * 60 * 1000); // 30 minutes from now
+    const minAllowedTime = new Date(now.getTime() + 15 * 60 * 1000); // 15 minutes from now
 
     return pickupDateTime >= minAllowedTime;
   },
   {
-    message: 'Pickup time must be at least 30 minutes from now',
+    message: 'Pickup time must be at least 15 minutes from now',
     path: ['pickupRequestedTime'] // Show error on the time field
   }
 );

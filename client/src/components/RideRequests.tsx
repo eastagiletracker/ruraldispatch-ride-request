@@ -287,22 +287,29 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
 
                 // Sort by uuid (timestamp) - most recent first
                 nonActiveRideReqs.sort((a, b) => {
-                    // Use createdAt if available, fallback to uuid
-                    const timeA = a.createdAt ? new Date(a.createdAt).getTime() : Number(a.uuid);
-                    const timeB = b.createdAt ? new Date(b.createdAt).getTime() : Number(b.uuid);
-                    return timeB - timeA;
+                    // Use createdAt if available, fallback to uuid lexicographic comparison
+                    // UUIDv7 can be sorted as strings (timestamp prefix)
+                    if (a.createdAt && b.createdAt) {
+                        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+                    }
+                    // Fallback to UUIDv7 string comparison (descending)
+                    return b.uuid.localeCompare(a.uuid);
                 });
                 activeRides.sort((a, b) => {
                     // Sort by pickupRequestedTime (most urgent first)
-                    const timeA = a.pickupRequestedTime ? new Date(a.pickupRequestedTime).getTime() : Number(a.uuid);
-                    const timeB = b.pickupRequestedTime ? new Date(b.pickupRequestedTime).getTime() : Number(b.uuid);
-                    return timeA - timeB; // Earliest pickup time first
+                    if (a.pickupRequestedTime && b.pickupRequestedTime) {
+                        return new Date(a.pickupRequestedTime).getTime() - new Date(b.pickupRequestedTime).getTime();
+                    }
+                    // Fallback to UUIDv7 string comparison (ascending)
+                    return a.uuid.localeCompare(b.uuid);
                 });
                 completedRides.sort((a, b) => {
                     // Sort by createdAt (most recent first)
-                    const timeA = a.createdAt ? new Date(a.createdAt).getTime() : Number(a.uuid);
-                    const timeB = b.createdAt ? new Date(b.createdAt).getTime() : Number(b.uuid);
-                    return timeB - timeA;
+                    if (a.createdAt && b.createdAt) {
+                        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+                    }
+                    // Fallback to UUIDv7 string comparison (descending)
+                    return b.uuid.localeCompare(a.uuid);
                 });
 
                 setRideRequests(nonActiveRideReqs);
@@ -542,7 +549,7 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                                     rideRequests.map((rideRequest) => (
                                         <TableRow key={rideRequest.uuid}>
                                             <TableCell className="font-medium text-sm whitespace-nowrap">
-                                                {formatLocalDateTime(rideRequest.createdAt || Number(rideRequest.uuid))}
+                                                {formatLocalDateTime(rideRequest.createdAt)}
                                             </TableCell>
                                             <TableCell className="font-medium whitespace-nowrap">
                                                 {getRider(rideRequest) ? (
@@ -699,7 +706,7 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                                                     <div>
                                                         <p className="text-xs text-muted-foreground">Request Created</p>
                                                         <p className="text-sm">
-                                                            {formatLocalDateTime(ride.createdAt || Number(ride.uuid))}
+                                                            {formatLocalDateTime(ride.createdAt)}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -810,7 +817,7 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                                         assignedRides.map((ride) => (
                                                 <TableRow key={ride.uuid}>
                                                     <TableCell className="font-medium text-sm whitespace-nowrap">
-                                                        {formatLocalDateTime(ride.createdAt || Number(ride.uuid))}
+                                                        {formatLocalDateTime(ride.createdAt)}
                                                     </TableCell>
                                                     <TableCell className="font-medium whitespace-nowrap">
                                                         {getRider(ride) ? (
@@ -1026,7 +1033,7 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                                         completedRides.map((ride) => (
                                                 <TableRow key={ride.uuid} className="bg-green-50/30">
                                                     <TableCell className="font-medium text-sm whitespace-nowrap">
-                                                        {formatLocalDateTime(ride.createdAt || Number(ride.uuid))}
+                                                        {formatLocalDateTime(ride.createdAt)}
                                                     </TableCell>
                                                     <TableCell className="font-medium whitespace-nowrap">
                                                         {getRider(ride) ? (

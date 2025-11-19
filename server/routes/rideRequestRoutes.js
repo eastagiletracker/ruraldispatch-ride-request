@@ -43,28 +43,7 @@ function createRideRequestRoutes(api) {
      */
     router.post('/', async (req, res) => {
         try {
-            const { pickupRequestedTime } = req.body;
-
-            // Validate pickup time is at least 30 minutes in the future
-            if (pickupRequestedTime) {
-                const pickupDateTime = new Date(pickupRequestedTime);
-                const now = new Date();
-                const minAllowedTime = new Date(now.getTime() + 30 * 60 * 1000); // 30 minutes from now
-
-                if (pickupDateTime < minAllowedTime) {
-                    return res.status(400).json({
-                        error: 'Pickup time must be at least 30 minutes from now'
-                    });
-                }
-
-                // Validate pickup time is not in the past
-                if (pickupDateTime < now) {
-                    return res.status(400).json({
-                        error: 'Pickup time cannot be in the past'
-                    });
-                }
-            }
-
+            // Validation handled by frontend Zod schema
             res.json(await api.addRideRequest(req.body));
         } catch (error) {
             console.error('Error creating ride request:', error);

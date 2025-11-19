@@ -102,8 +102,8 @@ export default function AssignDriver({ selectedRideRequestId, cancelFn }: Assign
             await updateDocument("riderequests", selectedRideRequestId, {
                 assignedDriverUuid: selectedDriver.uuid,
                 assignedVehicleUuid: selectedVehicle.uuid,
-                rideRequestStatus: 1000, // Ready to ride
-                rideStatus: 100 // Ride confirmed
+                rideRequestStatus: 400, // RIDE_CONFIRMATION_NEEDED - triggers driver assignment SMS
+                rideStatus: 0 // REQUEST_IN_PROGRESS - driver needs to accept
             });
 
             toast.success(isEditing ? 'Assignment updated successfully!' : 'Driver and vehicle assigned successfully!', {
