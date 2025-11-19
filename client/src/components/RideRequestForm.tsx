@@ -122,8 +122,8 @@ export default function RideRequestForm({
 
             // Get the logged-in case manager's UUID (only if authenticated)
             const currentUser = getCurrentUser();
-            const createdByUuid = currentUser?.uuid && currentUser.isAuthenticated 
-                ? parseInt(currentUser.uuid) 
+            const createdByUuid = currentUser?.uuid && currentUser.isAuthenticated
+                ? currentUser.uuid
                 : undefined;
 
             const rideRequestData = {
@@ -403,6 +403,7 @@ export default function RideRequestForm({
                                     <Input
                                         id="pickupRequestedDate"
                                         type="date"
+                                        min={new Date().toISOString().split('T')[0]}
                                         {...register('pickupRequestedDate')}
                                         className={errors.pickupRequestedDate ? 'border-destructive' : ''}
                                     />

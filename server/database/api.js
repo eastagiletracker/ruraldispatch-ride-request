@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config({ path: require('path').resolve(__dirname, '../../.env') });
 const database = require("./database");
 const notificationDb = require("./notification");
 const systemUserDb = require("./systemUser");

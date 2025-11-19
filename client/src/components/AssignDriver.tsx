@@ -24,8 +24,8 @@ interface RideRequestData {
     roundTrip?: boolean;
     notes?: string;
     purpose?: string;
-    assignedDriverUuid?: number;
-    assignedVehicleUuid?: number;
+    assignedDriverUuid?: string;
+    assignedVehicleUuid?: string;
     driver?: Array<{ uuid: string; fullName: string }>;
     vehicle?: Array<{ uuid: string; model?: string; displayName?: string }>;
 }
@@ -91,27 +91,17 @@ export default function AssignDriver({ selectedRideRequestId, cancelFn }: Assign
         setSubmitting(true);
         try {
             const isEditing = selectedRideRequest.assignedDriverUuid || selectedRideRequest.assignedVehicleUuid;
-            
-            const driverUuid = parseInt(selectedDriver.uuid.toString());
-            const vehicleUuid = parseInt(selectedVehicle.uuid.toString());
-            
+
             console.log('Submitting assignment:', {
                 selectedDriver,
                 selectedVehicle,
-                driverUuid,
-                vehicleUuid,
-                isValidDriver: !isNaN(driverUuid),
-                isValidVehicle: !isNaN(vehicleUuid)
+                driverUuid: selectedDriver.uuid,
+                vehicleUuid: selectedVehicle.uuid
             });
-            
-            if (isNaN(driverUuid) || isNaN(vehicleUuid)) {
-                toast.error('Invalid driver or vehicle UUID');
-                return;
-            }
-            
+
             await updateDocument("riderequests", selectedRideRequestId, {
-                assignedDriverUuid: driverUuid,
-                assignedVehicleUuid: vehicleUuid,
+                assignedDriverUuid: selectedDriver.uuid,
+                assignedVehicleUuid: selectedVehicle.uuid,
                 rideRequestStatus: 1000, // Ready to ride
                 rideStatus: 100 // Ride confirmed
             });
