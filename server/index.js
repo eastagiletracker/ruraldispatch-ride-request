@@ -8,6 +8,7 @@ require('dotenv').config({ path: '../.env' });
 
 const createRouter = require('./routes/router');
 const generateApi = require("./database/api");
+const dateUtils = require('./utils/dateUtils');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -69,6 +70,18 @@ async function init()
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     console.log(`Environment: ${process.env.NODE_ENV}`);
+
+    // Validate server timezone (CRITICAL for scheduler accuracy)
+    const tzCheck = dateUtils.validateServerTimezone();
+    console.log(tzCheck.message);
+    if (!tzCheck.isUTC) {
+      console.warn('⚠️  WARNING: Server is not running in UTC!');
+      console.warn(`   Timezone: ${tzCheck.timezone}`);
+      console.warn(`   Offset: ${tzCheck.offset} minutes from UTC`);
+      console.warn(`   This WILL cause scheduling issues!`);
+      console.warn(`   Remove TZ environment variable or set TZ=UTC`);
+    }
+
     const tz = process.env.TZ || 'UTC';
     const now = new Date();
     try {

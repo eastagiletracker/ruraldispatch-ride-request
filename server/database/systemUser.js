@@ -23,7 +23,8 @@ async function getSystemUserByUsername(collection, username) {
  * Get system user by UUID
  */
 async function getSystemUserByUuid(collection, uuid) {
-    return await collection.findOne({ uuid: parseInt(uuid) });
+    // UUIDs are now strings (UUIDv7 format)
+    return await collection.findOne({ uuid: uuid });
 }
 
 /**
@@ -41,8 +42,9 @@ async function getSystemUsersByRole(collection, role) {
  * Update system user status
  */
 async function updateSystemUserStatus(collection, uuid, isActive) {
+    // UUIDs are now strings (UUIDv7 format)
     return await collection.updateOne(
-        { uuid: parseInt(uuid) },
+        { uuid: uuid },
         {
             $set: {
                 isActive: isActive,
@@ -137,8 +139,9 @@ async function updateSystemUser(collection, uuid, updateData) {
         delete updates.password;
     }
 
+    // UUIDs are now strings (UUIDv7 format)
     const result = await collection.updateOne(
-        { uuid: parseInt(uuid) },
+        { uuid: uuid },
         { $set: updates }
     );
 
@@ -149,8 +152,9 @@ async function updateSystemUser(collection, uuid, updateData) {
  * Deactivate system user
  */
 async function deactivateSystemUser(collection, uuid) {
+    // UUIDs are now strings (UUIDv7 format)
     return await collection.updateOne(
-        { uuid: parseInt(uuid) },
+        { uuid: uuid },
         {
             $set: {
                 isActive: false,
@@ -164,8 +168,9 @@ async function deactivateSystemUser(collection, uuid) {
  * Activate system user
  */
 async function activateSystemUser(collection, uuid) {
+    // UUIDs are now strings (UUIDv7 format)
     return await collection.updateOne(
-        { uuid: parseInt(uuid) },
+        { uuid: uuid },
         {
             $set: {
                 isActive: true,
@@ -179,7 +184,8 @@ async function activateSystemUser(collection, uuid) {
  * Delete system user
  */
 async function deleteSystemUser(collection, uuid) {
-    return await collection.deleteOne({ uuid: parseInt(uuid) });
+    // UUIDs are now strings (UUIDv7 format)
+    return await collection.deleteOne({ uuid: uuid });
 }
 
 module.exports = {

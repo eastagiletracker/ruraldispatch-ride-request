@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { UserPlus, Car, MapPin, Clock, MessageSquare, User, Phone, Download, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
+import { formatLocalDateTime } from "@/utils/dateUtils";
 
 interface RideRequest {
     uuid: string;
@@ -141,9 +142,9 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                 // Format created date - check multiple possible fields
                 let createdDate = 'N/A';
                 if (ride.createdAt) {
-                    createdDate = new Date(ride.createdAt).toLocaleString();
+                    createdDate = formatLocalDateTime(ride.createdAt);
                 } else if (ride.updatedAt) {
-                    createdDate = new Date(ride.updatedAt).toLocaleString();
+                    createdDate = formatLocalDateTime(ride.updatedAt);
                 } else if ((ride as any)._id) {
                     // MongoDB ObjectId contains timestamp - extract it as fallback
                     try {
@@ -152,7 +153,7 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                             ? parseInt(objectId.substring(0, 8), 16) * 1000
                             : null;
                         if (timestamp) {
-                            createdDate = new Date(timestamp).toLocaleString();
+                            createdDate = formatLocalDateTime(timestamp);
                         }
                     } catch (e) {
                         console.debug('Could not extract timestamp from _id');
@@ -167,7 +168,7 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                     driver?.mobilePhone || 'N/A',
                     ride.pickupAddress || 'N/A',
                     ride.dropOffAddress || 'N/A',
-                    ride.pickupRequestedTime ? new Date(ride.pickupRequestedTime).toLocaleString() : 'N/A',
+                    formatLocalDateTime(ride.pickupRequestedTime),
                     createdDate
                 ];
             });
@@ -477,10 +478,7 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                                             <div className="flex items-center gap-2">
                                                 <Clock className="h-4 w-4 text-muted-foreground" />
                                                 <span className="text-sm">
-                                                    {rideRequest.pickupRequestedTime ?
-                                                        new Date(rideRequest.pickupRequestedTime).toLocaleString() :
-                                                        'No pickup time set'
-                                                    }
+                                                    {formatLocalDateTime(rideRequest.pickupRequestedTime) || 'No pickup time set'}
                                                 </span>
                                             </div>
                                         </div>
@@ -544,21 +542,7 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                                     rideRequests.map((rideRequest) => (
                                         <TableRow key={rideRequest.uuid}>
                                             <TableCell className="font-medium text-sm whitespace-nowrap">
-                                                {rideRequest.createdAt 
-                                                    ? new Date(rideRequest.createdAt).toLocaleString('en-US', {
-                                                        month: 'short',
-                                                        day: 'numeric',
-                                                        hour: '2-digit',
-                                                        minute: '2-digit'
-                                                    })
-                                                    : rideRequest.uuid 
-                                                    ? new Date(Number(rideRequest.uuid)).toLocaleString('en-US', {
-                                                        month: 'short',
-                                                        day: 'numeric',
-                                                        hour: '2-digit',
-                                                        minute: '2-digit'
-                                                    })
-                                                    : 'N/A'}
+                                                {formatLocalDateTime(rideRequest.createdAt || Number(rideRequest.uuid))}
                                             </TableCell>
                                             <TableCell className="font-medium whitespace-nowrap">
                                                 {getRider(rideRequest) ? (
@@ -596,7 +580,7 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                                             </TableCell>
                                             <TableCell className="whitespace-nowrap">
                                                 {rideRequest.pickupRequestedTime ?
-                                                    new Date(rideRequest.pickupRequestedTime).toLocaleString() :
+                                                    formatLocalDateTime(rideRequest.pickupRequestedTime) :
                                                     'No pickup time set'
                                                 }
                                             </TableCell>
@@ -715,21 +699,7 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                                                     <div>
                                                         <p className="text-xs text-muted-foreground">Request Created</p>
                                                         <p className="text-sm">
-                                                            {ride.createdAt 
-                                                                ? new Date(ride.createdAt).toLocaleString('en-US', {
-                                                                    month: 'short',
-                                                                    day: 'numeric',
-                                                                    hour: '2-digit',
-                                                                    minute: '2-digit'
-                                                                })
-                                                                : ride.uuid 
-                                                                ? new Date(Number(ride.uuid)).toLocaleString('en-US', {
-                                                                    month: 'short',
-                                                                    day: 'numeric',
-                                                                    hour: '2-digit',
-                                                                    minute: '2-digit'
-                                                                })
-                                                                : 'N/A'}
+                                                            {formatLocalDateTime(ride.createdAt || Number(ride.uuid))}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -756,7 +726,7 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                                                         <p className="text-xs text-muted-foreground">Requested Pickup</p>
                                                         <p className="text-sm">
                                                             {ride.pickupRequestedTime ?
-                                                                new Date(ride.pickupRequestedTime).toLocaleString() :
+                                                                formatLocalDateTime(ride.pickupRequestedTime) :
                                                                 'No pickup time set'
                                                             }
                                                         </p>
@@ -840,21 +810,7 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                                         assignedRides.map((ride) => (
                                                 <TableRow key={ride.uuid}>
                                                     <TableCell className="font-medium text-sm whitespace-nowrap">
-                                                        {ride.createdAt 
-                                                            ? new Date(ride.createdAt).toLocaleString('en-US', {
-                                                                month: 'short',
-                                                                day: 'numeric',
-                                                                hour: '2-digit',
-                                                                minute: '2-digit'
-                                                            })
-                                                            : ride.uuid 
-                                                            ? new Date(Number(ride.uuid)).toLocaleString('en-US', {
-                                                                month: 'short',
-                                                                day: 'numeric',
-                                                                hour: '2-digit',
-                                                                minute: '2-digit'
-                                                            })
-                                                            : 'N/A'}
+                                                        {formatLocalDateTime(ride.createdAt || Number(ride.uuid))}
                                                     </TableCell>
                                                     <TableCell className="font-medium whitespace-nowrap">
                                                         {getRider(ride) ? (
@@ -904,7 +860,7 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                                                     </TableCell>
                                                     <TableCell className="whitespace-nowrap">
                                                         {ride.pickupRequestedTime ?
-                                                            new Date(ride.pickupRequestedTime).toLocaleString() :
+                                                            formatLocalDateTime(ride.pickupRequestedTime) :
                                                             'No pickup time set'
                                                         }
                                                     </TableCell>
@@ -1070,21 +1026,7 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                                         completedRides.map((ride) => (
                                                 <TableRow key={ride.uuid} className="bg-green-50/30">
                                                     <TableCell className="font-medium text-sm whitespace-nowrap">
-                                                        {ride.createdAt 
-                                                            ? new Date(ride.createdAt).toLocaleString('en-US', {
-                                                                month: 'short',
-                                                                day: 'numeric',
-                                                                hour: '2-digit',
-                                                                minute: '2-digit'
-                                                            })
-                                                            : ride.uuid 
-                                                            ? new Date(Number(ride.uuid)).toLocaleString('en-US', {
-                                                                month: 'short',
-                                                                day: 'numeric',
-                                                                hour: '2-digit',
-                                                                minute: '2-digit'
-                                                            })
-                                                            : 'N/A'}
+                                                        {formatLocalDateTime(ride.createdAt || Number(ride.uuid))}
                                                     </TableCell>
                                                     <TableCell className="font-medium whitespace-nowrap">
                                                         {getRider(ride) ? (

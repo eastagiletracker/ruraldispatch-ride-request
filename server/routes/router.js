@@ -1,8 +1,11 @@
 require('dotenv').config({ path: '../.env' });
 const express = require('express');
 const notificationService = require('../services/notificationService');
-const scheduler = require('../services/scheduler');
+const scheduler = require('../services/scheduler/RideScheduler');
 const { checkPermission } = require('../middleware/permissions');
+const { RIDE_STATUSES, isClosingStatus } = require('../constants/rideStatuses');
+const { RIDE_REQUEST_STATUSES } = require('../constants/rideRequestStatuses');
+const { generateUuid } = require('../utils/uuid');
 
 
 function createRouter(api)
@@ -68,9 +71,7 @@ function createRouter(api)
                 }
             }
 
-            // Import ride status utilities
-            const { RIDE_STATUSES, isClosingStatus } = require('../constants/rideStatuses');
-            const { RIDE_REQUEST_STATUSES } = require('../constants/rideRequestStatuses');
+            // Request status constants available from module scope
 
             // Check if updating ride status to a closing status
             if (req.body.rideStatus !== undefined && isClosingStatus(req.body.rideStatus)) {
@@ -185,8 +186,8 @@ function createRouter(api)
             for (const notif of notifications) {
                 if (notif.success) {
                     const notificationRecord = {
-                        uuid: Date.now() + Math.random(), // Generate unique ID
-                        rideRequestUuid: parseInt(rideUuid),
+                        uuid: generateUuid(),
+                        rideRequestUuid: rideUuid,
                         notificationType: notif.type,
                         direction: 'outbound',
                         recipientPhone: notif.to,
@@ -392,11 +393,10 @@ function createRouter(api)
             console.log(`📋 Total rides in database: ${allRides.length}`);
 
             // Filter all active rides involving this sender
-            const rideStatuses = require('../constants/rideStatuses');
             const activeRides = allRides.filter(ride => {
                 // Check if ride is active (not complete)
-                const isActive = ride.rideStatus !== rideStatuses.RIDE_COMPLETE &&
-                                ride.rideStatus !== rideStatuses.ROUNDTRIP_COMPLETE;
+                const isActive = ride.rideStatus !== RIDE_STATUSES.RIDE_COMPLETE &&
+                                ride.rideStatus !== RIDE_STATUSES.ROUNDTRIP_COMPLETE;
 
                 if (!isActive) return false;
 
@@ -411,7 +411,7 @@ function createRouter(api)
             });
 
             // Get the most recent active ride (highest UUID/timestamp)
-            const activeRide = activeRides.sort((a, b) => b.uuid - a.uuid)[0];
+            let activeRide = activeRides.sort((a, b) => b.uuid - a.uuid)[0];
 
             if (activeRides.length > 1) {
                 console.log(`⚠️  Found ${activeRides.length} active rides, using most recent: #${activeRide.uuid}`);
@@ -445,6 +445,7 @@ function createRouter(api)
                 if (action.success) {
                     // Execute status updates
                     const updates = {};
+                    const previousRideStatus = activeRide.rideStatus;
 
                     if (action.newRideStatus !== undefined) {
                         updates.rideStatus = action.newRideStatus;
@@ -456,22 +457,43 @@ function createRouter(api)
                         console.log(`📝 Updating request status to: ${action.newRequestStatus}`);
                     }
 
+                    if (updates.rideStatus !== undefined && updates.requestStatus === undefined && isClosingStatus(updates.rideStatus)) {
+                        updates.requestStatus = RIDE_REQUEST_STATUSES.CLOSED.code;
+                        console.log('📝 Auto-closing ride request because ride entered a closing status');
+                    }
+
                     if (Object.keys(updates).length > 0) {
                         await api.updateRideRequest(activeRide.uuid, updates);
                         console.log(`✅ Ride #${activeRide.uuid} updated`);
+
+                        if (updates.rideStatus !== undefined && isClosingStatus(updates.rideStatus)) {
+                            scheduler.cancelRideTasks(activeRide.uuid);
+                        }
+
+                        activeRide = await api.getRideRequest(activeRide.uuid);
+
+                        if (activeRide.rideStatus === RIDE_STATUSES.RIDE_COMPLETE ||
+                            activeRide.rideStatus === RIDE_STATUSES.ROUNDTRIP_COMPLETE) {
+                            await api.closeRideSession(activeRide.uuid);
+                            console.log(`✅ Auto-closed SMS session for ride #${activeRide.uuid}`);
+                        }
                     }
+
+                    const riderData = activeRide.rider?.[0];
+                    const driverData = activeRide.driver?.[0];
+                    const vehicleData = activeRide.vehicle?.[0];
+
+                    const data = {
+                        rider: riderData,
+                        driver: driverData,
+                        vehicle: vehicleData,
+                        caseManager: activeRide.createdBy,
+                        rideRequest: activeRide,
+                        pickupLocation: activeRide.pickupLocation
+                    };
 
                     // Send bulk notifications
                     if (action.notifications && action.notifications.length > 0) {
-                        const data = {
-                            rider: activeRide.rider?.[0],
-                            driver: activeRide.driver?.[0],
-                            vehicle: activeRide.vehicle?.[0],
-                            caseManager: activeRide.createdBy,
-                            rideRequest: activeRide,
-                            pickupLocation: activeRide.pickupLocation
-                        };
-
                         console.log(`📨 Sending ${action.notifications.length} notifications`);
                         const notifResults = await notificationService.sendBulkNotifications(
                             activeRide,
@@ -485,15 +507,6 @@ function createRouter(api)
                     if (action.scheduleNotification) {
                         const { recipient, template, delayMinutes } = action.scheduleNotification;
                         console.log(`⏰ Scheduling ${template} notification to ${recipient} in ${delayMinutes} minutes`);
-
-                        const data = {
-                            rider: activeRide.rider?.[0],
-                            driver: activeRide.driver?.[0],
-                            vehicle: activeRide.vehicle?.[0],
-                            caseManager: activeRide.createdBy,
-                            rideRequest: activeRide,
-                            pickupLocation: activeRide.pickupLocation
-                        };
 
                         scheduler.scheduleNotification(
                             activeRide,
@@ -513,8 +526,38 @@ function createRouter(api)
                             activeRide,
                             status,
                             delayMinutes,
-                            async (uuid, updates) => await api.updateRideRequest(uuid, updates)
+                            async (uuid, newUpdates) => await api.updateRideRequest(uuid, newUpdates)
                         );
+                    }
+
+                    // Mirror scheduler behavior triggered via dashboard updates
+                    if (previousRideStatus !== activeRide.rideStatus) {
+                        if (activeRide.rideStatus === RIDE_STATUSES.RIDE_CONFIRMED && previousRideStatus !== RIDE_STATUSES.RIDE_CONFIRMED) {
+                            if (riderData && driverData) {
+                                scheduler.scheduleRideConfirmationTasks(
+                                    activeRide,
+                                    riderData,
+                                    driverData,
+                                    async (uuid, rideUpdates) => await api.updateRideRequest(uuid, rideUpdates)
+                                );
+                            }
+                        }
+
+                        if (activeRide.rideStatus === RIDE_STATUSES.RIDER_PICKED_UP && previousRideStatus !== RIDE_STATUSES.RIDER_PICKED_UP) {
+                            if (driverData) {
+                                scheduler.schedulePickupTasks(
+                                    activeRide,
+                                    driverData,
+                                    async (uuid, rideUpdates) => await api.updateRideRequest(uuid, rideUpdates)
+                                );
+                            }
+                        }
+
+                        if (activeRide.rideStatus === RIDE_STATUSES.RIDER_DROPPED_OFF && previousRideStatus !== RIDE_STATUSES.RIDER_DROPPED_OFF) {
+                            if (activeRide.roundTrip && driverData) {
+                                scheduler.scheduleDropoffTasks(activeRide, driverData);
+                            }
+                        }
                     }
                 } else {
                     // Not an interactive response - forward as conversation
@@ -554,10 +597,10 @@ function createRouter(api)
             }
 
             // Create notification record for incoming message
-            const notificationUuid = Date.now();
+            const notificationUuid = generateUuid();
             const notification = {
                 uuid: notificationUuid,
-                rideRequestUuid: activeRide ? parseInt(activeRide.uuid) : 0,
+                rideRequestUuid: activeRide ? activeRide.uuid : null,
                 notificationType: senderRole !== 'unknown' ? 'sms_response' : 'incoming_sms',
                 direction: 'inbound',
                 recipientPhone: To,
@@ -613,11 +656,10 @@ function createRouter(api)
             console.log(`📋 Total rides in database: ${allRides.length}`);
 
             // Filter all active rides involving this sender
-            const rideStatuses = require('../constants/rideStatuses');
             const activeRides = allRides.filter(ride => {
                 // Check if ride is active (not complete)
-                const isActive = ride.rideStatus !== rideStatuses.RIDE_COMPLETE &&
-                                ride.rideStatus !== rideStatuses.ROUNDTRIP_COMPLETE;
+                const isActive = ride.rideStatus !== RIDE_STATUSES.RIDE_COMPLETE &&
+                                ride.rideStatus !== RIDE_STATUSES.ROUNDTRIP_COMPLETE;
 
                 if (!isActive) return false;
 
@@ -648,7 +690,7 @@ function createRouter(api)
             }
 
             // Generate unique notification ID
-            const notificationUuid = Date.now();
+            const notificationUuid = generateUuid();
 
             // Determine sender role and recipient
             let senderRole = 'unknown';
@@ -729,12 +771,12 @@ function createRouter(api)
             console.log('Incoming SMS webhook (legacy):', { From, To, Body, MessageSid });
 
             // Generate unique notification ID
-            const notificationUuid = Date.now();
+            const notificationUuid = generateUuid();
 
             // Create notification record for incoming message
             const notification = {
                 uuid: notificationUuid,
-                rideRequestUuid: 0, // Will need to be associated with a ride later
+                rideRequestUuid: null, // Will need to be associated with a ride later
                 notificationType: 'incoming_sms',
                 direction: 'inbound',
                 recipientPhone: To,

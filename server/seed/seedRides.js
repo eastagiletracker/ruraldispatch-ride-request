@@ -12,7 +12,7 @@
 
 require('dotenv').config({ path: '../../.env' });
 const generateApi = require('../database/api');
-const { v4: uuidv4 } = require('uuid');
+const { v7: uuidv7 } = require('uuid');
 
 // Import ride status constants from source of truth
 const { RIDE_STATUSES } = require('../constants/rideStatuses');
@@ -358,7 +358,7 @@ async function seedRides() {
                 // Create ride request with proper rider array structure
                 const rideWithUuid = {
                     ...rideData,
-                    uuid: Date.now() + Math.floor(Math.random() * 10000),
+                    uuid: uuidv7(),
                     serviceUserUuid: actualUserUuid, // Use actual UUID from database
                     assignedDriverUuid: assignedDriverUuid, // Assign actual driver UUID
                     assignedVehicleUuid: assignedVehicleUuid, // Assign actual vehicle UUID

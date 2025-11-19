@@ -3,6 +3,7 @@ const rideStatuses = require('../constants/rideStatuses');
 const { RIDE_REQUEST_STATUSES } = require('../constants/rideRequestStatuses');
 const smsTemplates = require('./smsTemplates');
 const { processSMSResponse } = require('./smsResponseHandler');
+const { generateUuid } = require('../utils/uuid');
 
 /**
  * Notification Service
@@ -265,8 +266,8 @@ Check the dashboard for details.`;
     if (this.api && result.success) {
       try {
         const notificationRecord = {
-          uuid: Date.now() + Math.random(), // Generate unique ID
-          rideRequestUuid: data.ride ? parseInt(data.ride.uuid) : 0,
+          uuid: generateUuid(),
+          rideRequestUuid: data.ride ? data.ride.uuid : null,
           notificationType: template,
           direction: 'outbound',
           recipientPhone: phoneNumber,

@@ -172,6 +172,11 @@ function processSMSResponse(ride, senderRole, messageBody) {
             { recipient: 'rider', template: 'DRIVER_EN_ROUTE' },
             { recipient: 'case_manager', template: 'DRIVER_EN_ROUTE' }
           ],
+          scheduleNotification: {
+            recipient: 'driver',
+            template: 'DRIVER_ARRIVAL_CHECK',
+            delayMinutes: 5
+          },
           metadata: { driverEnRoute: true }
         };
       }
@@ -217,6 +222,12 @@ function processSMSResponse(ride, senderRole, messageBody) {
             { recipient: 'rider', template: RIDE_STATUSES.RIDER_DROPPED_OFF },
             { recipient: 'case_manager', template: RIDE_STATUSES.RIDER_DROPPED_OFF }
           ],
+          ...(!ride.roundTrip ? {
+            scheduleStatusChange: {
+              status: RIDE_STATUSES.RIDE_COMPLETE,
+              delayMinutes: 0
+            }
+          } : {}),
           metadata: { riderDroppedOff: true }
         };
       } else if (responseCode === 2) {

@@ -30,11 +30,18 @@ npm start                    # Start production server
 
 ### Database Seeding Scripts
 ```bash
-npm run seed:all             # Run all seed scripts
-npm run seed:users           # Seed service users
-npm run seed:providers       # Seed service providers
-npm run seed:vehicles        # Seed vehicles
+npm run seed:all             # Run all seed scripts (complete setup)
+npm run seed:admins          # Seed admin accounts
+npm run seed:dispatchers     # Seed dispatcher accounts
+npm run seed:case-managers   # Seed case manager accounts
+npm run seed:riders          # Seed service users (riders)
+npm run seed:caregivers      # Seed caregiver accounts
+npm run seed:drivers         # Seed driver/service provider accounts
+npm run seed:vehicles        # Seed fleet vehicles
 npm run seed:rides           # Seed ride requests
+npm run seed:reset           # Clear all collections and reset database
+npm run seed:prod            # Seed production environment
+npm run seed:staging         # Seed staging environment
 ```
 
 ## Architecture
@@ -120,6 +127,17 @@ REQUEST_OPEN (100)
 - **Fallback**: Vonage API
 - **Auto-failover**: Implemented in `server/services/notificationService.js`
 
+### SMS System Components
+1. **notificationService.js** - Provider abstraction (Twilio/Vonage), bulk sending, delivery tracking
+2. **smsTemplates.js** - All message templates with dynamic content insertion
+3. **smsResponseHandler.js** - Parses incoming SMS responses (1=Yes, 2=No, 3=Cancel), determines context
+4. **scheduler/** - Modular time-based notifications with auto-cleanup (refactored architecture):
+   - **RideScheduler.js** - High-level orchestration (public API, singleton export)
+   - **NotificationScheduler.js** - Individual notification scheduling methods
+   - **TaskManager.js** - Task storage, lifecycle, status tracking
+   - **TimeCalculator.js** - All time calculations (1-hour prior, pickup, dropoff, roundtrip)
+   - Features: 1 hour prior reminders, pickup/dropoff checks, roundtrip returns, delayed status changes
+
 ### Configuration Required
 Set these in `.env`:
 ```bash
@@ -142,26 +160,40 @@ VONAGE_WEBHOOK_URL=
 - Both providers supported with automatic provider detection
 
 ### Important SMS Features
-- Two-way SMS conversations tracked per ride
-- User consent tracking (TCPA compliance)
-- Opt-out handling (reply STOP)
-- Message history and delivery status tracking
+- **Interactive responses**: Users reply with 1=Yes, 2=No, 3=Cancel (or text equivalents)
+- **Two-way SMS**: Conversations tracked per ride with automatic context detection
+- **Scheduled notifications**: Time-based reminders and status checks
+- **User consent tracking**: TCPA compliance
+- **Opt-out handling**: Reply STOP to unsubscribe
+- **Message history**: Delivery status tracking in notifications collection
+- **Auto-cleanup**: Scheduled tasks automatically removed after execution
 
 ## Key File Locations
 
 ### Backend Critical Files
-- `server/routes/router.js` (915 lines) - All API endpoints
-- `server/database/api.js` - API factory pattern
+- `server/routes/router.js` - All API endpoints (comprehensive REST API)
+- `server/database/api.js` - API factory pattern for MongoDB operations
 - `server/services/notificationService.js` - SMS orchestration with provider fallback
+- `server/services/scheduler/` - **Refactored scheduler module** (modular architecture):
+  - `RideScheduler.js` - Main orchestrator (public API)
+  - `NotificationScheduler.js` - Individual notification scheduling
+  - `TaskManager.js` - Task lifecycle management
+  - `TimeCalculator.js` - Time calculations
+- `server/services/scheduler.js` - Backwards compatibility wrapper (re-exports RideScheduler)
+- `server/services/smsResponseHandler.js` - Interactive SMS response processing
+- `server/services/smsTemplates.js` - SMS message templates
 - `server/middleware/permissions.js` - RBAC middleware
-- `server/models/*.js` - Mongoose schemas
+- `server/constants/rideStatuses.js` - Ride status constants (use these, not numbers!)
+- `server/constants/rideRequestStatuses.js` - Ride request status constants
 
 ### Frontend Critical Files
 - `client/src/App.tsx` - Router with role-based protected routes
-- `client/src/components/RideRequests.tsx` (1200+ lines) - Main ride list UI
+- `client/src/components/RideRequests.tsx` - Main ride list UI with filtering and status updates
 - `client/src/components/RideRequestForm.tsx` - Comprehensive ride request form
 - `client/src/components/AssignDriver.tsx` - Driver assignment interface
+- `client/src/components/ui/google-maps-autocomplete.tsx` - Google Maps place autocomplete
 - `client/src/utils/permissions.ts` - Frontend permission checks
+- `client/src/contexts/AuthContext.tsx` - Authentication state management
 
 ## TypeScript Configuration Notes
 
@@ -209,6 +241,49 @@ await notificationService.sendSMS({
   messageType: 'ride_update'  // Optional: for categorization
 });
 ```
+
+### Scheduling Time-Based SMS
+The scheduler has been refactored into a modular architecture for better maintainability:
+
+```javascript
+const scheduler = require('../services/scheduler'); // or scheduler/RideScheduler
+
+// Schedule all tasks for a ride (must provide api update function)
+scheduler.scheduleAllTasks(ride, rider, driver, async (updates) => {
+  return await api.updateRideRequest(ride.uuid, updates);
+});
+
+// Cancel all scheduled tasks for a ride
+scheduler.cancelAllTasks(ride.uuid);
+
+// Individual scheduling methods (if needed)
+scheduler.scheduleOneHourPrior(ride, rider, apiUpdateFn);
+scheduler.scheduleDriverArrivalCheck(ride, driver);
+scheduler.schedulePickupTasks(ride, driver, apiUpdateFn);
+scheduler.scheduleDropoffTasks(ride, driver);
+```
+
+**Scheduler Module Structure:**
+- **TaskManager** - Manages task storage (Map), add/remove/cancel operations
+- **TimeCalculator** - Pure time calculation functions (no side effects)
+- **NotificationScheduler** - Individual scheduling methods (uses TaskManager + TimeCalculator)
+- **RideScheduler** - Public API, orchestrates high-level operations
+
+### Processing Incoming SMS Responses
+When handling webhook responses:
+```javascript
+const smsResponseHandler = require('../services/smsResponseHandler');
+
+// Parse and process SMS response
+const result = await smsResponseHandler.processResponse({
+  from: phoneNumber,
+  body: messageBody,
+  api: databaseApi
+});
+
+if (result.action === 'UPDATE_RIDE_STATUS') {
+  // Update ride with result.updates
+}
 
 ## Vite Configuration
 
@@ -263,6 +338,35 @@ VONAGE_WEBHOOK_URL=
 
 ## Important Caveats
 
+### SMS Scheduler Auto-Cleanup
+The scheduler service (v2.0) automatically cleans up scheduled tasks after execution. When a ride is updated or canceled:
+- **Always call** `scheduler.cancelAllTasks(rideUuid)` before rescheduling
+- Tasks are automatically removed after execution (prevents memory leaks)
+- On ride assignment: cancel existing tasks, then call `scheduleAllTasks()`
+- Task types: 1-hour prior, driver arrival, dropoff check, roundtrip return, delayed status changes
+
+### Timezone Handling
+**IMPORTANT**: The application uses a UTC-based timezone strategy:
+
+**Architecture:**
+- **Backend**: Always runs in UTC (do NOT set `TZ` environment variable)
+- **Database**: Stores all times in UTC (ISO 8601 format with 'Z' suffix)
+- **API**: Exchanges times in UTC ISO strings
+- **Frontend**: Displays times in user's local timezone
+- **Scheduler**: All calculations in UTC
+
+**Utilities Available:**
+- **Frontend**: `client/src/utils/dateUtils.ts`
+  - `formatLocalDateTime()` - Display UTC in user's timezone
+  - `utcToDateTimeLocal()` / `dateTimeLocalToUTC()` - Convert for datetime-local inputs
+  - `formatLocalDate()`, `formatLocalTime()`, `getRelativeTime()`
+- **Backend**: `server/utils/dateUtils.js`
+  - `getCurrentUTC()`, `addMinutes()`, `addHours()`
+  - `validateServerTimezone()` - Check if server is UTC
+  - `formatForLogging()` - UTC-aware console logging
+
+**See**: `docs/TIMEZONE_FIX_GUIDE.md` for complete implementation details
+
 ### Google Maps Autocomplete Integration
 The codebase recently added Google Maps autocomplete for address inputs:
 - Uses `google.maps.places.Autocomplete` (legacy, but still supported)
@@ -289,11 +393,17 @@ The app includes TCPA compliance features:
 Comprehensive docs in `/docs`:
 - `AUTHENTICATION.md` - Auth system details and role permissions
 - `SMS_SETUP.md` - SMS provider configuration
+- `SMS_SYSTEM_GUIDE.md` - Complete SMS flow documentation with interactive responses
+- `SMS_FLOW_PRESENTATION_GUIDE.md` - SMS flow presentation materials
+- `TIMEZONE_FIX_GUIDE.md` - **Timezone handling strategy and implementation** (UTC backend, local frontend)
 - `SEEDING.md` - Database seeding guide
 - `DEPLOYMENT.md` - Production deployment
+- `DEVELOPMENT_GUIDE.md` - Complete local setup and workflow
+- `API_REFERENCE.md` - Full API documentation with examples
 - `ZOD_VALIDATION.md` - Form validation patterns
 - `UI_DESIGN_SYSTEM.md` - shadcn/ui component usage
 - `TOLL_FREE_VERIFICATION.md` - SMS compliance
+- `SHARED_SCHEMAS.md` - Zod validation schemas
 
 ## Code Style Notes
 
@@ -303,3 +413,20 @@ Comprehensive docs in `/docs`:
 - Zod for validation schemas
 - Avoid prop drilling - use React Context for global state (see `AuthContext`)
 - Keep TypeScript errors minimal but don't over-engineer types
+
+## Critical Implementation Notes
+
+### When Modifying Ride Assignment Logic
+If you're working with `server/routes/router.js` ride assignment endpoints:
+1. Always validate driver and vehicle are assigned before setting `rideRequestStatus >= 400`
+2. Cancel existing scheduled tasks before rescheduling: `scheduler.cancelAllTasks(rideUuid)`
+3. Schedule new tasks after assignment: `scheduler.scheduleAllTasks(ride, rider, driver, apiUpdateFn)`
+4. Use status constants from `server/constants/` - never hardcode numbers
+
+### When Working with SMS Features
+If you're modifying `server/services/scheduler.js` or `server/services/smsResponseHandler.js`:
+1. The scheduler auto-cleans up tasks after execution (v2.0 feature)
+2. SMS responses support both numeric (1, 2, 3) and text formats ("yes", "no", "cancel")
+3. Context detection is automatic based on current ride status
+4. Always test scheduled tasks with near-future times during development
+5. Check `SMS_SYSTEM_GUIDE.md` for complete flow documentation
