@@ -20,6 +20,9 @@ async function add(collection, document)
 }
 
 async function update(collection, uuid, replacementFields){
+    // Auto-set updatedAt timestamp
+    replacementFields.updatedAt = new Date();
+
     const replacementDoc = {$set: replacementFields};
     // UUIDs are now strings (UUIDv7 format)
     const filter = {uuid: uuid};
@@ -110,7 +113,7 @@ async function deleteByUuid(collection, uuid) {
 }
 
 /**
- * Add a ride request with auto-generated display ID
+ * Add a ride request with auto-generated display ID and timestamps
  * @param {object} collection - MongoDB collection
  * @param {object} document - Ride request document
  * @returns {object} Insert result
@@ -119,6 +122,15 @@ async function addRideRequest(collection, document) {
     // Auto-generate display ID if not provided
     if (!document.displayId) {
         document.displayId = generateRideDisplayId();
+    }
+
+    // Auto-set timestamps
+    const now = new Date();
+    if (!document.createdAt) {
+        document.createdAt = now;
+    }
+    if (!document.updatedAt) {
+        document.updatedAt = now;
     }
 
     // Auto-generate UUID if not provided (handled by add function)
