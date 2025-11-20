@@ -41,12 +41,6 @@ function determineContext(ride, senderRole) {
 
   // Driver contexts
   if (senderRole === 'driver') {
-    // Waiting for driver to accept assignment
-    if (status === RIDE_STATUSES.REQUEST_IN_PROGRESS ||
-        ride.requestStatus === RIDE_REQUEST_STATUSES.RIDE_CONFIRMATION_NEEDED.code) {
-      return 'DRIVER_ACCEPT_ASSIGNMENT';
-    }
-
     // Waiting for driver arrival confirmation (at pickup time)
     if (status === RIDE_STATUSES.RIDE_CONFIRMED) {
       return 'DRIVER_ARRIVAL_CHECK';
@@ -127,36 +121,12 @@ function processSMSResponse(ride, senderRole, messageBody) {
   switch (context) {
     // ==================== DRIVER RESPONSES ====================
 
-    case 'DRIVER_ACCEPT_ASSIGNMENT':
-      if (responseCode === 1) {
-        // Driver accepts
-        return {
-          success: true,
-          newRideStatus: RIDE_STATUSES.RIDE_CONFIRMED,
-          notifications: [
-            { recipient: 'rider', template: RIDE_STATUSES.RIDE_CONFIRMED },
-            { recipient: 'case_manager', template: RIDE_STATUSES.RIDE_CONFIRMED }
-          ],
-          metadata: { driverAccepted: true }
-        };
-      } else if (responseCode === 2) {
-        // Driver declines
-        return {
-          success: true,
-          newRequestStatus: RIDE_REQUEST_STATUSES.DRIVER_NEEDED.code,
-          notifications: [
-            { recipient: 'dispatcher', message: `Driver declined ride #${ride.uuid}` }
-          ],
-          metadata: { driverDeclined: true, requiresReassignment: true }
-        };
-      }
-      break;
-
     case 'DRIVER_ARRIVAL_CHECK':
       if (responseCode === 1) {
-        // Driver arrived
+        // Driver arrived - change status to RIDE_STARTED to enable pickup confirmation
         return {
           success: true,
+          newRideStatus: RIDE_STATUSES.RIDE_STARTED,
           notifications: [
             { recipient: 'rider', template: 'DRIVER_ARRIVED' },
             { recipient: 'case_manager', template: 'DRIVER_ARRIVED' },

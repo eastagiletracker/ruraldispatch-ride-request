@@ -12,7 +12,8 @@ export async function seedRiders(prisma: PrismaClient) {
     {
       uuid: uuidv7(),
       fullName: 'Maria Rodriguez',
-      phone: '+12125551234',
+      phone: '+15551234567',
+      email: 'maria.rodriguez@example.com',
       role: 'rider',
       smsConsentGiven: true,
       smsConsentTimestamp: new Date(),
@@ -21,7 +22,8 @@ export async function seedRiders(prisma: PrismaClient) {
     {
       uuid: uuidv7(),
       fullName: 'James Wilson',
-      phone: '+14155554444',
+      phone: '+15551234568',
+      email: 'james.wilson@placeholder.com',
       role: 'rider',
       smsConsentGiven: true,
       smsConsentTimestamp: new Date(),
@@ -30,14 +32,7 @@ export async function seedRiders(prisma: PrismaClient) {
     {
       uuid: uuidv7(),
       fullName: 'Emily Chen',
-      phone: '+16465551111',
-      role: 'rider',
-      smsConsentGiven: false,
-    },
-    {
-      uuid: uuidv7(),
-      fullName: 'Robert Taylor',
-      phone: '+13105558888',
+      phone: '+15551234569',
       role: 'rider',
       smsConsentGiven: true,
       smsConsentTimestamp: new Date(),
@@ -45,31 +40,39 @@ export async function seedRiders(prisma: PrismaClient) {
     },
     {
       uuid: uuidv7(),
-      fullName: 'Sarah Johnson',
-      phone: '+14155552222',
-      role: 'caregiver',
+      fullName: 'Robert Taylor',
+      phone: '+15551234570',
+      email: 'rtaylor@placeholder.com',
+      role: 'rider',
       smsConsentGiven: true,
       smsConsentTimestamp: new Date(),
       smsConsentIpAddress: '192.168.1.4',
     },
     {
       uuid: uuidv7(),
-      fullName: 'David Martinez',
-      phone: '+12125559999',
-      role: 'rider',
+      fullName: 'Sarah Johnson',
+      phone: '+15551234571',
+      role: 'caregiver',
       smsConsentGiven: true,
       smsConsentTimestamp: new Date(),
       smsConsentIpAddress: '192.168.1.5',
+    },
+    {
+      uuid: uuidv7(),
+      fullName: 'David Martinez',
+      phone: '+15551234572',
+      email: 'david.m@example.com',
+      role: 'rider',
+      smsConsentGiven: true,
+      smsConsentTimestamp: new Date(),
+      smsConsentIpAddress: '192.168.1.6',
     },
   ];
 
   const createdRiders: any[] = [];
   for (const rider of riders) {
-    // Use upsert to avoid unique constraint on phone
-    const created = await prisma.user.upsert({
-      where: { phone: rider.phone },
-      update: {},
-      create: rider,
+    const created = await prisma.user.create({
+      data: rider,
     });
     createdRiders.push(created);
     console.log(`  ✅ Created ${rider.role}: ${rider.fullName}`);

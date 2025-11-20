@@ -9,8 +9,13 @@ import { generateUuid } from '../utils/uuid.js';
  * Helper function to determine sender role based on phone number
  */
 function determineSenderRole(ride, phoneNumber) {
-    // Check if sender is rider
+    // Check if sender is rider (registered user)
     if (ride.rider && ride.rider[0]?.phone === phoneNumber) {
+        return 'rider';
+    }
+
+    // Check if sender is rider (non-registered service user)
+    if (ride.riderPhone === phoneNumber || ride.serviceUserPhone === phoneNumber) {
         return 'rider';
     }
 
@@ -162,7 +167,12 @@ function createNotificationRoutes(api) {
                                 ride.rideStatus !== RIDE_STATUSES.ROUNDTRIP_COMPLETE;
                 if (!isActive) return false;
 
-                const isRider = ride.rider && ride.rider.length > 0 && ride.rider[0].phone === senderPhone;
+                // Check if sender is rider (registered or non-registered)
+                const isRider = (ride.rider && ride.rider.length > 0 && ride.rider[0].phone === senderPhone) ||
+                               ride.riderPhone === senderPhone ||
+                               ride.serviceUserPhone === senderPhone;
+                
+                // Check if sender is driver
                 const isDriver = ride.driver && ride.driver.length > 0 &&
                                 (ride.driver[0].mobilePhone === senderPhone || ride.driver[0].phone === senderPhone);
 

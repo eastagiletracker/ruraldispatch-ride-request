@@ -10,6 +10,7 @@ import { PrismaClient } from '../../prisma/generated/client/client.ts';
 import { PrismaPg } from '@prisma/adapter-pg';
 import pg from 'pg';
 import bcrypt from 'bcryptjs';
+import { generateRideDisplayId } from '../utils/displayId.js';
 
 const { Pool } = pg;
 
@@ -57,7 +58,9 @@ async function generateApi() {
         driver: ride.driver ? [ride.driver] : [],
         assignedVehicleUuid: ride.vehicleUuid,
         assignedDriverUuid: ride.driverUuid,
-        serviceUserUuid: ride.riderUuid
+        serviceUserUuid: ride.riderUuid,
+        serviceUserName: ride.riderName,
+        serviceUserPhone: ride.riderPhone
       };
     },
 
@@ -83,7 +86,9 @@ async function generateApi() {
         driver: ride.driver ? [ride.driver] : [],
         assignedVehicleUuid: ride.vehicleUuid,
         assignedDriverUuid: ride.driverUuid,
-        serviceUserUuid: ride.riderUuid
+        serviceUserUuid: ride.riderUuid,
+        serviceUserName: ride.riderName,
+        serviceUserPhone: ride.riderPhone
       }));
     },
 
@@ -94,8 +99,10 @@ async function generateApi() {
       return await prisma.ride.create({
         data: {
           uuid: rideReq.uuid,
-          displayId: rideReq.displayId,
+          displayId: rideReq.displayId || generateRideDisplayId(),
           riderUuid: rideReq.serviceUserUuid || rideReq.riderUuid || null,
+          riderName: rideReq.serviceUserName || null,
+          riderPhone: rideReq.serviceUserPhone || null,
           driverUuid: rideReq.assignedDriverUuid || rideReq.driverUuid || null,
           vehicleUuid: rideReq.assignedVehicleUuid || rideReq.vehicleUuid || null,
           pickupAddress: rideReq.pickupAddress,

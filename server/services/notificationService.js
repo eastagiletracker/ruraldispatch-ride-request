@@ -106,7 +106,7 @@ Thank you for using our service! If you have any feedback, please contact us.`;
    * Send driver assignment notification to driver
    */
   async notifyDriverAssigned(ride, driver, rider) {
-    // Use template for consistent messaging with "Accept? 1=Yes, 2=No"
+    // Send driver assignment notification with ride details
     const message = smsTemplates.getSMSTemplate('DRIVER_ASSIGNMENT', 'driver', {
       ride,
       rider

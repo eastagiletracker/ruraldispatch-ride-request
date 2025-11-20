@@ -44,8 +44,8 @@ function formatAddress(address) {
  * Get driver assignment SMS (sent when ride is matched to driver)
  */
 function getDriverAssignmentMessage(ride, rider) {
-  const pickup = formatAddress(ride.pickupLocation);
-  const dropoff = formatAddress(ride.dropoffLocation);
+  const pickup = formatAddress(ride.pickupAddress);
+  const dropoff = formatAddress(ride.dropOffAddress);
   const pickupTime = formatDateTime(ride.pickupRequestedTime);
   const roundtripIndicator = ride.roundTrip ? 'R' : '';
 
@@ -54,8 +54,7 @@ Rider: ${rider.fullName}
 Pickup: ${pickup}
 ${pickupTime}
 Drop off: ${dropoff}
-${roundtripIndicator}
-Accept? 1=Yes, 2=No`;
+${roundtripIndicator}`;
 }
 
 /**
@@ -63,8 +62,8 @@ Accept? 1=Yes, 2=No`;
  * Sent to both rider and case manager when driver accepts
  */
 function getRideConfirmedMessage(ride, driver, vehicle) {
-  const pickup = formatAddress(ride.pickupLocation);
-  const dropoff = formatAddress(ride.dropoffLocation);
+  const pickup = formatAddress(ride.pickupAddress);
+  const dropoff = formatAddress(ride.dropOffAddress);
   const pickupTime = formatDateTime(ride.pickupRequestedTime);
   const roundtripIndicator = ride.roundTrip ? 'R' : '';
   const vehicleName = vehicle ? vehicle.displayName : 'TBD';

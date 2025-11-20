@@ -17,6 +17,7 @@ model User {
   uuid      String   @id @default(uuid(7)) @db.Uuid
   fullName  String
   phone     String   @unique
+  email     String?
   role      String   @default("rider")
 
   // SMS Consent (TCPA compliance)
@@ -66,13 +67,13 @@ model ServiceProvider {
   uuid        String   @id @default(uuid(7)) @db.Uuid
   fullName    String
   phone       String?
-  mobilePhone String?  @unique
+  mobilePhone String?
 
   // Professional details
-  title          String?  // e.g., "Driver", "Fleet Manager"
+  title          String?
   organizationId Int?
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
-  role           String   @default("Driver")  // Driver, Fleet Manager, etc.
+  role           String   @default("Driver")
 
   // Timestamps
   createdAt DateTime @default(now())
@@ -93,16 +94,16 @@ model ServiceProvider {
 
 model Vehicle {
   uuid         String   @id @default(uuid(7)) @db.Uuid
-  displayName  String   // e.g., "2023 Toyota Sienna (Silver) - XYZ1234"
-  fleetId      String?  @unique  // e.g., "VH-001"
+  displayName  String
+  fleetId      String?  @unique
   model        String?
   year         Int?
   color        String?
   licensePlate String?  @unique
 
   // Capacity and service area
-  capacity     Int?     // Number of passengers
-  serviceArea  String?  // e.g., "Manhattan", "Brooklyn", "Queens"
+  capacity     Int?
+  serviceArea  String?
 
   // Accessibility features
   walkerAccessible      Boolean @default(false)
@@ -140,6 +141,10 @@ model Ride {
 
   vehicleUuid String?  @db.Uuid
   vehicle     Vehicle? @relation(fields: [vehicleUuid], references: [uuid], onDelete: SetNull)
+
+  // Rider info (for non-registered users or when rider relationship is null)
+  riderName  String?
+  riderPhone String?
 
   // Addresses
   pickupAddress  String

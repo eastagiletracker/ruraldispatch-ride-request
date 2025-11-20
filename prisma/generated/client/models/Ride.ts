@@ -42,6 +42,8 @@ export type RideMinAggregateOutputType = {
   riderUuid: string | null
   driverUuid: string | null
   vehicleUuid: string | null
+  riderName: string | null
+  riderPhone: string | null
   pickupAddress: string | null
   dropOffAddress: string | null
   pickupRequestedTime: Date | null
@@ -70,6 +72,8 @@ export type RideMaxAggregateOutputType = {
   riderUuid: string | null
   driverUuid: string | null
   vehicleUuid: string | null
+  riderName: string | null
+  riderPhone: string | null
   pickupAddress: string | null
   dropOffAddress: string | null
   pickupRequestedTime: Date | null
@@ -98,6 +102,8 @@ export type RideCountAggregateOutputType = {
   riderUuid: number
   driverUuid: number
   vehicleUuid: number
+  riderName: number
+  riderPhone: number
   pickupAddress: number
   dropOffAddress: number
   pickupRequestedTime: number
@@ -138,6 +144,8 @@ export type RideMinAggregateInputType = {
   riderUuid?: true
   driverUuid?: true
   vehicleUuid?: true
+  riderName?: true
+  riderPhone?: true
   pickupAddress?: true
   dropOffAddress?: true
   pickupRequestedTime?: true
@@ -166,6 +174,8 @@ export type RideMaxAggregateInputType = {
   riderUuid?: true
   driverUuid?: true
   vehicleUuid?: true
+  riderName?: true
+  riderPhone?: true
   pickupAddress?: true
   dropOffAddress?: true
   pickupRequestedTime?: true
@@ -194,6 +204,8 @@ export type RideCountAggregateInputType = {
   riderUuid?: true
   driverUuid?: true
   vehicleUuid?: true
+  riderName?: true
+  riderPhone?: true
   pickupAddress?: true
   dropOffAddress?: true
   pickupRequestedTime?: true
@@ -309,6 +321,8 @@ export type RideGroupByOutputType = {
   riderUuid: string | null
   driverUuid: string | null
   vehicleUuid: string | null
+  riderName: string | null
+  riderPhone: string | null
   pickupAddress: string
   dropOffAddress: string
   pickupRequestedTime: Date
@@ -360,6 +374,8 @@ export type RideWhereInput = {
   riderUuid?: Prisma.UuidNullableFilter<"Ride"> | string | null
   driverUuid?: Prisma.UuidNullableFilter<"Ride"> | string | null
   vehicleUuid?: Prisma.UuidNullableFilter<"Ride"> | string | null
+  riderName?: Prisma.StringNullableFilter<"Ride"> | string | null
+  riderPhone?: Prisma.StringNullableFilter<"Ride"> | string | null
   pickupAddress?: Prisma.StringFilter<"Ride"> | string
   dropOffAddress?: Prisma.StringFilter<"Ride"> | string
   pickupRequestedTime?: Prisma.DateTimeFilter<"Ride"> | Date | string
@@ -392,6 +408,8 @@ export type RideOrderByWithRelationInput = {
   riderUuid?: Prisma.SortOrderInput | Prisma.SortOrder
   driverUuid?: Prisma.SortOrderInput | Prisma.SortOrder
   vehicleUuid?: Prisma.SortOrderInput | Prisma.SortOrder
+  riderName?: Prisma.SortOrderInput | Prisma.SortOrder
+  riderPhone?: Prisma.SortOrderInput | Prisma.SortOrder
   pickupAddress?: Prisma.SortOrder
   dropOffAddress?: Prisma.SortOrder
   pickupRequestedTime?: Prisma.SortOrder
@@ -427,6 +445,8 @@ export type RideWhereUniqueInput = Prisma.AtLeast<{
   riderUuid?: Prisma.UuidNullableFilter<"Ride"> | string | null
   driverUuid?: Prisma.UuidNullableFilter<"Ride"> | string | null
   vehicleUuid?: Prisma.UuidNullableFilter<"Ride"> | string | null
+  riderName?: Prisma.StringNullableFilter<"Ride"> | string | null
+  riderPhone?: Prisma.StringNullableFilter<"Ride"> | string | null
   pickupAddress?: Prisma.StringFilter<"Ride"> | string
   dropOffAddress?: Prisma.StringFilter<"Ride"> | string
   pickupRequestedTime?: Prisma.DateTimeFilter<"Ride"> | Date | string
@@ -459,6 +479,8 @@ export type RideOrderByWithAggregationInput = {
   riderUuid?: Prisma.SortOrderInput | Prisma.SortOrder
   driverUuid?: Prisma.SortOrderInput | Prisma.SortOrder
   vehicleUuid?: Prisma.SortOrderInput | Prisma.SortOrder
+  riderName?: Prisma.SortOrderInput | Prisma.SortOrder
+  riderPhone?: Prisma.SortOrderInput | Prisma.SortOrder
   pickupAddress?: Prisma.SortOrder
   dropOffAddress?: Prisma.SortOrder
   pickupRequestedTime?: Prisma.SortOrder
@@ -495,6 +517,8 @@ export type RideScalarWhereWithAggregatesInput = {
   riderUuid?: Prisma.UuidNullableWithAggregatesFilter<"Ride"> | string | null
   driverUuid?: Prisma.UuidNullableWithAggregatesFilter<"Ride"> | string | null
   vehicleUuid?: Prisma.UuidNullableWithAggregatesFilter<"Ride"> | string | null
+  riderName?: Prisma.StringNullableWithAggregatesFilter<"Ride"> | string | null
+  riderPhone?: Prisma.StringNullableWithAggregatesFilter<"Ride"> | string | null
   pickupAddress?: Prisma.StringWithAggregatesFilter<"Ride"> | string
   dropOffAddress?: Prisma.StringWithAggregatesFilter<"Ride"> | string
   pickupRequestedTime?: Prisma.DateTimeWithAggregatesFilter<"Ride"> | Date | string
@@ -520,6 +544,8 @@ export type RideScalarWhereWithAggregatesInput = {
 export type RideCreateInput = {
   uuid?: string
   displayId: string
+  riderName?: string | null
+  riderPhone?: string | null
   pickupAddress: string
   dropOffAddress: string
   pickupRequestedTime: Date | string
@@ -552,6 +578,8 @@ export type RideUncheckedCreateInput = {
   riderUuid?: string | null
   driverUuid?: string | null
   vehicleUuid?: string | null
+  riderName?: string | null
+  riderPhone?: string | null
   pickupAddress: string
   dropOffAddress: string
   pickupRequestedTime: Date | string
@@ -578,6 +606,8 @@ export type RideUncheckedCreateInput = {
 export type RideUpdateInput = {
   uuid?: Prisma.StringFieldUpdateOperationsInput | string
   displayId?: Prisma.StringFieldUpdateOperationsInput | string
+  riderName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  riderPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pickupAddress?: Prisma.StringFieldUpdateOperationsInput | string
   dropOffAddress?: Prisma.StringFieldUpdateOperationsInput | string
   pickupRequestedTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -610,6 +640,8 @@ export type RideUncheckedUpdateInput = {
   riderUuid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   driverUuid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vehicleUuid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  riderName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  riderPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pickupAddress?: Prisma.StringFieldUpdateOperationsInput | string
   dropOffAddress?: Prisma.StringFieldUpdateOperationsInput | string
   pickupRequestedTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -639,6 +671,8 @@ export type RideCreateManyInput = {
   riderUuid?: string | null
   driverUuid?: string | null
   vehicleUuid?: string | null
+  riderName?: string | null
+  riderPhone?: string | null
   pickupAddress: string
   dropOffAddress: string
   pickupRequestedTime: Date | string
@@ -664,6 +698,8 @@ export type RideCreateManyInput = {
 export type RideUpdateManyMutationInput = {
   uuid?: Prisma.StringFieldUpdateOperationsInput | string
   displayId?: Prisma.StringFieldUpdateOperationsInput | string
+  riderName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  riderPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pickupAddress?: Prisma.StringFieldUpdateOperationsInput | string
   dropOffAddress?: Prisma.StringFieldUpdateOperationsInput | string
   pickupRequestedTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -692,6 +728,8 @@ export type RideUncheckedUpdateManyInput = {
   riderUuid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   driverUuid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vehicleUuid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  riderName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  riderPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pickupAddress?: Prisma.StringFieldUpdateOperationsInput | string
   dropOffAddress?: Prisma.StringFieldUpdateOperationsInput | string
   pickupRequestedTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -730,6 +768,8 @@ export type RideCountOrderByAggregateInput = {
   riderUuid?: Prisma.SortOrder
   driverUuid?: Prisma.SortOrder
   vehicleUuid?: Prisma.SortOrder
+  riderName?: Prisma.SortOrder
+  riderPhone?: Prisma.SortOrder
   pickupAddress?: Prisma.SortOrder
   dropOffAddress?: Prisma.SortOrder
   pickupRequestedTime?: Prisma.SortOrder
@@ -763,6 +803,8 @@ export type RideMaxOrderByAggregateInput = {
   riderUuid?: Prisma.SortOrder
   driverUuid?: Prisma.SortOrder
   vehicleUuid?: Prisma.SortOrder
+  riderName?: Prisma.SortOrder
+  riderPhone?: Prisma.SortOrder
   pickupAddress?: Prisma.SortOrder
   dropOffAddress?: Prisma.SortOrder
   pickupRequestedTime?: Prisma.SortOrder
@@ -791,6 +833,8 @@ export type RideMinOrderByAggregateInput = {
   riderUuid?: Prisma.SortOrder
   driverUuid?: Prisma.SortOrder
   vehicleUuid?: Prisma.SortOrder
+  riderName?: Prisma.SortOrder
+  riderPhone?: Prisma.SortOrder
   pickupAddress?: Prisma.SortOrder
   dropOffAddress?: Prisma.SortOrder
   pickupRequestedTime?: Prisma.SortOrder
@@ -968,6 +1012,8 @@ export type RideUpdateOneWithoutNotificationsNestedInput = {
 export type RideCreateWithoutRiderInput = {
   uuid?: string
   displayId: string
+  riderName?: string | null
+  riderPhone?: string | null
   pickupAddress: string
   dropOffAddress: string
   pickupRequestedTime: Date | string
@@ -998,6 +1044,8 @@ export type RideUncheckedCreateWithoutRiderInput = {
   displayId: string
   driverUuid?: string | null
   vehicleUuid?: string | null
+  riderName?: string | null
+  riderPhone?: string | null
   pickupAddress: string
   dropOffAddress: string
   pickupRequestedTime: Date | string
@@ -1056,6 +1104,8 @@ export type RideScalarWhereInput = {
   riderUuid?: Prisma.UuidNullableFilter<"Ride"> | string | null
   driverUuid?: Prisma.UuidNullableFilter<"Ride"> | string | null
   vehicleUuid?: Prisma.UuidNullableFilter<"Ride"> | string | null
+  riderName?: Prisma.StringNullableFilter<"Ride"> | string | null
+  riderPhone?: Prisma.StringNullableFilter<"Ride"> | string | null
   pickupAddress?: Prisma.StringFilter<"Ride"> | string
   dropOffAddress?: Prisma.StringFilter<"Ride"> | string
   pickupRequestedTime?: Prisma.DateTimeFilter<"Ride"> | Date | string
@@ -1081,6 +1131,8 @@ export type RideScalarWhereInput = {
 export type RideCreateWithoutDriverInput = {
   uuid?: string
   displayId: string
+  riderName?: string | null
+  riderPhone?: string | null
   pickupAddress: string
   dropOffAddress: string
   pickupRequestedTime: Date | string
@@ -1111,6 +1163,8 @@ export type RideUncheckedCreateWithoutDriverInput = {
   displayId: string
   riderUuid?: string | null
   vehicleUuid?: string | null
+  riderName?: string | null
+  riderPhone?: string | null
   pickupAddress: string
   dropOffAddress: string
   pickupRequestedTime: Date | string
@@ -1163,6 +1217,8 @@ export type RideUpdateManyWithWhereWithoutDriverInput = {
 export type RideCreateWithoutVehicleInput = {
   uuid?: string
   displayId: string
+  riderName?: string | null
+  riderPhone?: string | null
   pickupAddress: string
   dropOffAddress: string
   pickupRequestedTime: Date | string
@@ -1193,6 +1249,8 @@ export type RideUncheckedCreateWithoutVehicleInput = {
   displayId: string
   riderUuid?: string | null
   driverUuid?: string | null
+  riderName?: string | null
+  riderPhone?: string | null
   pickupAddress: string
   dropOffAddress: string
   pickupRequestedTime: Date | string
@@ -1245,6 +1303,8 @@ export type RideUpdateManyWithWhereWithoutVehicleInput = {
 export type RideCreateWithoutNotificationsInput = {
   uuid?: string
   displayId: string
+  riderName?: string | null
+  riderPhone?: string | null
   pickupAddress: string
   dropOffAddress: string
   pickupRequestedTime: Date | string
@@ -1276,6 +1336,8 @@ export type RideUncheckedCreateWithoutNotificationsInput = {
   riderUuid?: string | null
   driverUuid?: string | null
   vehicleUuid?: string | null
+  riderName?: string | null
+  riderPhone?: string | null
   pickupAddress: string
   dropOffAddress: string
   pickupRequestedTime: Date | string
@@ -1317,6 +1379,8 @@ export type RideUpdateToOneWithWhereWithoutNotificationsInput = {
 export type RideUpdateWithoutNotificationsInput = {
   uuid?: Prisma.StringFieldUpdateOperationsInput | string
   displayId?: Prisma.StringFieldUpdateOperationsInput | string
+  riderName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  riderPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pickupAddress?: Prisma.StringFieldUpdateOperationsInput | string
   dropOffAddress?: Prisma.StringFieldUpdateOperationsInput | string
   pickupRequestedTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1348,6 +1412,8 @@ export type RideUncheckedUpdateWithoutNotificationsInput = {
   riderUuid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   driverUuid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vehicleUuid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  riderName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  riderPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pickupAddress?: Prisma.StringFieldUpdateOperationsInput | string
   dropOffAddress?: Prisma.StringFieldUpdateOperationsInput | string
   pickupRequestedTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1375,6 +1441,8 @@ export type RideCreateManyRiderInput = {
   displayId: string
   driverUuid?: string | null
   vehicleUuid?: string | null
+  riderName?: string | null
+  riderPhone?: string | null
   pickupAddress: string
   dropOffAddress: string
   pickupRequestedTime: Date | string
@@ -1400,6 +1468,8 @@ export type RideCreateManyRiderInput = {
 export type RideUpdateWithoutRiderInput = {
   uuid?: Prisma.StringFieldUpdateOperationsInput | string
   displayId?: Prisma.StringFieldUpdateOperationsInput | string
+  riderName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  riderPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pickupAddress?: Prisma.StringFieldUpdateOperationsInput | string
   dropOffAddress?: Prisma.StringFieldUpdateOperationsInput | string
   pickupRequestedTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1430,6 +1500,8 @@ export type RideUncheckedUpdateWithoutRiderInput = {
   displayId?: Prisma.StringFieldUpdateOperationsInput | string
   driverUuid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vehicleUuid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  riderName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  riderPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pickupAddress?: Prisma.StringFieldUpdateOperationsInput | string
   dropOffAddress?: Prisma.StringFieldUpdateOperationsInput | string
   pickupRequestedTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1458,6 +1530,8 @@ export type RideUncheckedUpdateManyWithoutRiderInput = {
   displayId?: Prisma.StringFieldUpdateOperationsInput | string
   driverUuid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vehicleUuid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  riderName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  riderPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pickupAddress?: Prisma.StringFieldUpdateOperationsInput | string
   dropOffAddress?: Prisma.StringFieldUpdateOperationsInput | string
   pickupRequestedTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1485,6 +1559,8 @@ export type RideCreateManyDriverInput = {
   displayId: string
   riderUuid?: string | null
   vehicleUuid?: string | null
+  riderName?: string | null
+  riderPhone?: string | null
   pickupAddress: string
   dropOffAddress: string
   pickupRequestedTime: Date | string
@@ -1510,6 +1586,8 @@ export type RideCreateManyDriverInput = {
 export type RideUpdateWithoutDriverInput = {
   uuid?: Prisma.StringFieldUpdateOperationsInput | string
   displayId?: Prisma.StringFieldUpdateOperationsInput | string
+  riderName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  riderPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pickupAddress?: Prisma.StringFieldUpdateOperationsInput | string
   dropOffAddress?: Prisma.StringFieldUpdateOperationsInput | string
   pickupRequestedTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1540,6 +1618,8 @@ export type RideUncheckedUpdateWithoutDriverInput = {
   displayId?: Prisma.StringFieldUpdateOperationsInput | string
   riderUuid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vehicleUuid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  riderName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  riderPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pickupAddress?: Prisma.StringFieldUpdateOperationsInput | string
   dropOffAddress?: Prisma.StringFieldUpdateOperationsInput | string
   pickupRequestedTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1568,6 +1648,8 @@ export type RideUncheckedUpdateManyWithoutDriverInput = {
   displayId?: Prisma.StringFieldUpdateOperationsInput | string
   riderUuid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   vehicleUuid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  riderName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  riderPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pickupAddress?: Prisma.StringFieldUpdateOperationsInput | string
   dropOffAddress?: Prisma.StringFieldUpdateOperationsInput | string
   pickupRequestedTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1595,6 +1677,8 @@ export type RideCreateManyVehicleInput = {
   displayId: string
   riderUuid?: string | null
   driverUuid?: string | null
+  riderName?: string | null
+  riderPhone?: string | null
   pickupAddress: string
   dropOffAddress: string
   pickupRequestedTime: Date | string
@@ -1620,6 +1704,8 @@ export type RideCreateManyVehicleInput = {
 export type RideUpdateWithoutVehicleInput = {
   uuid?: Prisma.StringFieldUpdateOperationsInput | string
   displayId?: Prisma.StringFieldUpdateOperationsInput | string
+  riderName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  riderPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pickupAddress?: Prisma.StringFieldUpdateOperationsInput | string
   dropOffAddress?: Prisma.StringFieldUpdateOperationsInput | string
   pickupRequestedTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1650,6 +1736,8 @@ export type RideUncheckedUpdateWithoutVehicleInput = {
   displayId?: Prisma.StringFieldUpdateOperationsInput | string
   riderUuid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   driverUuid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  riderName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  riderPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pickupAddress?: Prisma.StringFieldUpdateOperationsInput | string
   dropOffAddress?: Prisma.StringFieldUpdateOperationsInput | string
   pickupRequestedTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1678,6 +1766,8 @@ export type RideUncheckedUpdateManyWithoutVehicleInput = {
   displayId?: Prisma.StringFieldUpdateOperationsInput | string
   riderUuid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   driverUuid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  riderName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  riderPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pickupAddress?: Prisma.StringFieldUpdateOperationsInput | string
   dropOffAddress?: Prisma.StringFieldUpdateOperationsInput | string
   pickupRequestedTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1737,6 +1827,8 @@ export type RideSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   riderUuid?: boolean
   driverUuid?: boolean
   vehicleUuid?: boolean
+  riderName?: boolean
+  riderPhone?: boolean
   pickupAddress?: boolean
   dropOffAddress?: boolean
   pickupRequestedTime?: boolean
@@ -1770,6 +1862,8 @@ export type RideSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   riderUuid?: boolean
   driverUuid?: boolean
   vehicleUuid?: boolean
+  riderName?: boolean
+  riderPhone?: boolean
   pickupAddress?: boolean
   dropOffAddress?: boolean
   pickupRequestedTime?: boolean
@@ -1801,6 +1895,8 @@ export type RideSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   riderUuid?: boolean
   driverUuid?: boolean
   vehicleUuid?: boolean
+  riderName?: boolean
+  riderPhone?: boolean
   pickupAddress?: boolean
   dropOffAddress?: boolean
   pickupRequestedTime?: boolean
@@ -1832,6 +1928,8 @@ export type RideSelectScalar = {
   riderUuid?: boolean
   driverUuid?: boolean
   vehicleUuid?: boolean
+  riderName?: boolean
+  riderPhone?: boolean
   pickupAddress?: boolean
   dropOffAddress?: boolean
   pickupRequestedTime?: boolean
@@ -1854,7 +1952,7 @@ export type RideSelectScalar = {
   updatedAt?: boolean
 }
 
-export type RideOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"uuid" | "displayId" | "riderUuid" | "driverUuid" | "vehicleUuid" | "pickupAddress" | "dropOffAddress" | "pickupRequestedTime" | "dropOffRequestedTime" | "rideStartedActualTime" | "pickupActualTime" | "dropOffActualTime" | "rideCompleteRequestedTime" | "rideCompleteActualTime" | "rideStatus" | "rideRequestStatus" | "roundTrip" | "purpose" | "notes" | "walkerAccessible" | "wheelchairAccessible" | "serviceAnimalFriendly" | "oxygenTankAccessible" | "createdAt" | "updatedAt", ExtArgs["result"]["ride"]>
+export type RideOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"uuid" | "displayId" | "riderUuid" | "driverUuid" | "vehicleUuid" | "riderName" | "riderPhone" | "pickupAddress" | "dropOffAddress" | "pickupRequestedTime" | "dropOffRequestedTime" | "rideStartedActualTime" | "pickupActualTime" | "dropOffActualTime" | "rideCompleteRequestedTime" | "rideCompleteActualTime" | "rideStatus" | "rideRequestStatus" | "roundTrip" | "purpose" | "notes" | "walkerAccessible" | "wheelchairAccessible" | "serviceAnimalFriendly" | "oxygenTankAccessible" | "createdAt" | "updatedAt", ExtArgs["result"]["ride"]>
 export type RideInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   rider?: boolean | Prisma.Ride$riderArgs<ExtArgs>
   driver?: boolean | Prisma.Ride$driverArgs<ExtArgs>
@@ -1887,6 +1985,8 @@ export type $RidePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     riderUuid: string | null
     driverUuid: string | null
     vehicleUuid: string | null
+    riderName: string | null
+    riderPhone: string | null
     pickupAddress: string
     dropOffAddress: string
     pickupRequestedTime: Date
@@ -2339,6 +2439,8 @@ export interface RideFieldRefs {
   readonly riderUuid: Prisma.FieldRef<"Ride", 'String'>
   readonly driverUuid: Prisma.FieldRef<"Ride", 'String'>
   readonly vehicleUuid: Prisma.FieldRef<"Ride", 'String'>
+  readonly riderName: Prisma.FieldRef<"Ride", 'String'>
+  readonly riderPhone: Prisma.FieldRef<"Ride", 'String'>
   readonly pickupAddress: Prisma.FieldRef<"Ride", 'String'>
   readonly dropOffAddress: Prisma.FieldRef<"Ride", 'String'>
   readonly pickupRequestedTime: Prisma.FieldRef<"Ride", 'DateTime'>

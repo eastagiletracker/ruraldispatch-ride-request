@@ -116,10 +116,6 @@ export default function RideRequestForm({
                 ? accessibilityFeatures.join(', ')
                 : 'None';
 
-            // Generate a temporary UUID for demo (user not in database)
-            // Using phone number as identifier since users aren't tracked in the system yet
-            const tempUserUuid = selectedUser?.uuid || `temp_${data.riderMobilePhone.replace(/\D/g, '')}`;
-
             // Get the logged-in case manager's UUID (only if authenticated)
             const currentUser = getCurrentUser();
             const createdByUuid = currentUser?.uuid && currentUser.isAuthenticated
@@ -127,7 +123,8 @@ export default function RideRequestForm({
                 : undefined;
 
             const rideRequestData = {
-                serviceUserUuid: tempUserUuid,
+                // Only include serviceUserUuid if we have a valid UUID from an existing user
+                ...(selectedUser?.uuid && { serviceUserUuid: selectedUser.uuid }),
                 serviceUserRole: 'rider',
                 serviceUserName: data.riderFullName,  // Store rider name directly
                 serviceUserPhone: data.riderMobilePhone,  // Store rider phone directly
@@ -149,8 +146,8 @@ export default function RideRequestForm({
                 rideStatus: 0,
                 purpose: data.purposeOfTrip,
                 rideRequestStatus: 100,
-                notes: `Case Manager: ${data.caseManagerFullName} (${data.caseManagerAgency}, ${data.caseManagerPhone}). ` +
-                       `Rider Phone: ${data.riderMobilePhone}. ` +
+                notes: `Rider: ${data.riderFullName} (${data.riderMobilePhone}). ` +
+                       `Case Manager: ${data.caseManagerFullName} (${data.caseManagerAgency}, ${data.caseManagerPhone}). ` +
                        `Accessibility: ${accessibilityString}. ` +
                        `Wait time: ${data.estimatedWaitTime || 'Not specified'}. ` +
                        `${data.notesComments || ''}`

@@ -111,6 +111,12 @@ function createRideRequestRoutes(api) {
             // Use data already populated in the ride object from getRideRequest
             if (updatedRide.rider && updatedRide.rider.length > 0) {
                 userData.rider = updatedRide.rider[0];
+            } else if (updatedRide.serviceUserName || updatedRide.serviceUserPhone) {
+                // Fallback to serviceUserName/serviceUserPhone if no linked rider
+                userData.rider = {
+                    fullName: updatedRide.serviceUserName || 'Unknown Rider',
+                    phone: updatedRide.serviceUserPhone || null
+                };
             }
 
             if (updatedRide.driver && updatedRide.driver.length > 0) {

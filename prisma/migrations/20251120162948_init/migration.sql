@@ -3,6 +3,7 @@ CREATE TABLE "users" (
     "uuid" UUID NOT NULL,
     "fullName" TEXT NOT NULL,
     "phone" TEXT NOT NULL,
+    "email" TEXT,
     "role" TEXT NOT NULL DEFAULT 'rider',
     "smsConsentGiven" BOOLEAN DEFAULT false,
     "smsConsentTimestamp" TIMESTAMP(3),
@@ -70,6 +71,8 @@ CREATE TABLE "rides" (
     "riderUuid" UUID,
     "driverUuid" UUID,
     "vehicleUuid" UUID,
+    "riderName" TEXT,
+    "riderPhone" TEXT,
     "pickupAddress" TEXT NOT NULL,
     "dropOffAddress" TEXT NOT NULL,
     "pickupRequestedTime" TIMESTAMP(3) NOT NULL,
@@ -145,9 +148,6 @@ CREATE UNIQUE INDEX "organizations_name_key" ON "organizations"("name");
 
 -- CreateIndex
 CREATE INDEX "organizations_name_idx" ON "organizations"("name");
-
--- CreateIndex
-CREATE UNIQUE INDEX "service_providers_mobilePhone_key" ON "service_providers"("mobilePhone");
 
 -- CreateIndex
 CREATE INDEX "service_providers_mobilePhone_idx" ON "service_providers"("mobilePhone");

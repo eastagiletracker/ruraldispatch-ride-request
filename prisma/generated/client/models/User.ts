@@ -28,6 +28,7 @@ export type UserMinAggregateOutputType = {
   uuid: string | null
   fullName: string | null
   phone: string | null
+  email: string | null
   role: string | null
   smsConsentGiven: boolean | null
   smsConsentTimestamp: Date | null
@@ -40,6 +41,7 @@ export type UserMaxAggregateOutputType = {
   uuid: string | null
   fullName: string | null
   phone: string | null
+  email: string | null
   role: string | null
   smsConsentGiven: boolean | null
   smsConsentTimestamp: Date | null
@@ -52,6 +54,7 @@ export type UserCountAggregateOutputType = {
   uuid: number
   fullName: number
   phone: number
+  email: number
   role: number
   smsConsentGiven: number
   smsConsentTimestamp: number
@@ -66,6 +69,7 @@ export type UserMinAggregateInputType = {
   uuid?: true
   fullName?: true
   phone?: true
+  email?: true
   role?: true
   smsConsentGiven?: true
   smsConsentTimestamp?: true
@@ -78,6 +82,7 @@ export type UserMaxAggregateInputType = {
   uuid?: true
   fullName?: true
   phone?: true
+  email?: true
   role?: true
   smsConsentGiven?: true
   smsConsentTimestamp?: true
@@ -90,6 +95,7 @@ export type UserCountAggregateInputType = {
   uuid?: true
   fullName?: true
   phone?: true
+  email?: true
   role?: true
   smsConsentGiven?: true
   smsConsentTimestamp?: true
@@ -175,6 +181,7 @@ export type UserGroupByOutputType = {
   uuid: string
   fullName: string
   phone: string
+  email: string | null
   role: string
   smsConsentGiven: boolean | null
   smsConsentTimestamp: Date | null
@@ -208,6 +215,7 @@ export type UserWhereInput = {
   uuid?: Prisma.UuidFilter<"User"> | string
   fullName?: Prisma.StringFilter<"User"> | string
   phone?: Prisma.StringFilter<"User"> | string
+  email?: Prisma.StringNullableFilter<"User"> | string | null
   role?: Prisma.StringFilter<"User"> | string
   smsConsentGiven?: Prisma.BoolNullableFilter<"User"> | boolean | null
   smsConsentTimestamp?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
@@ -221,6 +229,7 @@ export type UserOrderByWithRelationInput = {
   uuid?: Prisma.SortOrder
   fullName?: Prisma.SortOrder
   phone?: Prisma.SortOrder
+  email?: Prisma.SortOrderInput | Prisma.SortOrder
   role?: Prisma.SortOrder
   smsConsentGiven?: Prisma.SortOrderInput | Prisma.SortOrder
   smsConsentTimestamp?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -237,6 +246,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   OR?: Prisma.UserWhereInput[]
   NOT?: Prisma.UserWhereInput | Prisma.UserWhereInput[]
   fullName?: Prisma.StringFilter<"User"> | string
+  email?: Prisma.StringNullableFilter<"User"> | string | null
   role?: Prisma.StringFilter<"User"> | string
   smsConsentGiven?: Prisma.BoolNullableFilter<"User"> | boolean | null
   smsConsentTimestamp?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
@@ -250,6 +260,7 @@ export type UserOrderByWithAggregationInput = {
   uuid?: Prisma.SortOrder
   fullName?: Prisma.SortOrder
   phone?: Prisma.SortOrder
+  email?: Prisma.SortOrderInput | Prisma.SortOrder
   role?: Prisma.SortOrder
   smsConsentGiven?: Prisma.SortOrderInput | Prisma.SortOrder
   smsConsentTimestamp?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -268,6 +279,7 @@ export type UserScalarWhereWithAggregatesInput = {
   uuid?: Prisma.UuidWithAggregatesFilter<"User"> | string
   fullName?: Prisma.StringWithAggregatesFilter<"User"> | string
   phone?: Prisma.StringWithAggregatesFilter<"User"> | string
+  email?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   role?: Prisma.StringWithAggregatesFilter<"User"> | string
   smsConsentGiven?: Prisma.BoolNullableWithAggregatesFilter<"User"> | boolean | null
   smsConsentTimestamp?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
@@ -280,6 +292,7 @@ export type UserCreateInput = {
   uuid?: string
   fullName: string
   phone: string
+  email?: string | null
   role?: string
   smsConsentGiven?: boolean | null
   smsConsentTimestamp?: Date | string | null
@@ -293,6 +306,7 @@ export type UserUncheckedCreateInput = {
   uuid?: string
   fullName: string
   phone: string
+  email?: string | null
   role?: string
   smsConsentGiven?: boolean | null
   smsConsentTimestamp?: Date | string | null
@@ -306,6 +320,7 @@ export type UserUpdateInput = {
   uuid?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   smsConsentGiven?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   smsConsentTimestamp?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -319,6 +334,7 @@ export type UserUncheckedUpdateInput = {
   uuid?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   smsConsentGiven?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   smsConsentTimestamp?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -332,6 +348,7 @@ export type UserCreateManyInput = {
   uuid?: string
   fullName: string
   phone: string
+  email?: string | null
   role?: string
   smsConsentGiven?: boolean | null
   smsConsentTimestamp?: Date | string | null
@@ -344,6 +361,7 @@ export type UserUpdateManyMutationInput = {
   uuid?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   smsConsentGiven?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   smsConsentTimestamp?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -356,6 +374,7 @@ export type UserUncheckedUpdateManyInput = {
   uuid?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   smsConsentGiven?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   smsConsentTimestamp?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -368,6 +387,7 @@ export type UserCountOrderByAggregateInput = {
   uuid?: Prisma.SortOrder
   fullName?: Prisma.SortOrder
   phone?: Prisma.SortOrder
+  email?: Prisma.SortOrder
   role?: Prisma.SortOrder
   smsConsentGiven?: Prisma.SortOrder
   smsConsentTimestamp?: Prisma.SortOrder
@@ -380,6 +400,7 @@ export type UserMaxOrderByAggregateInput = {
   uuid?: Prisma.SortOrder
   fullName?: Prisma.SortOrder
   phone?: Prisma.SortOrder
+  email?: Prisma.SortOrder
   role?: Prisma.SortOrder
   smsConsentGiven?: Prisma.SortOrder
   smsConsentTimestamp?: Prisma.SortOrder
@@ -392,6 +413,7 @@ export type UserMinOrderByAggregateInput = {
   uuid?: Prisma.SortOrder
   fullName?: Prisma.SortOrder
   phone?: Prisma.SortOrder
+  email?: Prisma.SortOrder
   role?: Prisma.SortOrder
   smsConsentGiven?: Prisma.SortOrder
   smsConsentTimestamp?: Prisma.SortOrder
@@ -409,16 +431,16 @@ export type StringFieldUpdateOperationsInput = {
   set?: string
 }
 
+export type NullableStringFieldUpdateOperationsInput = {
+  set?: string | null
+}
+
 export type NullableBoolFieldUpdateOperationsInput = {
   set?: boolean | null
 }
 
 export type NullableDateTimeFieldUpdateOperationsInput = {
   set?: Date | string | null
-}
-
-export type NullableStringFieldUpdateOperationsInput = {
-  set?: string | null
 }
 
 export type DateTimeFieldUpdateOperationsInput = {
@@ -445,6 +467,7 @@ export type UserCreateWithoutRidesAsRiderInput = {
   uuid?: string
   fullName: string
   phone: string
+  email?: string | null
   role?: string
   smsConsentGiven?: boolean | null
   smsConsentTimestamp?: Date | string | null
@@ -457,6 +480,7 @@ export type UserUncheckedCreateWithoutRidesAsRiderInput = {
   uuid?: string
   fullName: string
   phone: string
+  email?: string | null
   role?: string
   smsConsentGiven?: boolean | null
   smsConsentTimestamp?: Date | string | null
@@ -485,6 +509,7 @@ export type UserUpdateWithoutRidesAsRiderInput = {
   uuid?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   smsConsentGiven?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   smsConsentTimestamp?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -497,6 +522,7 @@ export type UserUncheckedUpdateWithoutRidesAsRiderInput = {
   uuid?: Prisma.StringFieldUpdateOperationsInput | string
   fullName?: Prisma.StringFieldUpdateOperationsInput | string
   phone?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.StringFieldUpdateOperationsInput | string
   smsConsentGiven?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   smsConsentTimestamp?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -540,6 +566,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   uuid?: boolean
   fullName?: boolean
   phone?: boolean
+  email?: boolean
   role?: boolean
   smsConsentGiven?: boolean
   smsConsentTimestamp?: boolean
@@ -554,6 +581,7 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   uuid?: boolean
   fullName?: boolean
   phone?: boolean
+  email?: boolean
   role?: boolean
   smsConsentGiven?: boolean
   smsConsentTimestamp?: boolean
@@ -566,6 +594,7 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   uuid?: boolean
   fullName?: boolean
   phone?: boolean
+  email?: boolean
   role?: boolean
   smsConsentGiven?: boolean
   smsConsentTimestamp?: boolean
@@ -578,6 +607,7 @@ export type UserSelectScalar = {
   uuid?: boolean
   fullName?: boolean
   phone?: boolean
+  email?: boolean
   role?: boolean
   smsConsentGiven?: boolean
   smsConsentTimestamp?: boolean
@@ -586,7 +616,7 @@ export type UserSelectScalar = {
   updatedAt?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"uuid" | "fullName" | "phone" | "role" | "smsConsentGiven" | "smsConsentTimestamp" | "smsConsentIpAddress" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"uuid" | "fullName" | "phone" | "email" | "role" | "smsConsentGiven" | "smsConsentTimestamp" | "smsConsentIpAddress" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   ridesAsRider?: boolean | Prisma.User$ridesAsRiderArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
@@ -603,6 +633,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     uuid: string
     fullName: string
     phone: string
+    email: string | null
     role: string
     smsConsentGiven: boolean | null
     smsConsentTimestamp: Date | null
@@ -1036,6 +1067,7 @@ export interface UserFieldRefs {
   readonly uuid: Prisma.FieldRef<"User", 'String'>
   readonly fullName: Prisma.FieldRef<"User", 'String'>
   readonly phone: Prisma.FieldRef<"User", 'String'>
+  readonly email: Prisma.FieldRef<"User", 'String'>
   readonly role: Prisma.FieldRef<"User", 'String'>
   readonly smsConsentGiven: Prisma.FieldRef<"User", 'Boolean'>
   readonly smsConsentTimestamp: Prisma.FieldRef<"User", 'DateTime'>

@@ -268,12 +268,12 @@ export type ServiceProviderOrderByWithRelationInput = {
 
 export type ServiceProviderWhereUniqueInput = Prisma.AtLeast<{
   uuid?: string
-  mobilePhone?: string
   AND?: Prisma.ServiceProviderWhereInput | Prisma.ServiceProviderWhereInput[]
   OR?: Prisma.ServiceProviderWhereInput[]
   NOT?: Prisma.ServiceProviderWhereInput | Prisma.ServiceProviderWhereInput[]
   fullName?: Prisma.StringFilter<"ServiceProvider"> | string
   phone?: Prisma.StringNullableFilter<"ServiceProvider"> | string | null
+  mobilePhone?: Prisma.StringNullableFilter<"ServiceProvider"> | string | null
   title?: Prisma.StringNullableFilter<"ServiceProvider"> | string | null
   organizationId?: Prisma.IntNullableFilter<"ServiceProvider"> | number | null
   role?: Prisma.StringFilter<"ServiceProvider"> | string
@@ -281,7 +281,7 @@ export type ServiceProviderWhereUniqueInput = Prisma.AtLeast<{
   updatedAt?: Prisma.DateTimeFilter<"ServiceProvider"> | Date | string
   organization?: Prisma.XOR<Prisma.OrganizationNullableScalarRelationFilter, Prisma.OrganizationWhereInput> | null
   ridesAsDriver?: Prisma.RideListRelationFilter
-}, "uuid" | "mobilePhone">
+}, "uuid">
 
 export type ServiceProviderOrderByWithAggregationInput = {
   uuid?: Prisma.SortOrder

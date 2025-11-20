@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { UserPlus, Car, MapPin, Clock, MessageSquare, User, Phone, Download, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { formatLocalDateTime } from "@/utils/dateUtils";
+import { exportRideRequestsToCSV } from "@/utils/csvExport";
 
 interface RideRequest {
     uuid: string;
@@ -21,6 +22,8 @@ interface RideRequest {
     rideStatus?: number;
     rider: Array<{ fullName: string; phone: string }>;
     driver?: Array<{ fullName: string; mobilePhone: string }>;
+    serviceUserName?: string;
+    serviceUserPhone?: string;
     pickupAddress: string;
     dropOffAddress: string;
     pickupRequestedTime?: string;
@@ -37,7 +40,6 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
     const [rideRequests, setRideRequests] = useState<RideRequest[]>([]);
     const [assignedRides, setAssignedRides] = useState<RideRequest[]>([]);
     const [completedRides, setCompletedRides] = useState<RideRequest[]>([]);
-    const [expandedRideUuid, setExpandedRideUuid] = useState<string | null>(null);
     const [smsModalOpen, setSmsModalOpen] = useState(false);
     const [selectedRideForSms, setSelectedRideForSms] = useState<RideRequest | null>(null);
     const [userDetailModalOpen, setUserDetailModalOpen] = useState(false);
@@ -52,6 +54,12 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
     // Helpers to guard optional rider/driver
     const getRider = (ride: RideRequest) => ride?.rider && ride.rider.length > 0 ? ride.rider[0] : undefined;
     const getDriver = (ride: RideRequest) => ride?.driver && ride.driver.length > 0 ? ride.driver[0] : undefined;
+    
+    // Helper to get rider name with fallback to serviceUserName
+    const getRiderName = (ride: RideRequest) => {
+        const rider = getRider(ride);
+        return rider?.fullName || ride?.serviceUserName || 'Unknown';
+    };
 
     async function startRide(assignedRide: RideRequest) {
         setStartingRide(assignedRide.uuid);
@@ -72,139 +80,9 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
         }
     }
 
-    function exportToCSV() {
-        try {
-            // Combine both pending and assigned rides
-            const allRides = [...rideRequests, ...assignedRides, ...completedRides];
-            
-            if (allRides.length === 0) {
-                toast.error('No rides to export');
-                return;
-            }
-
-            // CSV Headers
-            const headers = [
-                'Status',
-                'Rider Name',
-                'Rider Phone',
-                'Driver Name',
-                'Driver Phone',
-                'Pickup Location',
-                'Dropoff Location',
-                'Requested Pickup Time',
-                'Created At'
-            ];
-
-            // Map rides to CSV rows
-            const rows = allRides.map(ride => {
-                const rider = getRider(ride);
-                const driver = getDriver(ride);
-                
-                // Determine status based on rideStatus
-                let status = 'Pending';
-                if (ride.rideStatus !== undefined) {
-                    switch(ride.rideStatus) {
-                        case RIDE_STATUSES.REQUEST_IN_PROGRESS:
-                            status = 'Pending';
-                            break;
-                        case RIDE_STATUSES.RIDE_CONFIRMED:
-                            status = 'Confirmed';
-                            break;
-                        case RIDE_STATUSES.RIDE_CANCELED_BY_RIDER:
-                            status = 'Canceled';
-                            break;
-                        case RIDE_STATUSES.RIDE_STARTED:
-                            status = 'In Progress';
-                            break;
-                        case RIDE_STATUSES.RIDE_INTERRUPTED:
-                            status = 'Interrupted';
-                            break;
-                        case RIDE_STATUSES.RIDER_PICKED_UP:
-                            status = 'En Route';
-                            break;
-                        case RIDE_STATUSES.RIDER_NOT_PICKED_UP:
-                            status = 'Not Picked Up';
-                            break;
-                        case RIDE_STATUSES.RIDER_DROPPED_OFF:
-                            status = 'Dropped Off';
-                            break;
-                        case RIDE_STATUSES.RIDE_COMPLETE:
-                            status = 'Complete';
-                            break;
-                        case RIDE_STATUSES.RIDE_INCOMPLETE:
-                            status = 'Incomplete';
-                            break;
-                        default:
-                            status = 'Unknown';
-                    }
-                }
-
-                // Format created date - check multiple possible fields
-                let createdDate = 'N/A';
-                if (ride.createdAt) {
-                    createdDate = formatLocalDateTime(ride.createdAt);
-                } else if (ride.updatedAt) {
-                    createdDate = formatLocalDateTime(ride.updatedAt);
-                } else if ((ride as any)._id) {
-                    // MongoDB ObjectId contains timestamp - extract it as fallback
-                    try {
-                        const objectId = (ride as any)._id;
-                        const timestamp = typeof objectId === 'string' && objectId.length === 24
-                            ? parseInt(objectId.substring(0, 8), 16) * 1000
-                            : null;
-                        if (timestamp) {
-                            createdDate = formatLocalDateTime(timestamp);
-                        }
-                    } catch (e) {
-                        console.debug('Could not extract timestamp from _id');
-                    }
-                }
-
-                return [
-                    status,
-                    rider?.fullName || 'N/A',
-                    rider?.phone || 'N/A',
-                    driver?.fullName || 'Unassigned',
-                    driver?.mobilePhone || 'N/A',
-                    ride.pickupAddress || 'N/A',
-                    ride.dropOffAddress || 'N/A',
-                    formatLocalDateTime(ride.pickupRequestedTime),
-                    createdDate
-                ];
-            });
-
-            // Create CSV content
-            const csvContent = [
-                headers.join(','),
-                ...rows.map(row => 
-                    row.map(cell => 
-                        // Escape commas and quotes in cell content
-                        `"${String(cell).replace(/"/g, '""')}"`
-                    ).join(',')
-                )
-            ].join('\n');
-
-            // Create and download file
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            const url = URL.createObjectURL(blob);
-            const timestamp = new Date().toISOString().split('T')[0];
-            
-            link.setAttribute('href', url);
-            link.setAttribute('download', `ride-requests-${timestamp}.csv`);
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            toast.success('Export successful', {
-                description: `Downloaded ${allRides.length} ride records`
-            });
-        } catch (error) {
-            console.error('Error exporting to CSV:', error);
-            toast.error('Failed to export rides');
-        }
-    }
+    const exportToCSV = () => {
+        exportRideRequestsToCSV(rideRequests, assignedRides, completedRides);
+    };
 
     async function cancelRideRequest(rideRequest: RideRequest) {
         try {
@@ -443,7 +321,7 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                                                         {getRider(rideRequest)?.fullName}
                                                     </button>
                                                 ) : (
-                                                    <span className="text-base font-semibold">Unknown</span>
+                                                    <span className="text-base font-semibold">{getRiderName(rideRequest)}</span>
                                                 )}
                                             </div>
                                             <Badge variant="secondary">Pending</Badge>
@@ -560,7 +438,7 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                                                         {getRider(rideRequest)?.fullName}
                                                     </button>
                                                 ) : (
-                                                    <span>Unknown</span>
+                                                    <span>{getRiderName(rideRequest)}</span>
                                                 )}
                                             </TableCell>
                                             <TableCell className="whitespace-nowrap">
@@ -687,7 +565,7 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                                                             {getRider(ride)?.fullName}
                                                         </button>
                                                     ) : (
-                                                        <span className="text-base font-semibold">Unknown</span>
+                                                        <span className="text-base font-semibold">{getRiderName(ride)}</span>
                                                     )}
                                                 </div>
                                                 <AssignedRideStatus
@@ -828,7 +706,7 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                                                                 {getRider(ride)?.fullName}
                                                             </button>
                                                         ) : (
-                                                            <span>Unknown</span>
+                                                            <span>{getRiderName(ride)}</span>
                                                         )}
                                                     </TableCell>
                                                     <TableCell className="font-medium whitespace-nowrap">
@@ -950,7 +828,7 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                                                             {getRider(ride)?.fullName}
                                                         </button>
                                                     ) : (
-                                                        <span className="text-base font-semibold">Unknown</span>
+                                                        <span className="text-base font-semibold">{getRiderName(ride)}</span>
                                                     )}
                                                 </div>
                                                 <AssignedRideStatus
@@ -1044,7 +922,7 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
                                                                 {getRider(ride)?.fullName}
                                                             </button>
                                                         ) : (
-                                                            <span>Unknown</span>
+                                                            <span>{getRiderName(ride)}</span>
                                                         )}
                                                     </TableCell>
                                                     <TableCell className="font-medium whitespace-nowrap">

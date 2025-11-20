@@ -40,8 +40,8 @@ class RideScheduler {
   scheduleRideConfirmationTasks(ride, rider, driver, apiUpdateFunction) {
     console.log(`📅 Scheduling all tasks for confirmed ride #${ride.uuid}`);
 
-    // Schedule 1-hour prior reminder
-    this.notificationScheduler.scheduleOneHourPrior(ride, rider, apiUpdateFunction);
+    // NOTE: One-hour prior reminder removed - rider gets confirmation when driver is assigned
+    // and can cancel at any time by replying '3'
 
     // Schedule driver arrival check at pickup time
     this.notificationScheduler.scheduleDriverArrivalCheck(ride, driver);

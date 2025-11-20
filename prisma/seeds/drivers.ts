@@ -16,8 +16,8 @@ export async function seedDrivers(prisma: PrismaClient, organizations: any[]) {
     {
       uuid: uuidv7(),
       fullName: 'Michael Chen',
-      phone: '+16465551234',
-      mobilePhone: '+16465551234',
+      phone: '+18777804236',
+      mobilePhone: '+18777804236',
       title: 'Senior Driver',
       organizationId: eastconn?.id,
       role: 'Driver',
@@ -25,8 +25,7 @@ export async function seedDrivers(prisma: PrismaClient, organizations: any[]) {
     {
       uuid: uuidv7(),
       fullName: 'Patricia Smith',
-      phone: '+12125555678',
-      mobilePhone: '+12125555678',
+      mobilePhone: '+18777804236',
       title: 'Fleet Manager',
       organizationId: eastconn?.id,
       role: 'Fleet Manager',
@@ -34,8 +33,8 @@ export async function seedDrivers(prisma: PrismaClient, organizations: any[]) {
     {
       uuid: uuidv7(),
       fullName: 'David Martinez',
-      phone: '+13105559999',
-      mobilePhone: '+13105559999',
+      phone: '+18777804236',
+      mobilePhone: '+18777804236',
       title: 'Driver',
       organizationId: eastconn?.id,
       role: 'Driver',
@@ -43,8 +42,7 @@ export async function seedDrivers(prisma: PrismaClient, organizations: any[]) {
     {
       uuid: uuidv7(),
       fullName: 'Jennifer Lee',
-      phone: '+14155557777',
-      mobilePhone: '+14155557777',
+      mobilePhone: '+18777804236',
       title: 'Lead Driver',
       organizationId: generationsHealth?.id,
       role: 'Driver',
@@ -52,8 +50,8 @@ export async function seedDrivers(prisma: PrismaClient, organizations: any[]) {
     {
       uuid: uuidv7(),
       fullName: 'Carlos Rodriguez',
-      phone: '+16465556666',
-      mobilePhone: '+16465556666',
+      phone: '+18777804236',
+      mobilePhone: '+18777804236',
       title: 'Driver',
       organizationId: generationsHealth?.id,
       role: 'Driver',
@@ -62,11 +60,8 @@ export async function seedDrivers(prisma: PrismaClient, organizations: any[]) {
 
   const createdDrivers: any[] = [];
   for (const driver of drivers) {
-    // Use upsert to avoid unique constraint on mobilePhone
-    const created = await prisma.serviceProvider.upsert({
-      where: { mobilePhone: driver.mobilePhone },
-      update: {},
-      create: driver,
+    const created = await prisma.serviceProvider.create({
+      data: driver,
     });
     createdDrivers.push(created);
     console.log(`  ✅ Created driver: ${driver.fullName}`);
