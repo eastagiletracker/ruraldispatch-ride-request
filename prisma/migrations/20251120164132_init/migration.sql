@@ -87,6 +87,7 @@ CREATE TABLE "rides" (
     "roundTrip" BOOLEAN NOT NULL DEFAULT false,
     "purpose" TEXT,
     "notes" TEXT,
+    "estimatedTravelTime" INTEGER,
     "walkerAccessible" BOOLEAN NOT NULL DEFAULT false,
     "wheelchairAccessible" BOOLEAN NOT NULL DEFAULT false,
     "serviceAnimalFriendly" BOOLEAN NOT NULL DEFAULT false,

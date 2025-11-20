@@ -188,7 +188,12 @@ export default function AssignDriver({ selectedRideRequestId, cancelFn }: Assign
                                     <User className="h-4 w-4 mt-1 text-muted-foreground flex-shrink-0" />
                                     <div className="flex-1">
                                         <p className="text-xs text-muted-foreground">Rider</p>
-                                        <p className="text-sm font-medium">{selectedRideRequest.rider[0]?.fullName || 'N/A'}</p>
+                                        <p className="text-sm font-medium">
+                                            {selectedRideRequest.rider?.[0]?.fullName || 
+                                             (selectedRideRequest as any).riderName || 
+                                             (selectedRideRequest as any).serviceUserName || 
+                                             'N/A'}
+                                        </p>
                                     </div>
                                 </div>
 
@@ -201,6 +206,18 @@ export default function AssignDriver({ selectedRideRequestId, cancelFn }: Assign
                                         </p>
                                     </div>
                                 </div>
+
+                                {(selectedRideRequest as any).estimatedTravelTime && (
+                                    <div className="flex items-start gap-2">
+                                        <Clock className="h-4 w-4 mt-1 text-blue-600 flex-shrink-0" />
+                                        <div className="flex-1">
+                                            <p className="text-xs text-muted-foreground">Estimated Travel Time</p>
+                                            <p className="text-sm font-medium">
+                                                {(selectedRideRequest as any).estimatedTravelTime} minutes
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
 
                                 <div className="flex items-start gap-2">
                                     <MapPin className="h-4 w-4 mt-1 text-green-600 flex-shrink-0" />

@@ -128,6 +128,7 @@ export const rideRequestFormSchema = z.object({
   pickupRequestedTime: z.string()
     .min(1, 'Pickup time is required'),
   estimatedWaitTime: z.string().optional(),
+  estimatedTravelTime: z.string().optional(),
 
   // Accessibility Features (Checkboxes)
   walkerAccessible: z.boolean().optional(),

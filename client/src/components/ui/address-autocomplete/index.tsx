@@ -4,7 +4,7 @@
  * Adapted from: https://github.com/NiazMorshed2007/shadcn-address-autocomplete
  */
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo, memo } from "react";
 import { MapPin, Pencil, X, Loader2, AlertCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -86,7 +86,7 @@ export interface AddressAutocompleteProps {
   className?: string;
 }
 
-export function AddressAutocomplete({
+const AddressAutocompleteComponent: React.FC<AddressAutocompleteProps> = ({
   value,
   onChange,
   placeholder = "Search for an address...",
@@ -98,9 +98,7 @@ export function AddressAutocomplete({
   locationBias,
   label,
   className,
-}: AddressAutocompleteProps) {
-  console.log('🔷 [AddressAutocomplete] Component rendered with value:', value);
-
+}) => {
   const [selectedAddress, setSelectedAddress] = useState<AddressType | null>(value || null);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
@@ -110,6 +108,7 @@ export function AddressAutocomplete({
 
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const isInternalUpdate = useRef(false);
 
   const {
     value: inputValue,
@@ -127,17 +126,20 @@ export function AddressAutocomplete({
     debounce: 500,
   });
 
-  // Sync external value changes
+  // Sync external value changes (only when it's not an internal update)
   useEffect(() => {
-    console.log('🟡 [AddressAutocomplete] External value changed:', value);
-    setSelectedAddress(value || null);
-  }, [value]);
+    // Skip if this is an internal update (we just called onChange)
+    if (isInternalUpdate.current) {
+      isInternalUpdate.current = false;
+      return;
+    }
 
-  // Debug: Log when selectedAddress changes
-  useEffect(() => {
-    console.log('🟢 [AddressAutocomplete] selectedAddress state updated:', selectedAddress);
-    console.log('🟢 [AddressAutocomplete] isValidAddress:', selectedAddress ? isValidAddress(selectedAddress) : 'null');
-  }, [selectedAddress]);
+    // Only update if value actually changed
+    const valuesAreDifferent = JSON.stringify(value) !== JSON.stringify(selectedAddress);
+    if (valuesAreDifferent) {
+      setSelectedAddress(value || null);
+    }
+  }, [value]); // Don't include selectedAddress in deps to avoid loops
 
   // Handle clicks outside to close suggestions
   useEffect(() => {
@@ -167,20 +169,16 @@ export function AddressAutocomplete({
   };
 
   const handleSelectPrediction = async (placeId: string) => {
-    console.log('🔵 [AddressAutocomplete] handleSelectPrediction called with placeId:', placeId);
     setIsLoadingDetails(true);
     setDetailsError(null);
     setShowSuggestions(false);
 
     try {
       // Fetch place details using the same session token
-      console.log('🔵 [AddressAutocomplete] Fetching place details...');
       const details = await getPlaceDetails(placeId, getSessionToken());
-      console.log('🔵 [AddressAutocomplete] Place details received:', details);
 
       // Parse address components
       const components = parseAddressComponents(details.addressComponents);
-      console.log('🔵 [AddressAutocomplete] Parsed components:', components);
 
       const address: AddressType = {
         address1: components.address1 || undefined,
@@ -194,24 +192,14 @@ export function AddressAutocomplete({
         lng: details.location.longitude,
       };
 
-      console.log('🔵 [AddressAutocomplete] Created address object:', address);
-
       // Check if address is incomplete (missing street address or postal code)
       const isIncomplete = !address.address1 || !address.postalCode;
 
-      if (isIncomplete) {
-        console.log('⚠️ [AddressAutocomplete] Incomplete address detected - opening dialog for completion');
-        console.log('⚠️ [AddressAutocomplete] Missing:', {
-          address1: !address.address1,
-          postalCode: !address.postalCode
-        });
-      }
-
-      console.log('🔵 [AddressAutocomplete] Calling setSelectedAddress...');
       setSelectedAddress(address);
-      console.log('🔵 [AddressAutocomplete] Calling onChange callback with address...');
+      
+      // Mark as internal update before calling onChange
+      isInternalUpdate.current = true;
       onChange(address);
-      console.log('🔵 [AddressAutocomplete] Clearing input value...');
       setInputValue("");
       setHasUserTyped(false);
       clearPredictions();
@@ -230,16 +218,18 @@ export function AddressAutocomplete({
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : "Failed to get address details";
       setDetailsError(errorMsg);
-      console.error('❌ [AddressAutocomplete] Error fetching place details:', err);
     } finally {
       setIsLoadingDetails(false);
     }
   };
 
   const handleClear = () => {
-    console.log('🔴 [AddressAutocomplete] Clear button clicked');
     setSelectedAddress(null);
+    
+    // Mark as internal update before calling onChange
+    isInternalUpdate.current = true;
     onChange(null);
+    
     setInputValue("");
     setHasUserTyped(false);
     clearPredictions();
@@ -248,15 +238,16 @@ export function AddressAutocomplete({
 
     // Refresh session token on dismissal
     refreshSessionToken();
-    console.log('✅ [AddressAutocomplete] Address cleared');
   };
 
   const handleSaveFromDialog = (address: AddressType) => {
-    console.log('🟣 [AddressAutocomplete] Dialog save called with:', address);
     setSelectedAddress(address);
+    
+    // Mark as internal update before calling onChange
+    isInternalUpdate.current = true;
     onChange(address);
+    
     setDialogOpen(false);
-    console.log('✅ [AddressAutocomplete] Dialog saved');
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -266,6 +257,11 @@ export function AddressAutocomplete({
   };
 
   const showValidationError = hasUserTyped && inputValue && predictions.length === 0 && !isLoading;
+  
+  // Memoize validation check to prevent unnecessary re-renders
+  const addressIsValid = useMemo(() => {
+    return selectedAddress ? isValidAddress(selectedAddress) : false;
+  }, [selectedAddress]);
 
   return (
     <div className={cn("space-y-2", className)} ref={containerRef}>
@@ -277,7 +273,7 @@ export function AddressAutocomplete({
       )}
 
       {/* Selected Address Display */}
-      {selectedAddress && isValidAddress(selectedAddress) ? (
+      {selectedAddress && addressIsValid ? (
         <div>
           <div
             className={cn(
@@ -420,5 +416,20 @@ export function AddressAutocomplete({
     </div>
   );
 }
+
+// Memoize component to prevent unnecessary re-renders
+export const AddressAutocomplete = memo(AddressAutocompleteComponent, (prevProps, nextProps) => {
+  // Custom comparison: only re-render if these props actually changed
+  return (
+    JSON.stringify(prevProps.value) === JSON.stringify(nextProps.value) &&
+    prevProps.onChange === nextProps.onChange &&
+    prevProps.error === nextProps.error &&
+    prevProps.errorMessage === nextProps.errorMessage &&
+    prevProps.disabled === nextProps.disabled &&
+    prevProps.placeholder === nextProps.placeholder
+  );
+});
+
+AddressAutocomplete.displayName = 'AddressAutocomplete';
 
 export type { AddressType, PartialAddressType };

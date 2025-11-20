@@ -30,9 +30,9 @@ export default function RequestRide() {
     }
 
     return (
-        <div className='flex flex-col gap-6 w-full justify-center items-center max-w-4xl mx-auto'>
+        <div className='flex flex-col gap-6 w-full'>
             {showBaseForm && (
-                <Card className="w-full">
+                <Card className="max-w-4xl mx-auto">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <UserPlus className="h-5 w-5 text-primary" />

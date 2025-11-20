@@ -9,6 +9,7 @@ import { createProviderRoutes, createServiceProviderRoutes } from './providerRou
 import createVehicleRoutes from './vehicleRoutes.js';
 import createNotificationRoutes from './notificationRoutes.js';
 import createAuthRoutes from './authRoutes.js';
+import createMapsRoutes from './mapsRoutes.js';
 
 dotenv.config({ path: '../.env' });
 
@@ -40,6 +41,7 @@ function createRouter(api) {
     router.use('/vehicles', createVehicleRoutes(api));
     router.use('/notifications', createNotificationRoutes(api));
     router.use('/auth', createAuthRoutes(api));
+    router.use('/maps', createMapsRoutes());
 
     console.log('✅ All routes registered successfully');
 

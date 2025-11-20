@@ -4,7 +4,7 @@
  * Adapted from: https://github.com/NiazMorshed2007/shadcn-address-autocomplete
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef, memo } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -28,32 +28,33 @@ interface AddressDialogProps {
   onOpenChange?: (open: boolean) => void;
 }
 
-export function AddressDialog({
+const AddressDialogComponent: React.FC<AddressDialogProps> = ({
   children,
   address: initialAddress,
   onSave,
   open: controlledOpen,
   onOpenChange,
-}: AddressDialogProps) {
-  console.log('🟠 [AddressDialog] Component rendered - initialAddress:', initialAddress, 'open:', controlledOpen);
-
+}) => {
   const [open, setOpen] = useState(controlledOpen ?? false);
   const [address, setAddress] = useState<PartialAddressType>(initialAddress);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
+  const prevAddressRef = useRef<string | undefined>(undefined);
 
   // Sync controlled open state
   useEffect(() => {
-    console.log('🟠 [AddressDialog] Controlled open changed to:', controlledOpen);
     if (controlledOpen !== undefined) {
       setOpen(controlledOpen);
     }
   }, [controlledOpen]);
 
-  // Update address when initialAddress changes
+  // Update address when initialAddress changes (only if actually different)
   useEffect(() => {
-    console.log('🟠 [AddressDialog] Initial address changed to:', initialAddress);
-    setAddress(initialAddress);
+    const addressStr = JSON.stringify(initialAddress);
+    if (prevAddressRef.current !== addressStr) {
+      prevAddressRef.current = addressStr;
+      setAddress(initialAddress);
+    }
   }, [initialAddress]);
 
   const handleOpenChange = (newOpen: boolean) => {
@@ -94,7 +95,6 @@ export function AddressDialog({
   };
 
   const handleSave = async () => {
-    console.log('🟠 [AddressDialog] Save button clicked - current address:', address);
     setIsLoading(true);
     setErrors({});
 
@@ -148,13 +148,10 @@ export function AddressDialog({
       }
 
       if (Object.keys(newErrors).length > 0) {
-        console.log('❌ [AddressDialog] Validation failed:', newErrors);
         setErrors(newErrors);
         setIsLoading(false);
         return;
       }
-
-      console.log('✅ [AddressDialog] Validation passed');
 
       // Ensure all required fields are present for AddressType
       const completeAddress: AddressType = {
@@ -169,13 +166,10 @@ export function AddressDialog({
         lng: address.lng || 0,
       };
 
-      console.log('🟠 [AddressDialog] Complete address created:', completeAddress);
-      console.log('🟠 [AddressDialog] Calling onSave callback...');
       onSave(completeAddress);
       handleOpenChange(false);
-      console.log('✅ [AddressDialog] Save complete');
     } catch (error) {
-      console.error("❌ [AddressDialog] Error saving address:", error);
+      console.error("Error saving address:", error);
     } finally {
       setIsLoading(false);
     }
@@ -313,4 +307,17 @@ export function AddressDialog({
       </DialogContent>
     </Dialog>
   );
-}
+};
+
+// Memoize component to prevent unnecessary re-renders
+export const AddressDialog = memo(AddressDialogComponent, (prevProps, nextProps) => {
+  // Custom comparison: only re-render if these props actually changed
+  return (
+    JSON.stringify(prevProps.address) === JSON.stringify(nextProps.address) &&
+    prevProps.onSave === nextProps.onSave &&
+    prevProps.open === nextProps.open &&
+    prevProps.onOpenChange === nextProps.onOpenChange
+  );
+});
+
+AddressDialog.displayName = 'AddressDialog';

@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { MapPin, User, Building2, AlertCircle } from "lucide-react";
+import { MapPin, User, Building2, AlertCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
@@ -25,6 +25,7 @@ import { rideRequestFormSchema, type RideRequestFormData } from "@/schemas/valid
 import type { RideRequestFormProps } from "@/types/form";
 import { getCurrentUser } from "@/utils/permissions";
 import { dateTimeLocalToUTC } from "@/utils/dateUtils";
+import { calculateTravelTimeWithTraffic } from "@/lib/distance-matrix-api";
 
 export default function RideRequestForm({
     selectedUser,
@@ -35,12 +36,15 @@ export default function RideRequestForm({
 }: RideRequestFormProps) {
     const [submitSuccess, setSubmitSuccess] = useState<boolean>(false);
     const [submitError, setSubmitError] = useState<string>('');
+    const [calculatingTravelTime, setCalculatingTravelTime] = useState<boolean>(false);
+    const [travelTimeCalculated, setTravelTimeCalculated] = useState<boolean>(false);
 
     const {
         register,
         handleSubmit,
         control,
         watch,
+        setValue,
         formState: { errors, isSubmitting },
         reset
     } = useForm<RideRequestFormData>({
@@ -58,6 +62,7 @@ export default function RideRequestForm({
             pickupRequestedDate: '',
             pickupRequestedTime: '',
             estimatedWaitTime: '',
+            estimatedTravelTime: '',
             walkerAccessible: false,
             wheelchairAccessible: false,
             serviceAnimalFriendly: false,
@@ -82,6 +87,7 @@ export default function RideRequestForm({
                 pickupRequestedDate: '',
                 pickupRequestedTime: '',
                 estimatedWaitTime: '',
+                estimatedTravelTime: '',
                 walkerAccessible: false,
                 wheelchairAccessible: false,
                 serviceAnimalFriendly: false,
@@ -94,6 +100,66 @@ export default function RideRequestForm({
 
     // Watch roundtrip checkbox to enable/disable wait time field
     const isRoundTrip = watch('roundtrip');
+
+    // Watch pickup and dropoff locations for automatic travel time calculation
+    const pickupLocation = watch('pickupLocation');
+    const dropoffLocation = watch('dropoffLocation');
+
+    // Reset travel time calculation state when addresses change
+    useEffect(() => {
+        setTravelTimeCalculated(false);
+    }, [pickupLocation, dropoffLocation]);
+
+    // Auto-calculate travel time when both addresses are selected
+    useEffect(() => {
+        // Get address strings from either string or AddressType
+        const getAddressString = (location: any): string => {
+            if (!location) return '';
+            return typeof location === 'string' ? location : location.formattedAddress;
+        };
+
+        const pickup = getAddressString(pickupLocation);
+        const dropoff = getAddressString(dropoffLocation);
+
+        // Only calculate if both addresses are available and not already calculating
+        if (!pickup || !dropoff || calculatingTravelTime || travelTimeCalculated) {
+            return;
+        }
+
+        // Debounce the calculation to avoid too many requests
+        const timeoutId = setTimeout(async () => {
+            setCalculatingTravelTime(true);
+
+            try {
+                const result = await calculateTravelTimeWithTraffic(pickup, dropoff);
+                
+                // Set the estimated travel time in the form
+                setValue('estimatedTravelTime', result.durationMinutes.toString(), {
+                    shouldValidate: true
+                });
+                
+                setTravelTimeCalculated(true);
+                
+                toast.success('Travel time calculated', {
+                    description: `Estimated ${result.durationMinutes} minutes (${result.distanceText})`
+                });
+            } catch (error) {
+                console.error('Error calculating travel time:', error);
+                // Silently fail - user can enter manually
+                // Only show toast if it's not a REQUEST_DENIED (API not enabled)
+                const errorMessage = error instanceof Error ? error.message : '';
+                if (!errorMessage.includes('REQUEST_DENIED')) {
+                    toast.error('Could not calculate travel time', {
+                        description: 'Please enter the time manually'
+                    });
+                }
+            } finally {
+                setCalculatingTravelTime(false);
+            }
+        }, 500); // 500ms debounce
+
+        return () => clearTimeout(timeoutId);
+    }, [pickupLocation, dropoffLocation, calculatingTravelTime, travelTimeCalculated, setValue]);
 
     const onSubmit = async (data: RideRequestFormData) => {
         setSubmitError('');
@@ -122,6 +188,15 @@ export default function RideRequestForm({
                 ? currentUser.uuid
                 : undefined;
 
+            // Parse estimatedTravelTime as a number (convert from string minutes)
+            let estimatedTravelTimeNum: number | undefined = undefined;
+            if (data.estimatedTravelTime) {
+                const travelTimeNum = parseInt(data.estimatedTravelTime, 10);
+                if (!isNaN(travelTimeNum)) {
+                    estimatedTravelTimeNum = travelTimeNum;
+                }
+            }
+
             const rideRequestData = {
                 // Only include serviceUserUuid if we have a valid UUID from an existing user
                 ...(selectedUser?.uuid && { serviceUserUuid: selectedUser.uuid }),
@@ -146,10 +221,12 @@ export default function RideRequestForm({
                 rideStatus: 0,
                 purpose: data.purposeOfTrip,
                 rideRequestStatus: 100,
+                ...(estimatedTravelTimeNum !== undefined && { estimatedTravelTime: estimatedTravelTimeNum }),
                 notes: `Rider: ${data.riderFullName} (${data.riderMobilePhone}). ` +
                        `Case Manager: ${data.caseManagerFullName} (${data.caseManagerAgency}, ${data.caseManagerPhone}). ` +
                        `Accessibility: ${accessibilityString}. ` +
                        `Wait time: ${data.estimatedWaitTime || 'Not specified'}. ` +
+                       `Travel time: ${data.estimatedTravelTime || 'Not specified'}. ` +
                        `${data.notesComments || ''}`
             };
 
@@ -374,6 +451,40 @@ export default function RideRequestForm({
                                     />
                                 )}
                             />
+
+                            <div className="space-y-2">
+                                <Label htmlFor="estimatedTravelTime">
+                                    Estimated Travel Time (minutes)
+                                    {travelTimeCalculated && (
+                                        <span className="ml-2 text-xs text-green-600 font-normal">
+                                            ✓ Auto-calculated
+                                        </span>
+                                    )}
+                                </Label>
+                                <div className="relative">
+                                    <Input
+                                        id="estimatedTravelTime"
+                                        type="number"
+                                        min="1"
+                                        {...register('estimatedTravelTime')}
+                                        placeholder={calculatingTravelTime ? "Calculating..." : "e.g., 30"}
+                                        disabled={calculatingTravelTime}
+                                        className={travelTimeCalculated ? 'border-green-500' : ''}
+                                    />
+                                    {calculatingTravelTime && (
+                                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                                        </div>
+                                    )}
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                    {calculatingTravelTime 
+                                        ? 'Calculating travel time using Google Maps...'
+                                        : travelTimeCalculated
+                                        ? 'Auto-calculated using current traffic. You can adjust manually if needed.'
+                                        : 'Enter estimated one-way travel time in minutes (used for SMS scheduling)'}
+                                </p>
+                            </div>
 
                             <div className="flex items-center space-x-2">
                                 <Controller

@@ -32,11 +32,9 @@ export default function PublicRideRequest() {
                 </div>
 
                 {/* Ride Request Form - No user lookup, just the form */}
-                <div className='flex flex-col gap-6 w-full justify-center items-center max-w-4xl mx-auto'>
-                    <RideRequestForm
-                        caseManagerName=""
-                    />
-                </div>
+                <RideRequestForm
+                    caseManagerName=""
+                />
             </div>
         </div>
     );

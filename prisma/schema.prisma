@@ -164,9 +164,10 @@ model Ride {
   rideRequestStatus Int @default(100)
 
   // Trip details
-  roundTrip Boolean @default(false)
-  purpose   String?
-  notes     String?
+  roundTrip            Boolean @default(false)
+  purpose              String?
+  notes                String?
+  estimatedTravelTime  Int?    // Estimated travel time in minutes
 
   // Accessibility requirements
   walkerAccessible      Boolean @default(false)
