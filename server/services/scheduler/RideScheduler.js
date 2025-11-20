@@ -1,6 +1,6 @@
-const TaskManager = require('./TaskManager');
-const NotificationScheduler = require('./NotificationScheduler');
-const { RIDE_STATUSES } = require('../../constants/rideStatuses');
+import TaskManager from './TaskManager.js';
+import NotificationScheduler from './NotificationScheduler.js';
+import { RIDE_STATUSES } from '../../constants/rideStatuses.js';
 
 /**
  * Ride Scheduler Service
@@ -224,4 +224,4 @@ class RideScheduler {
 }
 
 // Export singleton instance (maintains backwards compatibility)
-module.exports = new RideScheduler();
+export default new RideScheduler();

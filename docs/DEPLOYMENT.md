@@ -17,10 +17,10 @@ Railway offers the easiest deployment with automatic environment detection.
    - Select "Deploy from GitHub repo"
    - Choose your repository
 
-3. **Add MongoDB Database**
+3. **Add PostgreSQL Database**
    - In your Railway project, click "New"
-   - Select "Database" → "Add MongoDB"
-   - Railway will automatically set the `MONGODB_URI` environment variable
+   - Select "Database" → "Add PostgreSQL"
+   - Railway will automatically set the `DATABASE_URL` environment variable
 
 4. **Set Environment Variables**
    - Go to your service → Variables
@@ -60,7 +60,7 @@ Railway offers the easiest deployment with automatic environment detection.
 
 ```bash
 # Install Railway CLI
-npm install -g @railway/cli
+bun add -g @railway/cli
 
 # Login
 railway login
@@ -90,23 +90,21 @@ Render provides excellent free tier options and good PostgreSQL support.
    - Configure:
      - **Name**: ride-request-app
      - **Environment**: Node
-     - **Build Command**: `npm run install-all && npm run build`
-     - **Start Command**: `npm start`
+     - **Build Command**: `bun install && bun run build && bunx prisma generate && bunx prisma migrate deploy`
+     - **Start Command**: `bun start`
      - **Plan**: Free (or paid for better performance)
 
-3. **Add MongoDB Database**
-   - Option A: Use Render's MongoDB (if available)
-   - Option B: Use MongoDB Atlas:
-     - Go to [mongodb.com/cloud/atlas](https://www.mongodb.com/cloud/atlas)
-     - Create free cluster
-     - Get connection string
+3. **Add PostgreSQL Database**
+   - In Render dashboard, click "New +" → "PostgreSQL"
+   - Choose Free tier or paid plan
+   - Get "Internal Database URL" from database dashboard
 
 4. **Set Environment Variables**
    - In Render dashboard → Environment
    - Add:
      ```
      NODE_ENV=production
-     MONGODB_URI=your-mongodb-connection-string
+     DATABASE_URL=your-postgresql-connection-string
      JWT_SECRET=your-super-secret-jwt-key-change-this
      
      # Twilio Configuration (Primary SMS Provider)
@@ -145,7 +143,7 @@ Required for both platforms:
 | Variable | Description | Example |
 |----------|-------------|---------|
 | `NODE_ENV` | Application environment | `production` |
-| `MONGODB_URI` | MongoDB connection string | `mongodb+srv://user:pass@cluster.mongodb.net/db` |
+| `DATABASE_URL` | PostgreSQL connection string | `postgresql://user:pass@host:5432/db` |
 | `JWT_SECRET` | Secret key for JWT tokens | Generate with: `openssl rand -base64 32` |
 | `PORT` | Server port (auto-set on most platforms) | `5000` |
 
@@ -204,20 +202,26 @@ For automated deployments via GitHub Actions:
 
 ```bash
 # Install dependencies
-npm run install-all
+bun install
 
 # Set up environment variables
 cp .env.example .env
 # Edit .env with your local values
 
+# Run database migrations
+bunx prisma migrate dev
+
+# Seed database
+bun run seed
+
 # Run development server
-npm run dev
+bun run dev
 
 # Build for production
-npm run build
+bun run build
 
 # Run production server
-npm start
+bun start
 ```
 
 ---
@@ -227,17 +231,21 @@ npm start
 ### Railway Issues:
 - Check build logs in Railway dashboard
 - Ensure all environment variables are set
-- Verify MongoDB connection string
+- Verify DATABASE_URL connection string
+- Ensure Prisma migrations run: `bunx prisma migrate deploy`
 
 ### Render Issues:
 - Check deploy logs
 - Free tier services sleep after 15 min of inactivity (first request may be slow)
-- Ensure start command matches your package.json
+- Ensure build command includes `bunx prisma migrate deploy`
+- Verify Bun is available in build environment
 
 ### Database Connection:
-- Whitelist all IPs (0.0.0.0/0) in MongoDB Atlas for production
-- Verify connection string format
+- Ensure PostgreSQL database is accessible from deployment platform
+- Verify DATABASE_URL connection string format
 - Check database user permissions
+- Run migrations: `bunx prisma migrate deploy`
+- For production, use connection pooling if needed
 
 ---
 

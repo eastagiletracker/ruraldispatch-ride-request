@@ -1,4 +1,4 @@
-const vonageConfig = require('../../config/vonage');
+import vonageConfig from '../../config/vonage.js';
 
 /**
  * Vonage SMS Provider
@@ -95,4 +95,4 @@ class VonageProvider {
   }
 }
 
-module.exports = VonageProvider;
+export default VonageProvider;

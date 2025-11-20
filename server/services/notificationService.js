@@ -1,9 +1,9 @@
-const SMSProviderManager = require('./smsProviders/SMSProviderManager');
-const rideStatuses = require('../constants/rideStatuses');
-const { RIDE_REQUEST_STATUSES } = require('../constants/rideRequestStatuses');
-const smsTemplates = require('./smsTemplates');
-const { processSMSResponse } = require('./smsResponseHandler');
-const { generateUuid } = require('../utils/uuid');
+import SMSProviderManager from './smsProviders/SMSProviderManager.js';
+import { RIDE_STATUSES } from '../constants/rideStatuses.js';
+import { RIDE_REQUEST_STATUSES } from '../constants/rideRequestStatuses.js';
+import * as smsTemplates from './smsTemplates.js';
+import { processSMSResponse } from './smsResponseHandler.js';
+import { generateUuid } from '../utils/uuid.js';
 
 /**
  * Notification Service
@@ -216,13 +216,13 @@ Thank you for using our service! If you have any feedback, please contact us.`;
   getStatusText(status) {
     const statusMap = {
       [rideStatuses.REQUEST_IN_PROGRESS]: 'Request In Progress',
-      [rideStatuses.RIDE_CONFIRMED]: 'Ride Confirmed',
-      [rideStatuses.RIDE_STARTED]: 'Ride Started',
-      [rideStatuses.RIDER_PICKED_UP]: 'Rider Picked Up',
-      [rideStatuses.RIDER_DROPPED_OFF]: 'Rider Dropped Off',
+      [RIDE_CONFIRMED]: 'Ride Confirmed',
+      [RIDE_STARTED]: 'Ride Started',
+      [RIDER_PICKED_UP]: 'Rider Picked Up',
+      [RIDER_DROPPED_OFF]: 'Rider Dropped Off',
       [rideStatuses.ROUNDTRIP_RETURNING]: 'Returning (Round Trip)',
       [rideStatuses.ROUNDTRIP_COMPLETE]: 'Round Trip Complete',
-      [rideStatuses.RIDE_COMPLETE]: 'Ride Complete'
+      [RIDE_COMPLETE]: 'Ride Complete'
     };
 
     return statusMap[status] || `Status ${status}`;
@@ -504,4 +504,4 @@ Thank you for using our service! If you have any feedback, please contact us.`;
   }
 }
 
-module.exports = new NotificationService();
+export default new NotificationService();

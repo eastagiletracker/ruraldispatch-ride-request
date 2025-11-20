@@ -1,4 +1,4 @@
-const { v7: uuidv7 } = require('uuid');
+import { v7 as uuidv7 } from 'uuid';
 
 /**
  * Generate a UUIDv7 identifier
@@ -32,7 +32,5 @@ function isValidUuid(uuid) {
     return uuidRegex.test(uuid);
 }
 
-module.exports = {
-    generateUuid,
-    isValidUuid
-};
+export { generateUuid,
+    isValidUuid };

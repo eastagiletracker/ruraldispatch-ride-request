@@ -1,5 +1,5 @@
-const express = require('express');
-const { checkPermission } = require('../middleware/permissions');
+import express from 'express';
+import { checkPermission } from '../middleware/permissions.js';
 
 /**
  * Service Provider Routes
@@ -88,7 +88,5 @@ function createServiceProviderRoutes(api) {
     return router;
 }
 
-module.exports = {
-    createProviderRoutes,
-    createServiceProviderRoutes
-};
+export { createProviderRoutes,
+    createServiceProviderRoutes };

@@ -189,8 +189,7 @@ function validateServerTimezone() {
   };
 }
 
-module.exports = {
-  getCurrentUTC,
+export { getCurrentUTC,
   isValidISODate,
   toUTCString,
   addMinutes,
@@ -201,5 +200,4 @@ module.exports = {
   getDifferenceInHours,
   formatForLogging,
   sanitizeDateField,
-  validateServerTimezone
-};
+  validateServerTimezone };

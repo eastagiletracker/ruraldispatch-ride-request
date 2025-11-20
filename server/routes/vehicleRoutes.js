@@ -1,5 +1,5 @@
-const express = require('express');
-const { checkPermission } = require('../middleware/permissions');
+import express from 'express';
+import { checkPermission } from '../middleware/permissions.js';
 
 /**
  * Vehicle Routes
@@ -62,4 +62,4 @@ function createVehicleRoutes(api) {
     return router;
 }
 
-module.exports = createVehicleRoutes;
+export default createVehicleRoutes;

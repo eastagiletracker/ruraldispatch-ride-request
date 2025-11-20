@@ -1,7 +1,7 @@
-const notificationService = require('../notificationService');
-const timeCalculator = require('./TimeCalculator');
-const { RIDE_STATUSES, isClosingStatus } = require('../../constants/rideStatuses');
-const { RIDE_REQUEST_STATUSES } = require('../../constants/rideRequestStatuses');
+import notificationService from '../notificationService.js';
+import timeCalculator from './TimeCalculator.js';
+import { RIDE_STATUSES, isClosingStatus } from '../../constants/rideStatuses.js';
+import { RIDE_REQUEST_STATUSES } from '../../constants/rideRequestStatuses.js';
 
 /**
  * Notification Scheduler
@@ -258,4 +258,4 @@ class NotificationScheduler {
   }
 }
 
-module.exports = NotificationScheduler;
+export default NotificationScheduler;

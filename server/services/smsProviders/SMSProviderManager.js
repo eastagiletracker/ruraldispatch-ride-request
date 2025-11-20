@@ -1,5 +1,5 @@
-const VonageProvider = require('./VonageProvider');
-const TwilioProvider = require('./TwilioProvider');
+import VonageProvider from './VonageProvider.js';
+import TwilioProvider from './TwilioProvider.js';
 
 /**
  * SMS Provider Manager
@@ -138,4 +138,4 @@ class SMSProviderManager {
   }
 }
 
-module.exports = SMSProviderManager;
+export default SMSProviderManager;

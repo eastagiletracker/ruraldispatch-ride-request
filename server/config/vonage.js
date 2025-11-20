@@ -1,5 +1,12 @@
-require('dotenv').config({ path: require('path').resolve(__dirname, '../../.env') });
-const { Vonage } = require('@vonage/server-sdk');
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+import { Vonage } from '@vonage/server-sdk';
 
 // Initialize Vonage client
 const vonageClient = new Vonage({
@@ -13,4 +20,4 @@ const vonageConfig = {
   webhookUrl: process.env.VONAGE_WEBHOOK_URL
 };
 
-module.exports = vonageConfig;
+export default vonageConfig;

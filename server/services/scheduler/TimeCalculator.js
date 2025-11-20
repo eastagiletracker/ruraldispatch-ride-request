@@ -121,4 +121,4 @@ class TimeCalculator {
   }
 }
 
-module.exports = new TimeCalculator();
+export default new TimeCalculator();

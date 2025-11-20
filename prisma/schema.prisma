@@ -1,0 +1,268 @@
+// Prisma Schema for Rural Dispatch Ride-Sharing System
+// Using Prisma 7 with PostgreSQL
+
+generator client {
+  provider = "prisma-client"
+  output   = "./generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ==================== USERS ====================
+
+/// Service users (riders, caregivers, etc.)
+model User {
+  uuid      String   @id @default(uuid(7)) @db.Uuid
+  fullName  String
+  phone     String   @unique
+  role      String   @default("rider")
+
+  // SMS Consent (TCPA compliance)
+  smsConsentGiven     Boolean?  @default(false)
+  smsConsentTimestamp DateTime?
+  smsConsentIpAddress String?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  ridesAsRider Ride[] @relation("RiderRides")
+
+  // Indexes
+  @@index([phone])
+  @@index([fullName])
+  @@map("users")
+}
+
+// ==================== ORGANIZATIONS ====================
+
+model Organization {
+  id          Int    @id @default(autoincrement())
+  name        String @unique
+  description String?
+
+  // Contact info
+  contactEmail String?
+  contactPhone String?
+  address      String?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  serviceProviders ServiceProvider[]
+
+  @@index([name])
+  @@map("organizations")
+}
+
+// ==================== SERVICE PROVIDERS (Drivers) ====================
+
+model ServiceProvider {
+  uuid        String   @id @default(uuid(7)) @db.Uuid
+  fullName    String
+  phone       String?
+  mobilePhone String?  @unique
+
+  // Professional details
+  title          String?  // e.g., "Driver", "Fleet Manager"
+  organizationId Int?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  role           String   @default("Driver")  // Driver, Fleet Manager, etc.
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  ridesAsDriver Ride[] @relation("DriverRides")
+
+  // Indexes
+  @@index([mobilePhone])
+  @@index([fullName])
+  @@index([role])
+  @@index([organizationId])
+  @@map("service_providers")
+}
+
+// ==================== VEHICLES ====================
+
+model Vehicle {
+  uuid         String   @id @default(uuid(7)) @db.Uuid
+  displayName  String   // e.g., "2023 Toyota Sienna (Silver) - XYZ1234"
+  fleetId      String?  @unique  // e.g., "VH-001"
+  model        String?
+  year         Int?
+  color        String?
+  licensePlate String?  @unique
+
+  // Capacity and service area
+  capacity     Int?     // Number of passengers
+  serviceArea  String?  // e.g., "Manhattan", "Brooklyn", "Queens"
+
+  // Accessibility features
+  walkerAccessible      Boolean @default(false)
+  wheelchairAccessible  Boolean @default(false)
+  serviceAnimalFriendly Boolean @default(false)
+  oxygenTankAccessible  Boolean @default(false)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  rides Ride[]
+
+  // Indexes
+  @@index([licensePlate])
+  @@index([displayName])
+  @@index([fleetId])
+  @@index([serviceArea])
+  @@map("vehicles")
+}
+
+// ==================== RIDE REQUESTS ====================
+
+model Ride {
+  uuid      String   @id @default(uuid(7)) @db.Uuid
+  displayId String   @unique // Human-readable ID (e.g., RIDE-X7K9)
+
+  // Relationships (Foreign Keys with ON DELETE SET NULL)
+  riderUuid   String? @db.Uuid
+  rider       User?   @relation("RiderRides", fields: [riderUuid], references: [uuid], onDelete: SetNull)
+
+  driverUuid  String?          @db.Uuid
+  driver      ServiceProvider? @relation("DriverRides", fields: [driverUuid], references: [uuid], onDelete: SetNull)
+
+  vehicleUuid String?  @db.Uuid
+  vehicle     Vehicle? @relation(fields: [vehicleUuid], references: [uuid], onDelete: SetNull)
+
+  // Addresses
+  pickupAddress  String
+  dropOffAddress String
+
+  // Timing
+  pickupRequestedTime       DateTime
+  dropOffRequestedTime      DateTime?
+  rideStartedActualTime     DateTime?
+  pickupActualTime          DateTime?
+  dropOffActualTime         DateTime?
+  rideCompleteRequestedTime DateTime?
+  rideCompleteActualTime    DateTime?
+
+  // Status
+  rideStatus        Int @default(0)
+  rideRequestStatus Int @default(100)
+
+  // Trip details
+  roundTrip Boolean @default(false)
+  purpose   String?
+  notes     String?
+
+  // Accessibility requirements
+  walkerAccessible      Boolean @default(false)
+  wheelchairAccessible  Boolean @default(false)
+  serviceAnimalFriendly Boolean @default(false)
+  oxygenTankAccessible  Boolean @default(false)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  notifications Notification[]
+
+  // Indexes
+  @@index([riderUuid])
+  @@index([driverUuid])
+  @@index([vehicleUuid])
+  @@index([rideStatus])
+  @@index([rideRequestStatus])
+  @@index([pickupRequestedTime])
+  @@index([displayId])
+  @@map("rides")
+}
+
+// ==================== NOTIFICATIONS ====================
+
+model Notification {
+  uuid String @id @default(uuid(7)) @db.Uuid
+
+  // Relationship
+  rideUuid String? @db.Uuid
+  ride     Ride?   @relation(fields: [rideUuid], references: [uuid], onDelete: Cascade)
+
+  // Notification details
+  notificationType String
+  direction        String  // 'inbound' or 'outbound'
+  recipientPhone   String
+  recipientName    String?
+  recipientRole    String  // 'rider', 'driver', 'case_manager', 'dispatcher'
+  messageBody      String  @db.Text
+
+  // Twilio/Vonage tracking
+  twilioMessageSid String? @unique
+  twilioStatus     String? @default("pending")
+  errorMessage     String?
+
+  // Timing
+  sentAt      DateTime
+  deliveredAt DateTime?
+
+  // Session management
+  sessionActive    Boolean   @default(true)
+  sessionClosedAt  DateTime?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Indexes
+  @@index([rideUuid])
+  @@index([recipientPhone])
+  @@index([twilioMessageSid])
+  @@index([sessionActive])
+  @@index([sentAt])
+  @@map("notifications")
+}
+
+// ==================== SYSTEM USERS (Authentication) ====================
+
+model SystemUser {
+  uuid         String   @id @default(uuid(7)) @db.Uuid
+  username     String   @unique
+  passwordHash String
+  fullName     String
+  role         String   // 'admin', 'dispatcher', 'driver', 'case_manager'
+  isActive     Boolean  @default(true)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Indexes
+  @@index([username])
+  @@index([role])
+  @@map("system_users")
+}
+
+// ==================== ENUMS (if needed) ====================
+
+// Note: Prisma 7 supports mapped enums, but for flexibility we're using String types
+// You can convert these to enums later if needed:
+//
+// enum UserRole {
+//   RIDER
+//   CAREGIVER
+//   CASE_MANAGER
+// }
+//
+// enum RideStatus {
+//   REQUEST_IN_PROGRESS @map("0")
+//   RIDE_CONFIRMED      @map("100")
+//   // ... etc
+// }

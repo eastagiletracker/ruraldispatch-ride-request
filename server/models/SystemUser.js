@@ -1,8 +1,8 @@
 // System User model for authentication and authorization
 // This is separate from the "users" collection which stores service users (riders, etc.)
 
-const bcrypt = require('bcryptjs');
-const { generateUuid } = require('../utils/uuid');
+import bcrypt from 'bcryptjs';
+import { generateUuid } from '../utils/uuid.js';
 
 /**
  * System User Schema
@@ -117,4 +117,4 @@ class SystemUser {
     }
 }
 
-module.exports = SystemUser;
+export default SystemUser;

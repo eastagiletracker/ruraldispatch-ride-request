@@ -1,5 +1,5 @@
-const { RIDE_STATUSES } = require('../constants/rideStatuses');
-const { RIDE_REQUEST_STATUSES } = require('../constants/rideRequestStatuses');
+import { RIDE_STATUSES } from '../constants/rideStatuses.js';
+import { RIDE_REQUEST_STATUSES } from '../constants/rideRequestStatuses.js';
 
 /**
  * SMS Response Handler
@@ -374,8 +374,6 @@ function processSMSResponse(ride, senderRole, messageBody) {
   };
 }
 
-module.exports = {
-  parseResponse,
+export { parseResponse,
   determineContext,
-  processSMSResponse
-};
+  processSMSResponse };

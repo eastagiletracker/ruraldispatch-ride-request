@@ -6,9 +6,9 @@
  *   node server/tests/testSMSFlow.js
  */
 
-const { processSMSResponse } = require('../services/smsResponseHandler');
-const { RIDE_STATUSES } = require('../constants/rideStatuses');
-const { RIDE_REQUEST_STATUSES } = require('../constants/rideRequestStatuses');
+import { processSMSResponse } from '../services/smsResponseHandler.js';
+import { RIDE_STATUSES } from '../constants/rideStatuses.js';
+import { RIDE_REQUEST_STATUSES } from '../constants/rideRequestStatuses.js';
 
 // Mock ride objects for testing
 const mockRides = {

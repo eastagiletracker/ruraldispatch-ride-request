@@ -1,14 +1,16 @@
-require('dotenv').config({ path: '../.env' });
-const express = require('express');
-const notificationService = require('../services/notificationService');
+import dotenv from 'dotenv';
+import express from 'express';
+import notificationService from '../services/notificationService.js';
 
 // Import route modules
-const createRideRequestRoutes = require('./rideRequestRoutes');
-const createUserRoutes = require('./userRoutes');
-const { createProviderRoutes, createServiceProviderRoutes } = require('./providerRoutes');
-const createVehicleRoutes = require('./vehicleRoutes');
-const createNotificationRoutes = require('./notificationRoutes');
-const createAuthRoutes = require('./authRoutes');
+import createRideRequestRoutes from './rideRequestRoutes.js';
+import createUserRoutes from './userRoutes.js';
+import { createProviderRoutes, createServiceProviderRoutes } from './providerRoutes.js';
+import createVehicleRoutes from './vehicleRoutes.js';
+import createNotificationRoutes from './notificationRoutes.js';
+import createAuthRoutes from './authRoutes.js';
+
+dotenv.config({ path: '../.env' });
 
 /**
  * Main Router Factory
@@ -44,4 +46,4 @@ function createRouter(api) {
     return router;
 }
 
-module.exports = createRouter;
+export default createRouter;

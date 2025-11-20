@@ -297,8 +297,7 @@ const getAllStatusDescriptions = () => {
   return descriptions;
 };
 
-module.exports = {
-  RIDE_REQUEST_STATUSES,
+export { RIDE_REQUEST_STATUSES,
   STATUS_CATEGORIES,
   CLOSING_STATUSES,
   PROBLEMATIC_STATUSES,
@@ -313,5 +312,4 @@ module.exports = {
   getNextValidStatuses,
   isValidStatusTransition,
   getAllStatusCodes,
-  getAllStatusDescriptions
-}; 
+  getAllStatusDescriptions }; 

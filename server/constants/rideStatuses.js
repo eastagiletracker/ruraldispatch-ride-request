@@ -128,8 +128,7 @@ const isValidStatusTransition = (fromStatus, toStatus, isRoundTrip = false) => {
   return validNextStatuses.includes(toStatus);
 };
 
-module.exports = {
-  RIDE_STATUSES,
+export { RIDE_STATUSES,
   STATUS_CATEGORIES,
   CLOSING_STATUSES,
   PROBLEMATIC_STATUSES,
@@ -138,5 +137,4 @@ module.exports = {
   isValidStatus,
   getStatusDescription,
   getNextValidStatuses,
-  isValidStatusTransition
-}; 
+  isValidStatusTransition }; 

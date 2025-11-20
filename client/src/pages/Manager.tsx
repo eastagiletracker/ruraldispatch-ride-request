@@ -62,9 +62,12 @@ interface ServiceProvider {
     uuid: number;
     fullName: string;
     title?: string;
-    organization?: string;
+    organization?: {
+        id: number;
+        name: string;
+    };
     mobilePhone?: string;
-    serviceProviderRole?: string;
+    role?: string;
     specializations?: string;
 }
 
@@ -394,7 +397,7 @@ export default function Manager() {
 
     const filteredProviders = serviceProviders.filter(provider =>
         provider.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        provider.organization?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        provider.organization?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         provider.mobilePhone?.includes(searchTerm)
     );
 
@@ -550,9 +553,9 @@ export default function Manager() {
                                                 <TableCell className="font-medium">{formatShortId(provider.uuid)}</TableCell>
                                                 <TableCell className="font-semibold">{provider.fullName || 'N/A'}</TableCell>
                                                 <TableCell>{provider.title || 'N/A'}</TableCell>
-                                                <TableCell>{provider.organization || 'N/A'}</TableCell>
+                                                <TableCell>{provider.organization?.name || 'N/A'}</TableCell>
                                                 <TableCell>
-                                                    <Badge variant="secondary">{provider.serviceProviderRole || 'N/A'}</Badge>
+                                                    <Badge variant="secondary">{provider.role || 'N/A'}</Badge>
                                                 </TableCell>
                                                 <TableCell>{provider.mobilePhone || 'N/A'}</TableCell>
                                                 <TableCell className="text-right">

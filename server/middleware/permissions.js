@@ -145,4 +145,4 @@ const checkPermission = (requiredPermission) => {
     };
 };
 
-module.exports = { checkPermission };
+export { checkPermission };

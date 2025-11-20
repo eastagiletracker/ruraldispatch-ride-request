@@ -1,14 +1,21 @@
-const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
-const morgan = require('morgan');
-const path = require('path');
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
 
-require('dotenv').config({ path: '../.env' });
+// ESM equivalent of __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-const createRouter = require('./routes/router');
-const generateApi = require("./database/api");
-const dateUtils = require('./utils/dateUtils');
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
+
+import createRouter from './routes/router.js';
+// import generateApi from "./database/api.js"; // MongoDB version (deprecated)
+import generateApi from "./database/prismaApi.js"; // Prisma 7 + PostgreSQL version
+import * as dateUtils from './utils/dateUtils.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;

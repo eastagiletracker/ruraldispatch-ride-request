@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 /**
  * Notification Schema
@@ -126,4 +126,4 @@ notificationSchema.methods.closeSession = function() {
   return this.save();
 };
 
-module.exports = mongoose.model('Notification', notificationSchema);
+export default mongoose.model('Notification', notificationSchema);

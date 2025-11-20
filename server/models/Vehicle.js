@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const vehicleSchema = new mongoose.Schema({
   uuid: {
@@ -36,4 +36,4 @@ const vehicleSchema = new mongoose.Schema({
 vehicleSchema.index({ uuid: 1 });
 vehicleSchema.index({ fleetId: 1 });
 
-module.exports = mongoose.model('Vehicle', vehicleSchema); 
+export default mongoose.model('Vehicle', vehicleSchema); 

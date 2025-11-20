@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const serviceProviderSchema = new mongoose.Schema({
   uuid: {
@@ -56,4 +56,4 @@ const serviceProviderSchema = new mongoose.Schema({
 // Index for efficient queries
 serviceProviderSchema.index({ uuid: 1 });
 
-module.exports = mongoose.model('ServiceProvider', serviceProviderSchema); 
+export default mongoose.model('ServiceProvider', serviceProviderSchema); 

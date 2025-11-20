@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const locationSchema = new mongoose.Schema({
   uuid: {
@@ -35,4 +35,4 @@ const locationSchema = new mongoose.Schema({
 // Index for efficient queries
 locationSchema.index({ uuid: 1 });
 
-module.exports = mongoose.model('Location', locationSchema); 
+export default mongoose.model('Location', locationSchema); 

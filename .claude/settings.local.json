@@ -9,7 +9,16 @@
       "WebFetch(domain:github.com)",
       "WebFetch(domain:raw.githubusercontent.com)",
       "Bash(node server/database/seedSystemUsers.js:*)",
-      "WebFetch(domain:developers.google.com)"
+      "WebFetch(domain:developers.google.com)",
+      "WebFetch(domain:www.prisma.io)",
+      "Bash(npx prisma:*)",
+      "WebSearch",
+      "Bash(node server/migration/exportFromMongoDB.js:*)",
+      "Bash(cat:*)",
+      "Bash(node server/seed/seedSystemUsers.js:*)",
+      "Bash(node convert-to-esm.js:*)",
+      "Bash(timeout 10 npx tsx:*)",
+      "Bash(bunx prisma migrate:*)"
     ],
     "deny": [],
     "ask": []

@@ -110,4 +110,4 @@ class TaskManager {
   }
 }
 
-module.exports = TaskManager;
+export default TaskManager;

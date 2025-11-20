@@ -1,4 +1,4 @@
-const { RIDE_STATUSES } = require('../constants/rideStatuses');
+import { RIDE_STATUSES } from '../constants/rideStatuses.js';
 
 /**
  * SMS Templates Service
@@ -331,8 +331,7 @@ function getSMSTemplate(status, recipient, data = {}) {
   return null;
 }
 
-module.exports = {
-  getSMSTemplate,
+export { getSMSTemplate,
   formatDateTime,
   formatAddress,
 
@@ -355,5 +354,4 @@ module.exports = {
   getRoundtripCompletedMessage,
   getRideCompletedMessage,
   getRiderNotDroppedOffAlert,
-  getRideStatusUpdateMessage
-};
+  getRideStatusUpdateMessage };

@@ -1,6 +1,6 @@
-const express = require('express');
-const notificationService = require('../services/notificationService');
-const { checkPermission } = require('../middleware/permissions');
+import express from 'express';
+import notificationService from '../services/notificationService.js';
+import { checkPermission } from '../middleware/permissions.js';
 
 /**
  * User Routes
@@ -122,4 +122,4 @@ function createUserRoutes(api) {
     return router;
 }
 
-module.exports = createUserRoutes;
+export default createUserRoutes;

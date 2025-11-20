@@ -1,6 +1,6 @@
-const mongoose = require('mongoose');
-const { RIDE_STATUSES } = require('../constants/rideStatuses');
-const { RIDE_REQUEST_STATUSES } = require('../constants/rideRequestStatuses');
+import mongoose from 'mongoose';
+import { RIDE_STATUSES } from '../constants/rideStatuses.js';
+import { RIDE_REQUEST_STATUSES } from '../constants/rideRequestStatuses.js';
 
 const rideRequestSchema = new mongoose.Schema({
   uuid: {
@@ -117,4 +117,4 @@ const rideRequestSchema = new mongoose.Schema({
 // Index for efficient queries
 rideRequestSchema.index({ uuid: 1 });
 
-module.exports = mongoose.model('RideRequest', rideRequestSchema); 
+export default mongoose.model('RideRequest', rideRequestSchema); 

@@ -1,4 +1,4 @@
-const twilioConfig = require('../../config/twilio');
+import twilioConfig from '../../config/twilio.js';
 
 /**
  * Twilio SMS Provider
@@ -108,4 +108,4 @@ class TwilioProvider {
   }
 }
 
-module.exports = TwilioProvider;
+export default TwilioProvider;

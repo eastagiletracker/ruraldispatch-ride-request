@@ -1,9 +1,9 @@
-const express = require('express');
-const notificationService = require('../services/notificationService');
-const scheduler = require('../services/scheduler/RideScheduler');
-const { RIDE_STATUSES, isClosingStatus } = require('../constants/rideStatuses');
-const { RIDE_REQUEST_STATUSES } = require('../constants/rideRequestStatuses');
-const { generateUuid } = require('../utils/uuid');
+import express from 'express';
+import notificationService from '../services/notificationService.js';
+import scheduler from '../services/scheduler/RideScheduler.js';
+import { RIDE_STATUSES, isClosingStatus } from '../constants/rideStatuses.js';
+import { RIDE_REQUEST_STATUSES } from '../constants/rideRequestStatuses.js';
+import { generateUuid } from '../utils/uuid.js';
 
 /**
  * Ride Request Routes
@@ -236,4 +236,4 @@ function createRideRequestRoutes(api) {
     return router;
 }
 
-module.exports = createRideRequestRoutes;
+export default createRideRequestRoutes;

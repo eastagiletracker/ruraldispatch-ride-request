@@ -71,11 +71,9 @@ function isValidDisplayId(displayId, prefix) {
     return pattern.test(displayId);
 }
 
-module.exports = {
-    generateRideDisplayId,
+export { generateRideDisplayId,
     generateUserDisplayId,
     generateDriverDisplayId,
     generateVehicleDisplayId,
     isValidDisplayId,
-    generateRandomCode
-};
+    generateRandomCode };

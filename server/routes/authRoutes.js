@@ -1,5 +1,5 @@
-const express = require('express');
-const { checkPermission } = require('../middleware/permissions');
+import express from 'express';
+import { checkPermission } from '../middleware/permissions.js';
 
 /**
  * Authentication and System User Routes
@@ -236,4 +236,4 @@ function createAuthRoutes(api) {
     return router;
 }
 
-module.exports = createAuthRoutes;
+export default createAuthRoutes;

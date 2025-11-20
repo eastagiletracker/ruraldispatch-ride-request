@@ -12,4 +12,4 @@
  * All existing code will continue to work without changes.
  */
 
-module.exports = require('./scheduler/RideScheduler');
+export default require('./scheduler/RideScheduler');
