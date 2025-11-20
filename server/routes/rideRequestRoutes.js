@@ -88,6 +88,13 @@ function createRideRequestRoutes(api) {
                         }
                     });
                 }
+
+                // When driver and vehicle are assigned (status 400), automatically confirm the ride (status 100)
+                // This removes the unnecessary driver approval step
+                if (req.body.rideRequestStatus === 400 && oldRide.rideRequestStatus !== 400) {
+                    console.log('🎯 Auto-confirming ride: Setting rideStatus to RIDE_CONFIRMED (100)');
+                    req.body.rideStatus = RIDE_STATUSES.RIDE_CONFIRMED;
+                }
             }
 
             // Check if updating ride status to a closing status

@@ -103,33 +103,6 @@ Thank you for using our service! If you have any feedback, please contact us.`;
   }
 
   /**
-   * Send driver assignment notification to driver
-   */
-  async notifyDriverAssigned(ride, driver, rider) {
-    // Use template for consistent messaging with "Accept? 1=Yes, 2=No"
-    const message = smsTemplates.getSMSTemplate('DRIVER_ASSIGNMENT', 'driver', {
-      ride,
-      rider
-    });
-
-    const driverPhone = driver.mobilePhone || driver.phone;
-
-    if (!driverPhone) {
-      console.error('❌ Driver has no phone number!', { driver });
-      return {
-        success: false,
-        error: 'Driver has no phone number configured',
-        timestamp: new Date()
-      };
-    }
-
-    console.log('📱 Sending driver assignment SMS to:', driverPhone);
-    console.log('📨 Message:', message);
-
-    return await this.sendSMS(driverPhone, message);
-  }
-
-  /**
    * Send status update notification to dispatcher
    */
   async notifyDispatcher(dispatcherPhone, ride, status) {
@@ -148,6 +121,7 @@ Thank you for using our service! If you have any feedback, please contact us.`;
 
     try {
       // When driver is assigned (request status moves to RIDE_CONFIRMATION_NEEDED = 400)
+      // Send ride confirmed notification to rider and case manager
       console.log('Checking assignment notification:');
       console.log('  requestStatus === 400 (RIDE_CONFIRMATION_NEEDED)?', newStatus === RIDE_REQUEST_STATUSES.RIDE_CONFIRMATION_NEEDED.code, `(${newStatus} === ${RIDE_REQUEST_STATUSES.RIDE_CONFIRMATION_NEEDED.code})`);
       console.log('  Has rider?', !!userData.rider);
@@ -155,33 +129,39 @@ Thank you for using our service! If you have any feedback, please contact us.`;
 
       if (newStatus === RIDE_REQUEST_STATUSES.RIDE_CONFIRMATION_NEEDED.code &&
           userData.rider && userData.driver) {
-        console.log('  ✅ Condition passed! Sending SMS...');
+        console.log('  ✅ Driver assigned! Sending ride confirmation to rider...');
 
         try {
-          console.log('📨 Sending rider notification...');
-          const riderNotif = await this.notifyRideAccepted(
-            ride,
-            userData.rider,
-            userData.driver,
-            userData.vehicle  // Optional - will show "TBD" if not found
+          // Send ride confirmed message to rider
+          console.log('📨 Sending ride confirmed notification to rider...');
+          const riderNotif = await this.sendTemplateSMS(
+            userData.rider.phone,
+            rideStatuses.RIDE_STATUSES.RIDE_CONFIRMED,
+            'rider',
+            { ride, rider: userData.rider, driver: userData.driver, vehicle: userData.vehicle }
           );
-          notifications.push({ type: 'rider_accepted', ...riderNotif });
+          notifications.push({ type: 'rider_confirmed', ...riderNotif });
           console.log('✅ Rider notification result:', riderNotif.success ? 'SUCCESS' : 'FAILED');
         } catch (error) {
           console.error('❌ Error sending rider notification:', error.message);
         }
 
-        try {
-          console.log('📨 Sending driver notification...');
-          const driverNotif = await this.notifyDriverAssigned(
-            ride,
-            userData.driver,
-            userData.rider
-          );
-          notifications.push({ type: 'driver_assigned', ...driverNotif });
-          console.log('✅ Driver notification result:', driverNotif.success ? 'SUCCESS' : 'FAILED');
-        } catch (error) {
-          console.error('❌ Error sending driver notification:', error.message);
+        // Send confirmation to case manager if available
+        if (userData.rider.caseManagerPhone || ride.createdBy?.phone) {
+          try {
+            console.log('📨 Sending ride confirmed notification to case manager...');
+            const caseManagerPhone = userData.rider.caseManagerPhone || ride.createdBy?.phone;
+            const caseManagerNotif = await this.sendTemplateSMS(
+              caseManagerPhone,
+              rideStatuses.RIDE_STATUSES.RIDE_CONFIRMED,
+              'case_manager',
+              { ride, rider: userData.rider, driver: userData.driver, vehicle: userData.vehicle }
+            );
+            notifications.push({ type: 'case_manager_confirmed', ...caseManagerNotif });
+            console.log('✅ Case manager notification result:', caseManagerNotif.success ? 'SUCCESS' : 'FAILED');
+          } catch (error) {
+            console.error('❌ Error sending case manager notification:', error.message);
+          }
         }
       }
 
@@ -419,28 +399,6 @@ Thank you for using our service! If you have any feedback, please contact us.`;
       default:
         return null;
     }
-  }
-
-  /**
-   * Send driver assignment notification (when ride matched to driver)
-   * Uses new template system
-   */
-  async sendDriverAssignment(ride, driver, rider) {
-    const message = smsTemplates.getDriverAssignmentMessage(ride, rider);
-    const driverPhone = driver.mobilePhone || driver.phone;
-
-    if (!driverPhone) {
-      console.error('❌ Driver has no phone number!', { driver });
-      return {
-        success: false,
-        error: 'Driver has no phone number configured',
-        timestamp: new Date()
-      };
-    }
-
-    console.log('📱 Sending driver assignment to:', driverPhone);
-
-    return await this.sendSMS(driverPhone, message);
   }
 
   /**

@@ -8,11 +8,13 @@ const { RIDE_STATUSES } = require('../constants/rideStatuses');
 
 /**
  * Format date/time for SMS messages
+ * Displays in Eastern Time (America/New_York) for EastConn users
  */
 function formatDateTime(dateTime) {
   if (!dateTime) return 'TBD';
   const date = new Date(dateTime);
   return date.toLocaleString('en-US', {
+    timeZone: 'America/New_York',
     month: 'numeric',
     day: 'numeric',
     hour: 'numeric',
@@ -41,26 +43,8 @@ function formatAddress(address) {
 }
 
 /**
- * Get driver assignment SMS (sent when ride is matched to driver)
- */
-function getDriverAssignmentMessage(ride, rider) {
-  const pickup = formatAddress(ride.pickupLocation);
-  const dropoff = formatAddress(ride.dropoffLocation);
-  const pickupTime = formatDateTime(ride.pickupRequestedTime);
-  const roundtripIndicator = ride.roundTrip ? 'R' : '';
-
-  return `New ride assigned to you!
-Rider: ${rider.fullName}
-Pickup: ${pickup}
-${pickupTime}
-Drop off: ${dropoff}
-${roundtripIndicator}
-Accept? 1=Yes, 2=No`;
-}
-
-/**
  * Get ride confirmed SMS (Status 100)
- * Sent to both rider and case manager when driver accepts
+ * Sent to both rider and case manager when driver and vehicle are assigned
  */
 function getRideConfirmedMessage(ride, driver, vehicle) {
   const pickup = formatAddress(ride.pickupLocation);
@@ -82,9 +66,10 @@ To Cancel ride, type 3`;
 
 /**
  * Get 1 hour prior reminder SMS
+ * This is a reminder only - cancellation option is in the initial confirmation message
  */
 function getOneHourPriorMessage() {
-  return 'Your driver will arrive in 1 hour. Reply 1 to confirm ride. Reply 2 to cancel ride.';
+  return 'Reminder: Your driver will arrive in 1 hour. To cancel ride, reply 3.';
 }
 
 /**
@@ -220,11 +205,6 @@ function getSMSTemplate(status, recipient, data = {}) {
 
   // Map of status -> recipient -> message template
   const templates = {
-    // Driver Assignment (before status 100)
-    'DRIVER_ASSIGNMENT': {
-      driver: () => getDriverAssignmentMessage(ride, rider)
-    },
-
     // Status 100 - Ride Confirmed
     [RIDE_STATUSES.RIDE_CONFIRMED]: {
       rider: () => getRideConfirmedMessage(ride, driver, vehicle),
@@ -337,7 +317,6 @@ module.exports = {
   formatAddress,
 
   // Export individual message generators for direct use
-  getDriverAssignmentMessage,
   getRideConfirmedMessage,
   getOneHourPriorMessage,
   getRideCanceledMessage,
