@@ -5,7 +5,7 @@ import path from 'path'
 export default defineConfig(({ mode }) => {
   // Load env file from parent directory (root)
   const env = loadEnv(mode, path.resolve(__dirname, '..'), '')
-  
+
   return {
     plugins: [react()],
     resolve: {
@@ -17,6 +17,17 @@ export default defineConfig(({ mode }) => {
     // Expose VITE_ prefixed env vars to the client
     define: {
       'import.meta.env.VITE_GOOGLE_MAPS_API_KEY': JSON.stringify(env.VITE_GOOGLE_MAPS_API_KEY)
+    },
+    // Build configuration
+    build: {
+      sourcemap: mode === 'development', // Only generate sourcemaps in dev
+      rollupOptions: {
+        onwarn(warning, warn) {
+          // Suppress sourcemap warnings from dependencies
+          if (warning.code === 'SOURCEMAP_ERROR') return;
+          warn(warning);
+        }
+      }
     },
     server: {
       host: '127.0.0.1', // Restrict to localhost only
