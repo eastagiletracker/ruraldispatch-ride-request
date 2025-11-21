@@ -3,14 +3,7 @@
  * Handles all ride/ride-request database operations
  */
 
-import type { PrismaClient } from '../../../../prisma/generated/client/client.js';
-import type {
-  Ride,
-  User,
-  ServiceProvider,
-  Vehicle,
-  Notification,
-} from '../../../../prisma/generated/client/client.js';
+import type { PrismaClient, Ride, User, ServiceProvider, Vehicle, Notification } from '../../../../prisma/generated/client/client.js';
 import { generateRideDisplayId } from '../displayId.js';
 
 // ==================== TYPE DEFINITIONS ====================
@@ -18,12 +11,12 @@ import { generateRideDisplayId } from '../displayId.js';
 /**
  * Ride with joined relationships
  */
-interface RideWithRelations extends Ride {
+type RideWithRelations = Ride & {
   rider: User | null;
   driver: ServiceProvider | null;
   vehicle: Vehicle | null;
   notifications?: Notification[];
-}
+};
 
 /**
  * Input types for creating/updating entities
