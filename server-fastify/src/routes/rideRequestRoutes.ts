@@ -95,11 +95,10 @@ const rideRequestRoutes: FastifyPluginAsync = async (fastify) => {
         body.rideRequestStatus >= 400
       ) {
         // Check both the update body and existing ride data
-        // Use assignedDriverUuid/driverUuid (backwards compatibility with MongoDB field names)
-        const bodyDriverUuid = body.assignedDriverUuid || body.driverUuid;
-        const bodyVehicleUuid = body.assignedVehicleUuid || body.vehicleUuid;
-        const oldDriverUuid = oldRide.assignedDriverUuid || oldRide.driverUuid;
-        const oldVehicleUuid = oldRide.assignedVehicleUuid || oldRide.vehicleUuid;
+        const bodyDriverUuid = body.driverUuid;
+        const bodyVehicleUuid = body.vehicleUuid;
+        const oldDriverUuid = oldRide.driverUuid;
+        const oldVehicleUuid = oldRide.vehicleUuid;
 
         const hasDriver = (bodyDriverUuid !== undefined && bodyDriverUuid !== null) || (oldDriverUuid !== undefined && oldDriverUuid !== null);
         const hasVehicle = (bodyVehicleUuid !== undefined && bodyVehicleUuid !== null) || (oldVehicleUuid !== undefined && oldVehicleUuid !== null);
@@ -145,23 +144,23 @@ const rideRequestRoutes: FastifyPluginAsync = async (fastify) => {
       const userData: UserData = {};
 
       // Use data already populated in the ride object from getRideRequest
-      if (updatedRide.rider && updatedRide.rider.length > 0) {
-        userData.rider = updatedRide.rider[0] as User;
-      } else if (updatedRide.serviceUserName || updatedRide.serviceUserPhone) {
-        // Fallback to serviceUserName/serviceUserPhone if no linked rider
-        // Cast as any to allow fallback object (matches Express behavior)
+      if (updatedRide.rider) {
+        userData.rider = updatedRide.rider;
+      } else if (updatedRide.riderName || updatedRide.riderPhone) {
+        // Fallback to riderName/riderPhone if no linked rider
+        // Cast as any to allow fallback object
         userData.rider = {
-          fullName: updatedRide.serviceUserName || 'Unknown Rider',
-          phone: updatedRide.serviceUserPhone || null,
+          fullName: updatedRide.riderName || 'Unknown Rider',
+          phone: updatedRide.riderPhone || null,
         } as any;
       }
 
-      if (updatedRide.driver && updatedRide.driver.length > 0) {
-        userData.driver = updatedRide.driver[0] as ServiceProvider;
+      if (updatedRide.driver) {
+        userData.driver = updatedRide.driver;
       }
 
-      // Check for vehicle UUID (backwards compatibility with MongoDB field names)
-      const vehicleUuidToCheck = (updatedRide as any).assignedVehicleUuid || updatedRide.vehicleUuid;
+      // Check for vehicle UUID
+      const vehicleUuidToCheck = updatedRide.vehicleUuid;
       if (vehicleUuidToCheck) {
         fastify.log.info({ vehicleUuid: vehicleUuidToCheck }, '🚗 Looking up vehicle');
         try {

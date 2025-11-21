@@ -184,9 +184,9 @@ export function createNotificationRepository(prisma: PrismaClient) {
 
       return {
         total: notifications.length,
-        sent: notifications.filter((n) => n.twilioStatus === 'sent').length,
-        delivered: notifications.filter((n) => n.twilioStatus === 'delivered').length,
-        failed: notifications.filter((n) => n.twilioStatus === 'failed').length,
+        sent: notifications.filter((n: Notification) => n.twilioStatus === 'sent').length,
+        delivered: notifications.filter((n: Notification) => n.twilioStatus === 'delivered').length,
+        failed: notifications.filter((n: Notification) => n.twilioStatus === 'failed').length,
       };
     },
   };

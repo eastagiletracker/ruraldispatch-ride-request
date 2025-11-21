@@ -8,6 +8,7 @@ import type {
   Ride,
   User,
   ServiceProvider,
+  Vehicle,
   Notification,
 } from '../../../../prisma/generated/client/client.js';
 import { generateRideDisplayId } from '../displayId.js';
@@ -15,16 +16,12 @@ import { generateRideDisplayId } from '../displayId.js';
 // ==================== TYPE DEFINITIONS ====================
 
 /**
- * Ride with joined relationships (matches MongoDB structure)
+ * Ride with joined relationships
  */
 interface RideWithRelations extends Ride {
-  rider?: User[] | null;
-  driver?: ServiceProvider[] | null;
-  assignedVehicleUuid?: string | null;
-  assignedDriverUuid?: string | null;
-  serviceUserUuid?: string | null;
-  serviceUserName?: string | null;
-  serviceUserPhone?: string | null;
+  rider: User | null;
+  driver: ServiceProvider | null;
+  vehicle: Vehicle | null;
   notifications?: Notification[];
 }
 
@@ -107,19 +104,7 @@ export function createRideRepository(prisma: PrismaClient) {
         },
       });
 
-      if (!ride) return null;
-
-      // Format to match MongoDB structure for backward compatibility
-      return {
-        ...ride,
-        rider: ride.rider ? [ride.rider] : [],
-        driver: ride.driver ? [ride.driver] : [],
-        assignedVehicleUuid: ride.vehicleUuid,
-        assignedDriverUuid: ride.driverUuid,
-        serviceUserUuid: ride.riderUuid,
-        serviceUserName: ride.riderName,
-        serviceUserPhone: ride.riderPhone,
-      } as RideWithRelations;
+      return ride;
     },
 
     /**
@@ -137,17 +122,7 @@ export function createRideRepository(prisma: PrismaClient) {
         },
       });
 
-      // Format to match MongoDB structure
-      return rides.map((ride) => ({
-        ...ride,
-        rider: ride.rider ? [ride.rider] : [],
-        driver: ride.driver ? [ride.driver] : [],
-        assignedVehicleUuid: ride.vehicleUuid,
-        assignedDriverUuid: ride.driverUuid,
-        serviceUserUuid: ride.riderUuid,
-        serviceUserName: ride.riderName,
-        serviceUserPhone: ride.riderPhone,
-      })) as RideWithRelations[];
+      return rides;
     },
 
     /**

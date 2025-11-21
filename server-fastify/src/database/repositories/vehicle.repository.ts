@@ -69,7 +69,7 @@ export function createVehicleRepository(prisma: PrismaClient) {
       });
 
       // Transform accessibility booleans into comma-separated string for each vehicle
-      return vehicles.map((vehicle) => {
+      return vehicles.map((vehicle: Vehicle) => {
         const features: string[] = [];
         if (vehicle.wheelchairAccessible) features.push('Wheelchair');
         if (vehicle.walkerAccessible) features.push('Walker');

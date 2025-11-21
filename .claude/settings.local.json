@@ -5,7 +5,6 @@
       "WebFetch(domain:developer.vonage.com)",
       "Bash(npm run build:*)",
       "Bash(npx shadcn@latest add:*)",
-      "Bash(mongo:*)",
       "WebFetch(domain:github.com)",
       "WebFetch(domain:raw.githubusercontent.com)",
       "Bash(node server/database/seedSystemUsers.js:*)",

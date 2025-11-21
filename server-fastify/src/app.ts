@@ -49,7 +49,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   app.addContentTypeParser(
     'application/json',
     { parseAs: 'string' },
-    (req, body: string, done) => {
+    (_req, body: string, done) => {
       try {
         const json = body === '' ? {} : JSON.parse(body);
         done(null, json);

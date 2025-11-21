@@ -35,7 +35,7 @@ type RecipientRole = 'driver' | 'rider' | 'case_manager';
  */
 function determineSenderRole(ride: any, phoneNumber: string): SenderRole {
   // Check if sender is rider (registered user)
-  if (ride.rider && ride.rider[0]?.phone === phoneNumber) {
+  if (ride.rider && ride.rider.phone === phoneNumber) {
     return 'rider';
   }
 
@@ -45,8 +45,8 @@ function determineSenderRole(ride: any, phoneNumber: string): SenderRole {
   }
 
   // Check if sender is driver
-  if (ride.driver && ride.driver[0]) {
-    const driverPhone = ride.driver[0].mobilePhone || ride.driver[0].phone;
+  if (ride.driver) {
+    const driverPhone = ride.driver.mobilePhone || ride.driver.phone;
     if (driverPhone === phoneNumber) {
       return 'driver';
     }
@@ -209,15 +209,14 @@ const notificationRoutes: FastifyPluginAsync = async (fastify) => {
 
         // Check if sender is rider (registered or non-registered)
         const isRider =
-          (ride.rider && ride.rider.length > 0 && ride.rider[0].phone === senderPhone) ||
+          (ride.rider && ride.rider.phone === senderPhone) ||
           ride.riderPhone === senderPhone ||
           ride.serviceUserPhone === senderPhone;
 
         // Check if sender is driver
         const isDriver =
           ride.driver &&
-          ride.driver.length > 0 &&
-          (ride.driver[0].mobilePhone === senderPhone || ride.driver[0].phone === senderPhone);
+          (ride.driver.mobilePhone === senderPhone || ride.driver.phone === senderPhone);
 
         return isRider || isDriver;
       });
@@ -391,16 +390,16 @@ const notificationRoutes: FastifyPluginAsync = async (fastify) => {
           // Not an interactive response - forward as conversation
           fastify.log.info('💬 Not an interactive response, forwarding as conversation');
 
-          if (senderRole === 'rider' && activeRide.driver && activeRide.driver.length > 0) {
-            const recipientPhone = activeRide.driver[0].mobilePhone || activeRide.driver[0].phone;
-            const senderName = activeRide.rider[0].fullName;
+          if (senderRole === 'rider' && activeRide.driver) {
+            const recipientPhone = activeRide.driver.mobilePhone || activeRide.driver.phone;
+            const senderName = activeRide.rider?.fullName || 'Rider';
             const forwardMessage = `Message from ${senderName} (Rider):\n${Body}`;
 
             fastify.log.info(`📤 Forwarding rider message to driver: ${recipientPhone}`);
             await notificationService.sendSMS(recipientPhone, forwardMessage);
-          } else if (senderRole === 'driver' && activeRide.rider && activeRide.rider.length > 0) {
-            const recipientPhone = activeRide.rider[0].phone;
-            const senderName = activeRide.driver[0].fullName;
+          } else if (senderRole === 'driver' && activeRide.rider) {
+            const recipientPhone = activeRide.rider.phone;
+            const senderName = activeRide.driver?.fullName || 'Driver';
             const forwardMessage = `Message from ${senderName} (Driver):\n${Body}`;
 
             fastify.log.info(`📤 Forwarding driver message to rider: ${recipientPhone}`);
@@ -487,11 +486,10 @@ const notificationRoutes: FastifyPluginAsync = async (fastify) => {
           ride.rideStatus !== RIDE_STATUSES.ROUNDTRIP_COMPLETE;
         if (!isActive) return false;
 
-        const isRider = ride.rider && ride.rider.length > 0 && ride.rider[0]?.phone === senderPhone;
+        const isRider = ride.rider && ride.rider.phone === senderPhone;
         const isDriver =
           ride.driver &&
-          ride.driver.length > 0 &&
-          (ride.driver[0]?.mobilePhone === senderPhone || ride.driver[0]?.phone === senderPhone);
+          (ride.driver.mobilePhone === senderPhone || ride.driver.phone === senderPhone);
 
         return isRider || isDriver;
       });
@@ -501,20 +499,19 @@ const notificationRoutes: FastifyPluginAsync = async (fastify) => {
       if (activeRide) {
         fastify.log.info(`✅ Found active ride: #${activeRide.uuid}`);
 
-        const isRider = activeRide.rider && activeRide.rider.length > 0 && activeRide.rider[0]?.phone === senderPhone;
+        const isRider = activeRide.rider && activeRide.rider.phone === senderPhone;
         const isDriver =
           activeRide.driver &&
-          activeRide.driver.length > 0 &&
-          (activeRide.driver[0]?.mobilePhone === senderPhone ||
-            activeRide.driver[0]?.phone === senderPhone);
+          (activeRide.driver.mobilePhone === senderPhone ||
+            activeRide.driver.phone === senderPhone);
 
         let senderRole: SenderRole = 'unknown';
 
         if (isRider) {
           senderRole = 'rider';
-          if (activeRide.driver && activeRide.driver.length > 0) {
-            const recipientPhone = activeRide.driver[0]?.mobilePhone || activeRide.driver[0]?.phone;
-            const senderName = activeRide.rider?.[0]?.fullName;
+          if (activeRide.driver) {
+            const recipientPhone = activeRide.driver.mobilePhone || activeRide.driver.phone;
+            const senderName = activeRide.rider?.fullName || 'Rider';
             if (recipientPhone) {
               const forwardMessage = `Message from ${senderName} (Rider):\n${text}`;
 
@@ -524,9 +521,9 @@ const notificationRoutes: FastifyPluginAsync = async (fastify) => {
           }
         } else if (isDriver) {
           senderRole = 'driver';
-          if (activeRide.rider && activeRide.rider.length > 0 && activeRide.rider[0]?.phone) {
-            const recipientPhone = activeRide.rider[0]!.phone!;
-            const senderName = activeRide.driver?.[0]?.fullName;
+          if (activeRide.rider && activeRide.rider.phone) {
+            const recipientPhone = activeRide.rider.phone;
+            const senderName = activeRide.driver?.fullName || 'Driver';
             const forwardMessage = `Message from ${senderName} (Driver):\n${text}`;
 
             fastify.log.info(`📤 Forwarding driver message to rider: ${recipientPhone}`);
