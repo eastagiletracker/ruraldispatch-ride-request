@@ -19,7 +19,7 @@ projects:
             repo: https://github.com/swarmnyc/ruraldispatch-ride-request
             branch: feat/move_relational_db
             rootDir: client
-            buildCommand: npm install && npm run build
+            buildCommand: bun install && bun run build
             staticPublishPath: ./dist
             envVars:
               - key: VITE_GOOGLE_MAPS_API_KEY
@@ -41,8 +41,8 @@ projects:
             rootDir: server-fastify
             plan: free
             region: ohio
-            buildCommand: npm install && npx prisma generate --schema=./prisma/schema.prisma && npm run build
-            startCommand: npm run start:prod
+            buildCommand: bun install && bunx prisma generate --schema=./prisma/schema.prisma && bun run build
+            startCommand: bun run start:prod
             envVars:
               - key: NODE_ENV
                 value: production
@@ -99,7 +99,7 @@ projects:
       #       repo: https://github.com/swarmnyc/ruraldispatch-ride-request
       #       branch: main
       #       rootDir: client
-      #       buildCommand: npm install && npm run build
+      #       buildCommand: bun install && bun run build
       #       staticPublishPath: ./dist
       #       envVars:
       #         - key: VITE_GOOGLE_MAPS_API_KEY
@@ -121,8 +121,8 @@ projects:
       #       rootDir: server-fastify
       #       plan: free
       #       region: ohio
-      #       buildCommand: npm install && npx prisma generate --schema=../prisma/schema.prisma && npm run build
-      #       startCommand: npm run start:prod
+      #       buildCommand: bun install && bunx prisma generate --schema=./prisma/schema.prisma && bun run build
+      #       startCommand: bun run start:prod
       #       envVars:
       #         - key: NODE_ENV
       #           value: production
