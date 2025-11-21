@@ -34,6 +34,10 @@ export default defineConfig(({ mode }) => {
     define: {
       'import.meta.env.VITE_GOOGLE_MAPS_API_KEY': JSON.stringify(env.VITE_GOOGLE_MAPS_API_KEY)
     },
+    // Optimize dependencies
+    optimizeDeps: {
+      include: ['react-phone-number-input']
+    },
     // Build configuration
     build: {
       sourcemap: mode === 'development', // Only generate sourcemaps in dev
@@ -43,6 +47,9 @@ export default defineConfig(({ mode }) => {
           if (warning.code === 'SOURCEMAP_ERROR') return;
           warn(warning);
         }
+      },
+      commonjsOptions: {
+        include: [/react-phone-number-input/, /node_modules/]
       }
     },
     server: {
