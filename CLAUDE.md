@@ -4,68 +4,85 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Rural Dispatch is a ride-sharing management MVP with a React/TypeScript frontend, Node.js/Express backend, and MongoDB database. The monorepo includes comprehensive features for managing ride requests, drivers, vehicles, and SMS notifications with role-based access control.
+Rural Dispatch is a ride-sharing management MVP with a React/TypeScript frontend, Node.js/Express backend, and PostgreSQL database with Prisma 7 ORM. The monorepo includes comprehensive features for managing ride requests, drivers, vehicles, and SMS notifications with role-based access control.
 
 ## Development Commands
 
 ### Setup & Installation
 ```bash
-npm run install-all          # Install all dependencies (root, client, shared)
-npm run seed:system-users    # Create demo users (admin, dispatcher, driver, case_manager)
-npm run seed                 # Seed all demo data (users, providers, vehicles, rides)
+bun install                  # Install all dependencies (uses Bun, not npm)
+cp .env.example .env         # Copy environment template
+# Edit .env with your DATABASE_URL and credentials
+bunx prisma migrate dev      # Run database migrations
+bunx prisma generate         # Generate Prisma Client
+bun run seed                 # Seed all demo data (users, providers, vehicles, rides)
 ```
 
 ### Running the Application
 ```bash
-npm run dev                  # Run both client (port 3001) and server (port 5000) concurrently
-npm run client               # Run client only (Vite dev server on port 3001)
-npm run server               # Run server only (nodemon on port 5000)
+bun run dev                  # Run both client (port 3001) and server (port 5000) concurrently
+bun run client               # Run client only (Vite dev server on port 3001)
+bun run server               # Run server only (Bun with --watch flag on port 5000)
 ```
 
-### Building for Production
+### Database Management
 ```bash
-npm run build                # Build client for production
-npm start                    # Start production server
+bunx prisma migrate dev      # Create and apply migrations
+bunx prisma generate         # Generate Prisma Client (run after schema changes)
+bunx prisma studio           # Open Prisma Studio (database GUI)
+bunx prisma db push          # Push schema changes without migrations (dev only)
+bun run db:migrate           # Alias for prisma migrate dev
+bun run db:generate          # Alias for prisma generate
+bun run db:studio            # Alias for prisma studio
 ```
 
 ### Database Seeding Scripts
 ```bash
-npm run seed:all             # Run all seed scripts (complete setup)
-npm run seed:admins          # Seed admin accounts
-npm run seed:dispatchers     # Seed dispatcher accounts
-npm run seed:case-managers   # Seed case manager accounts
-npm run seed:riders          # Seed service users (riders)
-npm run seed:caregivers      # Seed caregiver accounts
-npm run seed:drivers         # Seed driver/service provider accounts
-npm run seed:vehicles        # Seed fleet vehicles
-npm run seed:rides           # Seed ride requests
-npm run seed:reset           # Clear all collections and reset database
-npm run seed:prod            # Seed production environment
-npm run seed:staging         # Seed staging environment
+bun run seed                 # Seed all demo data (default)
+bun run seed:reset           # Clear database and reseed (prisma migrate reset --force)
+bun run seed:prod            # Seed production environment
+bun run seed:staging         # Seed staging environment
+bun run seed:reset:prod      # Reset production database (DANGEROUS!)
+bun run seed:reset:staging   # Reset staging database
+```
+
+### Building for Production
+```bash
+bun run build                # Build client for production
+bun start                    # Start production server
 ```
 
 ## Architecture
 
 ### Monorepo Structure
 - **`/client`** - React 18 + TypeScript + Vite frontend (7300+ LOC)
-- **`/server`** - Express.js + MongoDB backend
+- **`/server`** - Express.js + Prisma 7 backend (ESM modules)
+- **`/prisma`** - Prisma schema and generated client (`prisma/schema.prisma`)
 - **`/shared`** - Zod validation schemas shared between client and server
 - **`/docs`** - Documentation files
 
 ### Key Technologies
 - **Frontend**: React 18, TypeScript, Vite, Tailwind CSS, shadcn/ui, React Hook Form, Zod
-- **Backend**: Express.js, MongoDB (native driver), bcryptjs, Helmet, CORS
+- **Backend**: Node.js/Express (ESM), PostgreSQL, Prisma 7 ORM, bcryptjs, Helmet, CORS
+- **Runtime**: Bun (development) - faster than Node.js for dev workflow
 - **SMS**: Twilio (primary), Vonage (fallback)
 - **Authentication**: Two-layer system (portal password + database-backed user auth)
 
-### Database Collections (MongoDB)
-1. **users** - Service users (riders, caregivers, etc.) with text indexes on `fullName` and `phone`
-2. **ride-requests** - Ride request records with status tracking
-3. **service-providers** - Drivers with text indexes
-4. **vehicles** - Fleet vehicles with text indexes
+### Database Tables (PostgreSQL via Prisma 7)
+1. **users** - Service users (riders, caregivers, etc.) with indexes on `fullName` and `phone`
+2. **rides** - Ride request records with status tracking (was `ride-requests` in MongoDB)
+3. **service_providers** - Drivers with indexes and organization relationship
+4. **vehicles** - Fleet vehicles with accessibility features
 5. **notifications** - SMS message history and delivery tracking
-6. **system-users** - Authentication (admin, dispatcher, driver, case_manager)
-7. **locations** - Optional address information
+6. **system_users** - Authentication (admin, dispatcher, driver, case_manager)
+7. **organizations** - Optional organization grouping for service providers
+
+**Key Architectural Changes from MongoDB:**
+- UUIDs use Prisma's `uuid(7)` function (not MongoDB ObjectIDs)
+- Foreign keys with `ON DELETE SET NULL` (rides preserve data when user/driver deleted)
+- Generated `displayId` for human-readable ride IDs (e.g., RIDE-X7K9)
+- Prisma Client generated at `prisma/generated/client/` (custom output path)
+- Database API in `server/database/prismaApi.js` (replaces `api.js`)
 
 ## Authentication & Authorization
 
@@ -171,8 +188,12 @@ VONAGE_WEBHOOK_URL=
 ## Key File Locations
 
 ### Backend Critical Files
-- `server/routes/router.js` - All API endpoints (comprehensive REST API)
-- `server/database/api.js` - API factory pattern for MongoDB operations
+- `server/index.js` - Main Express app initialization (ESM entry point)
+- `server/routes/router.js` - Main router composition (imports modular route files)
+- `server/routes/*Routes.js` - Modular route files (rideRequestRoutes, userRoutes, etc.)
+- **`server/database/prismaApi.js`** - **Prisma-based database API** (replaces MongoDB `api.js`)
+- `prisma/schema.prisma` - Database schema definition (source of truth)
+- `prisma/generated/client/` - Generated Prisma Client (DO NOT edit manually)
 - `server/services/notificationService.js` - SMS orchestration with provider fallback
 - `server/services/scheduler/` - **Refactored scheduler module** (modular architecture):
   - `RideScheduler.js` - Main orchestrator (public API)
@@ -185,6 +206,7 @@ VONAGE_WEBHOOK_URL=
 - `server/middleware/permissions.js` - RBAC middleware
 - `server/constants/rideStatuses.js` - Ride status constants (use these, not numbers!)
 - `server/constants/rideRequestStatuses.js` - Ride request status constants
+- `server/utils/displayId.js` - Human-readable ID generation (RIDE-XXXX format)
 
 ### Frontend Critical Files
 - `client/src/App.tsx` - Router with role-based protected routes
@@ -209,6 +231,81 @@ The project uses **relaxed strict mode** for gradual migration (`client/tsconfig
 - `@/*` → `./client/src/*`
 - `@shared/*` → `./shared/*`
 
+## Working with Prisma 7
+
+### Schema-First Development
+The database schema in `prisma/schema.prisma` is the **single source of truth**. All database changes start here.
+
+**Workflow for Schema Changes:**
+```bash
+# 1. Edit prisma/schema.prisma
+# 2. Create migration and apply to database
+bunx prisma migrate dev --name descriptive_migration_name
+
+# 3. Generate Prisma Client (happens automatically with migrate dev)
+bunx prisma generate
+
+# 4. Update prismaApi.js if adding new operations
+```
+
+### Important Prisma Patterns in This Codebase
+
+**Custom Prisma Client Path:**
+- Generated client is at `prisma/generated/client/` (not default `node_modules/.prisma/client`)
+- Import: `import { PrismaClient } from '../../prisma/generated/client/client.ts'`
+
+**Database Adapter Pattern:**
+- Uses `@prisma/adapter-pg` with native `pg` driver for better performance
+- Connection pool managed by `pg.Pool`
+
+**Backward Compatibility Layer:**
+- `prismaApi.js` maintains MongoDB-style API surface for existing code
+- Returns objects with MongoDB-style field names (e.g., `serviceUserUuid`, `assignedDriverUuid`)
+- Includes relations as arrays (e.g., `rider: [user]`) to match old structure
+
+**UUID Generation:**
+- Uses Prisma's `uuid(7)` function for all primary keys
+- Format: 7-character UUID v7 (time-sortable)
+- Human-readable display IDs generated separately (e.g., RIDE-X7K9)
+
+### Common Prisma Operations
+
+**Include Relations:**
+```javascript
+const ride = await prisma.ride.findUnique({
+  where: { uuid },
+  include: {
+    rider: true,
+    driver: true,
+    vehicle: true,
+    notifications: true
+  }
+});
+```
+
+**Filtering and Ordering:**
+```javascript
+const rides = await prisma.ride.findMany({
+  where: {
+    rideStatus: { gte: 100 },
+    riderUuid: { not: null }
+  },
+  orderBy: { createdAt: 'desc' },
+  take: 50
+});
+```
+
+**Foreign Key Cascade Behavior:**
+- `ON DELETE SET NULL` - Deleting a user/driver/vehicle sets FK to null (preserves ride history)
+- `ON DELETE CASCADE` - Deleting a ride deletes all its notifications
+
+### Prisma Studio (Database GUI)
+```bash
+bunx prisma studio
+# Opens at http://localhost:5555
+# Browse/edit data in visual interface
+```
+
 ## Common Development Patterns
 
 ### Adding a New Form
@@ -218,10 +315,12 @@ The project uses **relaxed strict mode** for gradual migration (`client/tsconfig
 4. Follow existing form patterns in `RideRequestForm.tsx` or `UserForm.tsx`
 
 ### Adding a New API Endpoint
-1. Add route in `server/routes/router.js`
-2. Use permission middleware if needed: `checkPermission(['admin', 'dispatcher'])`
-3. Follow RESTful conventions
-4. Update `server/database/api.js` if adding new collection operations
+1. Add route in appropriate `server/routes/*Routes.js` file (or create new one)
+2. Import new route file in `server/routes/router.js` and compose with main router
+3. Use permission middleware if needed: `checkPermission(['admin', 'dispatcher'])`
+4. Follow RESTful conventions
+5. Update `server/database/prismaApi.js` if adding new database operations
+6. If adding new models, update `prisma/schema.prisma` and run `bunx prisma migrate dev`
 
 ### Adding a New Role Permission
 1. Update `server/middleware/permissions.js` - Backend validation
@@ -300,8 +399,13 @@ If port 5000 is in use:
 
 ### Required for Development
 ```bash
-# MongoDB
-MONGODB_URI=mongodb+srv://...
+# Timezone (CRITICAL - always UTC for backend)
+TZ=UTC
+
+# PostgreSQL + Prisma
+DATABASE_URL=postgresql://username:password@localhost:5432/ride_request_app
+# OR for Prisma Postgres Cloud:
+# DATABASE_URL=postgresql://[KEY]:[SECRET]@db.prisma.io:5432/postgres?sslmode=require
 
 # Server
 NODE_ENV=development
@@ -322,7 +426,16 @@ VONAGE_API_KEY=
 VONAGE_API_SECRET=
 VONAGE_FROM_NUMBER=
 VONAGE_WEBHOOK_URL=
+
+# Google Maps (for address autocomplete and distance calculations)
+VITE_GOOGLE_MAPS_API_KEY=         # Client-side key (HTTP referrer restrictions)
+GOOGLE_MAPS_SERVER_API_KEY=       # Server-side key (IP restrictions)
 ```
+
+**IMPORTANT**:
+- Copy `.env.example` to `.env` and fill in your credentials
+- Never commit `.env` to version control
+- `DATABASE_URL` is required for Prisma to connect to PostgreSQL
 
 ## Testing Access
 
@@ -335,6 +448,28 @@ VONAGE_WEBHOOK_URL=
 - Dispatcher: `dispatcher` / `dispatch123`
 - Driver: `driver` / `driver123`
 - Case Manager: `casemanager` / `case123`
+
+## Migration Status: MongoDB → PostgreSQL + Prisma 7
+
+**✅ COMPLETED**: This codebase has been fully migrated from MongoDB to PostgreSQL with Prisma 7.
+
+**What Changed:**
+- Database layer completely rewritten (`server/database/prismaApi.js` replaces `api.js`)
+- All routes updated to work with Prisma Client
+- Schema redesigned for relational database patterns
+- UUIDs use Prisma's `uuid(7)` instead of MongoDB ObjectIDs
+- Foreign keys with cascade behavior replace document embedding
+- Seeding scripts updated for Prisma (`prisma/seed.ts`)
+
+**Legacy References:**
+- Old `server/database/api.js` may still exist but is unused (imports now point to `prismaApi.js`)
+- Some comments may reference "MongoDB" - these are outdated
+- Environment variable `MONGODB_URI` is no longer used (replaced by `DATABASE_URL`)
+
+**If You See Import Errors:**
+- Run `bunx prisma generate` to regenerate Prisma Client
+- Ensure `prisma/generated/client/` directory exists
+- Check that `DATABASE_URL` is set in `.env`
 
 ## Important Caveats
 
@@ -430,3 +565,61 @@ If you're modifying `server/services/scheduler.js` or `server/services/smsRespon
 3. Context detection is automatic based on current ride status
 4. Always test scheduled tasks with near-future times during development
 5. Check `SMS_SYSTEM_GUIDE.md` for complete flow documentation
+
+## Troubleshooting
+
+### PostgreSQL Connection Issues
+```bash
+# Check DATABASE_URL format
+echo $DATABASE_URL
+# Should be: postgresql://username:password@host:5432/database
+
+# Test connection with Prisma
+bunx prisma db pull
+
+# Verify PostgreSQL is running (if local)
+psql -U username -d ride_request_app -c "\dt"
+```
+
+### Prisma Client Generation Errors
+```bash
+# Regenerate client from scratch
+rm -rf prisma/generated/client
+bunx prisma generate
+
+# If using custom output path, verify prisma/schema.prisma has:
+# generator client {
+#   provider = "prisma-client"
+#   output   = "./generated/client"
+# }
+```
+
+### Migration Issues
+```bash
+# View migration status
+bunx prisma migrate status
+
+# Reset database (DESTROYS ALL DATA)
+bunx prisma migrate reset --force
+
+# Create migration from schema changes
+bunx prisma migrate dev --name descriptive_name
+
+# Apply pending migrations
+bunx prisma migrate deploy
+```
+
+### "Cannot find module '@prisma/client'" Error
+```bash
+# Ensure Prisma Client is generated
+bunx prisma generate
+
+# Verify import path matches custom output
+# Should be: prisma/generated/client/client.ts
+# NOT: @prisma/client or node_modules/.prisma/client
+```
+
+### Bun vs Node.js
+- **Development**: Use `bun run dev` (faster, recommended)
+- **Production**: Works with both Bun and Node.js
+- If Bun issues occur, fallback: `node server/index.js`

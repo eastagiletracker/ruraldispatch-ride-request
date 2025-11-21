@@ -11,6 +11,7 @@
   },
   "scripts": {
     "dev": "concurrently \"bun run server\" \"bun run client\"",
+    "dev:fastify": "cd server-fastify && bun run dev",
     "server": "bun --watch server/index.js",
     "client": "cd client && bun run dev",
     "build": "cd client && bun run build",
@@ -25,7 +26,10 @@
     "db:studio": "bunx prisma studio",
     "db:migrate": "bunx prisma migrate dev",
     "db:generate": "bunx prisma generate",
-    "db:push": "bunx prisma db push"
+    "db:push": "bunx prisma db push",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write ."
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.0.0",
@@ -45,6 +49,7 @@
     "uuid": "^13.0.0"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.3.6",
     "concurrently": "^8.2.0"
   },
   "keywords": [

@@ -18,7 +18,13 @@
       "Bash(node server/seed/seedSystemUsers.js:*)",
       "Bash(node convert-to-esm.js:*)",
       "Bash(timeout 10 npx tsx:*)",
-      "Bash(bunx prisma migrate:*)"
+      "Bash(bunx prisma migrate:*)",
+      "Bash(bun run type-check:*)",
+      "Bash(bunx biome format:*)",
+      "Bash(bunx biome init:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx @biomejs/biome format:*)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []
