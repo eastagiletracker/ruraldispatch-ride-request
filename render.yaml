@@ -21,11 +21,13 @@ projects:
             rootDir: client
             buildCommand: bun install && bun run build
             staticPublishPath: ./dist
+            domains:
+              - stg-ruraldispatch.swarmnyc.com
             envVars:
               - key: VITE_GOOGLE_MAPS_API_KEY
                 sync: false
               - key: VITE_API_URL
-                sync: false  # Set to staging backend URL
+                value: https://stg-api-ruraldispatch.swarmnyc.com
             routes:
               - type: rewrite
                 source: /*
@@ -43,6 +45,8 @@ projects:
             region: ohio
             buildCommand: bun install && bun x prisma generate --schema=./prisma/schema.prisma && bun run build
             startCommand: bun run start
+            domains:
+              - stg-api-ruraldispatch.swarmnyc.com
             envVars:
               - key: NODE_ENV
                 value: development
@@ -51,7 +55,7 @@ projects:
               - key: DATABASE_URL
                 sync: false
               - key: CLIENT_URL
-                sync: false  # Set to staging frontend URL
+                value: https://stg-ruraldispatch.swarmnyc.com
               - key: JWT_SECRET
                 generateValue: true
               - key: TWILIO_ACCOUNT_SID
@@ -101,11 +105,13 @@ projects:
       #       rootDir: client
       #       buildCommand: bun install && bun run build
       #       staticPublishPath: ./dist
+      #       domains:
+      #         - ruraldispatch.swarmnyc.com
       #       envVars:
       #         - key: VITE_GOOGLE_MAPS_API_KEY
       #           sync: false
       #         - key: VITE_API_URL
-      #           sync: false
+      #           value: https://api-ruraldispatch.swarmnyc.com
       #       routes:
       #         - type: rewrite
       #           source: /*
@@ -123,6 +129,8 @@ projects:
       #       region: ohio
       #       buildCommand: bun install && bun x prisma generate --schema=./prisma/schema.prisma && bun run build
       #       startCommand: bun run start:prod
+      #       domains:
+      #         - api-ruraldispatch.swarmnyc.com
       #       envVars:
       #         - key: NODE_ENV
       #           value: production
@@ -131,7 +139,7 @@ projects:
       #         - key: DATABASE_URL
       #           sync: false
       #         - key: CLIENT_URL
-      #           sync: false
+      #           value: https://ruraldispatch.swarmnyc.com
       #         - key: JWT_SECRET
       #           generateValue: true
       #         - key: TWILIO_ACCOUNT_SID
