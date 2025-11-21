@@ -42,10 +42,10 @@ projects:
             plan: free
             region: ohio
             buildCommand: bun install && bun x prisma generate --schema=./prisma/schema.prisma && bun run build
-            startCommand: bun run start:prod
+            startCommand: bun run start
             envVars:
               - key: NODE_ENV
-                value: production
+                value: development
               - key: PORT
                 value: 5000
               - key: DATABASE_URL
