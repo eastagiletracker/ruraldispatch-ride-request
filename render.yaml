@@ -19,7 +19,6 @@ projects:
             branch: feat/move_relational_db
             rootDir: client
             plan: free
-            region: ohio
             buildCommand: npm install && npm run build
             staticPublishPath: ./dist
             envVars:
@@ -100,7 +99,6 @@ projects:
             branch: main
             rootDir: client
             plan: free  # Upgrade for production
-            region: ohio
             buildCommand: npm install && npm run build
             staticPublishPath: ./dist
             envVars:
