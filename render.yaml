@@ -41,7 +41,7 @@ projects:
             rootDir: server-fastify
             plan: free
             region: ohio
-            buildCommand: bun install && bunx prisma generate --schema=./prisma/schema.prisma && bun run build
+            buildCommand: bun install && bun x prisma generate --schema=./prisma/schema.prisma && bun run build
             startCommand: bun run start:prod
             envVars:
               - key: NODE_ENV
@@ -121,7 +121,7 @@ projects:
       #       rootDir: server-fastify
       #       plan: free
       #       region: ohio
-      #       buildCommand: bun install && bunx prisma generate --schema=./prisma/schema.prisma && bun run build
+      #       buildCommand: bun install && bun x prisma generate --schema=./prisma/schema.prisma && bun run build
       #       startCommand: bun run start:prod
       #       envVars:
       #         - key: NODE_ENV
