@@ -9,10 +9,26 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react()],
     resolve: {
-      alias: {
-        '@': path.resolve(__dirname, './src'),
-        '@shared': path.resolve(__dirname, '../shared'),
-      },
+      alias: [
+        // Zod v4 path resolution for shared schemas
+        {
+          find: /^zod\/v4$/,
+          replacement: path.resolve(__dirname, 'node_modules', 'zod', 'v4'),
+        },
+        {
+          find: /^zod\/v4\/(.+)$/,
+          replacement: path.resolve(__dirname, 'node_modules', 'zod', 'v4', '$1'),
+        },
+        // Project aliases
+        {
+          find: '@',
+          replacement: path.resolve(__dirname, './src'),
+        },
+        {
+          find: '@shared',
+          replacement: path.resolve(__dirname, '../shared'),
+        },
+      ],
     },
     // Expose VITE_ prefixed env vars to the client
     define: {
