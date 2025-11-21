@@ -1,18 +1,43 @@
 services:
+  # ==========================================
+  # REACT FRONTEND (Vite + TypeScript)
+  # Monorepo Configuration: rootDir set to client
+  # ==========================================
   - type: web
-    name: ride-request-app
+    name: ride-request-client
+    runtime: static
+    rootDir: client  # Monorepo: Only deploy from this directory
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: VITE_GOOGLE_MAPS_API_KEY
+        sync: false  # Google Maps API key for address autocomplete
+      - key: VITE_API_URL
+        sync: false  # Backend API URL (set to ride-request-fastify URL)
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html  # Enable React Router SPA support
+
+  # ==========================================
+  # FASTIFY SERVER (PostgreSQL + Prisma)
+  # Monorepo Configuration: rootDir set to server-fastify
+  # ==========================================
+  - type: web
+    name: ride-request-fastify
     runtime: node
-    buildCommand: npm run install-all && npm run build
-    startCommand: npm start
+    rootDir: server-fastify  # Monorepo: Only deploy from this directory
+    buildCommand: npm install && npx prisma generate && npm run build
+    startCommand: npm run start:prod
     envVars:
       - key: NODE_ENV
         value: production
-      - key: MONGODB_URI
-        sync: false
-      - key: MONGODB_DB_PROD
-        value: prod-ruraldispatch
-      - key: MONGODB_DB_DEV
-        value: dev-ruraldispatch
+      - key: PORT
+        value: 5000
+      - key: DATABASE_URL
+        sync: false  # Set from PostgreSQL database below
+      - key: CLIENT_URL
+        sync: false  # Set to your frontend domain (ride-request-client URL)
       - key: JWT_SECRET
         generateValue: true
       - key: TWILIO_ACCOUNT_SID
@@ -24,9 +49,9 @@ services:
       - key: TWILIO_MESSAGING_SERVICE_SID
         sync: false
       - key: TWILIO_WEBHOOK_URL
-        sync: false
+        sync: false  # Update after deployment with your Render URL
       - key: TWILIO_STATUS_CALLBACK_URL
-        sync: false
+        sync: false  # Update after deployment with your Render URL
       - key: VONAGE_API_KEY
         sync: false
       - key: VONAGE_API_SECRET
@@ -34,7 +59,13 @@ services:
       - key: VONAGE_FROM_NUMBER
         sync: false
       - key: VONAGE_WEBHOOK_URL
+        sync: false  # Update after deployment with your Render URL
+      - key: GOOGLE_MAPS_API_KEY
         sync: false
-      - key: VITE_GOOGLE_MAPS_API_KEY
-        sync: false
-        
+
+databases:
+  # PostgreSQL database for Fastify server
+  - name: rural-dispatch-postgres
+    databaseName: db_rural_dispatch
+    user: user_rural_dispatch
+    plan: free  # Upgrade to paid plan for production
