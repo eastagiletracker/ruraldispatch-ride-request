@@ -1,73 +1,169 @@
-services:
-  # ==========================================
-  # REACT FRONTEND (Vite + TypeScript)
-  # Monorepo Configuration: rootDir set to client
-  # ==========================================
-  - type: web
-    plan: free
-    name: ride-request-client
-    runtime: static
-    rootDir: client  # Monorepo: Only deploy from this directory
-    buildCommand: npm install && npm run build
-    staticPublishPath: ./dist
-    envVars:
-      - key: VITE_GOOGLE_MAPS_API_KEY
-        sync: false  # Google Maps API key for address autocomplete
-      - key: VITE_API_URL
-        sync: false  # Backend API URL (set to ride-request-fastify URL)
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html  # Enable React Router SPA support
+# Render Blueprint - Rural Dispatch
+# Monorepo deployment with staging and production environments
+version: "1"
 
-  # ==========================================
-  # FASTIFY SERVER (PostgreSQL + Prisma)
-  # Monorepo Configuration: rootDir set to server-fastify
-  # ==========================================
-  - type: web
-    plan: free
-    name: ride-request-fastify
-    runtime: node
-    rootDir: server-fastify  # Monorepo: Only deploy from this directory
-    buildCommand: npm install && npx prisma generate && npm run build
-    startCommand: npm run start:prod
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: PORT
-        value: 5000
-      - key: DATABASE_URL
-        sync: false  # Set from PostgreSQL database below
-      - key: CLIENT_URL
-        sync: false  # Set to your frontend domain (ride-request-client URL)
-      - key: JWT_SECRET
-        generateValue: true
-      - key: TWILIO_ACCOUNT_SID
-        sync: false
-      - key: TWILIO_AUTH_TOKEN
-        sync: false
-      - key: TWILIO_PHONE_NUMBER
-        sync: false
-      - key: TWILIO_MESSAGING_SERVICE_SID
-        sync: false
-      - key: TWILIO_WEBHOOK_URL
-        sync: false  # Update after deployment with your Render URL
-      - key: TWILIO_STATUS_CALLBACK_URL
-        sync: false  # Update after deployment with your Render URL
-      - key: VONAGE_API_KEY
-        sync: false
-      - key: VONAGE_API_SECRET
-        sync: false
-      - key: VONAGE_FROM_NUMBER
-        sync: false
-      - key: VONAGE_WEBHOOK_URL
-        sync: false  # Update after deployment with your Render URL
-      - key: GOOGLE_MAPS_API_KEY
-        sync: false
+projects:
+  - name: rural_dispatch
 
-databases:
-  # PostgreSQL database for Fastify server
-  - name: rural-dispatch-postgres
-    databaseName: db_rural_dispatch
-    user: user_rural_dispatch
-    plan: free  # Upgrade to paid plan for production
+    # ==========================================
+    # STAGING ENVIRONMENT
+    # ==========================================
+    environments:
+      - name: Staging
+        services:
+          # React Frontend - Staging
+          - type: web
+            name: stage-ride-request-client
+            runtime: static
+            repo: https://github.com/swarmnyc/ruraldispatch-ride-request
+            branch: feat/move_relational_db
+            rootDir: client
+            plan: free
+            region: ohio
+            buildCommand: npm install && npm run build
+            staticPublishPath: ./dist
+            envVars:
+              - key: VITE_GOOGLE_MAPS_API_KEY
+                sync: false
+              - key: VITE_API_URL
+                sync: false  # Set to staging backend URL
+            routes:
+              - type: rewrite
+                source: /*
+                destination: /index.html
+            autoDeployTrigger: commit
+
+          # Fastify Backend - Staging
+          - type: web
+            name: stage-ride-request-fastify
+            runtime: node
+            repo: https://github.com/swarmnyc/ruraldispatch-ride-request
+            branch: feat/move_relational_db
+            rootDir: server-fastify
+            plan: free
+            region: ohio
+            buildCommand: npm install && npx prisma generate && npm run build
+            startCommand: npm run start:prod
+            envVars:
+              - key: NODE_ENV
+                value: production
+              - key: PORT
+                value: 5000
+              - key: DATABASE_URL
+                sync: false
+              - key: CLIENT_URL
+                sync: false  # Set to staging frontend URL
+              - key: JWT_SECRET
+                generateValue: true
+              - key: TWILIO_ACCOUNT_SID
+                sync: false
+              - key: TWILIO_AUTH_TOKEN
+                sync: false
+              - key: TWILIO_PHONE_NUMBER
+                sync: false
+              - key: TWILIO_MESSAGING_SERVICE_SID
+                sync: false
+              - key: TWILIO_WEBHOOK_URL
+                sync: false
+              - key: TWILIO_STATUS_CALLBACK_URL
+                sync: false
+              - key: VONAGE_API_KEY
+                sync: false
+              - key: VONAGE_API_SECRET
+                sync: false
+              - key: VONAGE_FROM_NUMBER
+                sync: false
+              - key: VONAGE_WEBHOOK_URL
+                sync: false
+              - key: GOOGLE_MAPS_API_KEY
+                sync: false
+            autoDeployTrigger: commit
+
+        # Staging Database
+        databases:
+          - name: stage-rural-dispatch-postgres
+            databaseName: stage_rural_dispatch
+            user: stage_user
+            plan: free
+            region: ohio
+
+      # ==========================================
+      # PRODUCTION ENVIRONMENT
+      # ==========================================
+      - name: Production
+        services:
+          # React Frontend - Production
+          - type: web
+            name: prod-ride-request-client
+            runtime: static
+            repo: https://github.com/swarmnyc/ruraldispatch-ride-request
+            branch: main
+            rootDir: client
+            plan: free  # Upgrade for production
+            region: ohio
+            buildCommand: npm install && npm run build
+            staticPublishPath: ./dist
+            envVars:
+              - key: VITE_GOOGLE_MAPS_API_KEY
+                sync: false
+              - key: VITE_API_URL
+                sync: false  # Set to production backend URL
+            routes:
+              - type: rewrite
+                source: /*
+                destination: /index.html
+            autoDeployTrigger: commit
+
+          # Fastify Backend - Production
+          - type: web
+            name: prod-ride-request-fastify
+            runtime: node
+            repo: https://github.com/swarmnyc/ruraldispatch-ride-request
+            branch: main
+            rootDir: server-fastify
+            plan: free  # Upgrade for production
+            region: ohio
+            buildCommand: npm install && npx prisma generate && npm run build
+            startCommand: npm run start:prod
+            envVars:
+              - key: NODE_ENV
+                value: production
+              - key: PORT
+                value: 5000
+              - key: DATABASE_URL
+                sync: false
+              - key: CLIENT_URL
+                sync: false  # Set to production frontend URL
+              - key: JWT_SECRET
+                generateValue: true
+              - key: TWILIO_ACCOUNT_SID
+                sync: false
+              - key: TWILIO_AUTH_TOKEN
+                sync: false
+              - key: TWILIO_PHONE_NUMBER
+                sync: false
+              - key: TWILIO_MESSAGING_SERVICE_SID
+                sync: false
+              - key: TWILIO_WEBHOOK_URL
+                sync: false
+              - key: TWILIO_STATUS_CALLBACK_URL
+                sync: false
+              - key: VONAGE_API_KEY
+                sync: false
+              - key: VONAGE_API_SECRET
+                sync: false
+              - key: VONAGE_FROM_NUMBER
+                sync: false
+              - key: VONAGE_WEBHOOK_URL
+                sync: false
+              - key: GOOGLE_MAPS_API_KEY
+                sync: false
+            autoDeployTrigger: commit
+
+        # Production Database
+        databases:
+          - name: prod-rural-dispatch-postgres
+            databaseName: prod_rural_dispatch
+            user: prod_user
+            plan: free  # Upgrade to paid plan for production
+            region: ohio
