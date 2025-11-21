@@ -18,7 +18,6 @@ projects:
             repo: https://github.com/swarmnyc/ruraldispatch-ride-request
             branch: feat/move_relational_db
             rootDir: client
-            plan: free
             buildCommand: npm install && npm run build
             staticPublishPath: ./dist
             envVars:
@@ -98,7 +97,6 @@ projects:
             repo: https://github.com/swarmnyc/ruraldispatch-ride-request
             branch: main
             rootDir: client
-            plan: free  # Upgrade for production
             buildCommand: npm install && npm run build
             staticPublishPath: ./dist
             envVars:
