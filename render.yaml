@@ -4,6 +4,7 @@ services:
   # Monorepo Configuration: rootDir set to client
   # ==========================================
   - type: web
+    plan: free
     name: ride-request-client
     runtime: static
     rootDir: client  # Monorepo: Only deploy from this directory
@@ -24,6 +25,7 @@ services:
   # Monorepo Configuration: rootDir set to server-fastify
   # ==========================================
   - type: web
+    plan: free
     name: ride-request-fastify
     runtime: node
     rootDir: server-fastify  # Monorepo: Only deploy from this directory
