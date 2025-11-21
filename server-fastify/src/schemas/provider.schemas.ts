@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from 'zod/v4';
 
 /**
  * Service Provider (Driver) Validation Schemas
@@ -72,7 +72,7 @@ export const createProviderSchema = z.object({
 export const updateProviderSchema = z.object({
   fullName: z.string().min(1).max(100).trim().optional(),
   phone: phoneNumberSchema.optional(),
-  email: z.string().email().optional().nullable(),
+  email: z.email().optional().nullable(),
   address: addressSchema,
   organizationName: z.string().max(200).trim().optional().nullable(),
   organizationUuid: uuidSchema.optional().nullable(),

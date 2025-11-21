@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from 'zod/v4';
 import { RIDE_STATUSES } from '../constants/rideStatuses.js';
 import { RIDE_REQUEST_STATUSES } from '../constants/rideRequestStatuses.js';
 

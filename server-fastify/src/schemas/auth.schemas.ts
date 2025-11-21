@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from 'zod/v4';
 
 /**
  * Authentication & System User Validation Schemas
@@ -23,7 +23,7 @@ export const loginResponseSchema = z.object({
   success: z.boolean(),
   user: z
     .object({
-      uuid: z.string().uuid(),
+      uuid: z.uuid(),
       username: z.string(),
       fullName: z.string(),
       role: z.enum(['admin', 'dispatcher', 'driver', 'case_manager']),

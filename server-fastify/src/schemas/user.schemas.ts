@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from 'zod/v4';
 
 /**
  * User (Service User) Validation Schemas
@@ -8,6 +8,14 @@ import { z } from 'zod';
 // ==================== COMMON SCHEMAS ====================
 
 export const uuidSchema = z.string().uuid('Invalid UUID format');
+
+// IP address validation (IPv4 or IPv6) - Zod v4 removed .ip()
+export const ipAddressSchema = z
+  .string()
+  .regex(
+    /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$|^(?:[a-fA-F0-9]{1,4}:){7}[a-fA-F0-9]{1,4}$/,
+    'Invalid IP address format'
+  );
 
 export const phoneNumberSchema = z
   .string()
@@ -25,7 +33,7 @@ export const addressSchema = z
   .nullable();
 
 export const dateTimeSchema = z
-  .string()
+  .iso
   .datetime('Invalid ISO 8601 datetime format')
   .or(z.date())
   .transform((val) => (typeof val === 'string' ? new Date(val) : val));
@@ -42,7 +50,7 @@ export const createUserSchema = z.object({
   phone: phoneNumberSchema,
 
   // Optional contact information
-  email: z.string().email('Invalid email format').optional().nullable(),
+  email: z.email('Invalid email format').optional().nullable(),
   address: addressSchema,
 
   // Optional relationships
@@ -53,8 +61,8 @@ export const createUserSchema = z.object({
   smsConsent: z
     .object({
       given: z.boolean(),
-      timestamp: z.string().datetime().optional(),
-      ipAddress: z.string().ip().optional().nullable(),
+      timestamp: z.iso.datetime().optional(),
+      ipAddress: ipAddressSchema.optional().nullable(),
     })
     .optional()
     .nullable(),
@@ -69,15 +77,15 @@ export const createUserSchema = z.object({
 export const updateUserSchema = z.object({
   fullName: z.string().min(1).max(100).trim().optional(),
   phone: phoneNumberSchema.optional(),
-  email: z.string().email().optional().nullable(),
+  email: z.email().optional().nullable(),
   address: addressSchema,
   organizationUuid: uuidSchema.optional().nullable(),
   caregiverUuid: uuidSchema.optional().nullable(),
   smsConsent: z
     .object({
       given: z.boolean(),
-      timestamp: z.string().datetime().optional(),
-      ipAddress: z.string().ip().optional().nullable(),
+      timestamp: z.iso.datetime().optional(),
+      ipAddress: ipAddressSchema.optional().nullable(),
     })
     .optional()
     .nullable(),
@@ -90,8 +98,8 @@ export const updateUserSchema = z.object({
 export const smsConsentSchema = z.object({
   phoneNumber: phoneNumberSchema,
   consentGiven: z.boolean(),
-  timestamp: z.string().datetime().optional(),
-  ipAddress: z.string().ip().optional().nullable(),
+  timestamp: z.iso.datetime().optional(),
+  ipAddress: ipAddressSchema.optional().nullable(),
 });
 
 // ==================== PARAMS SCHEMAS ====================

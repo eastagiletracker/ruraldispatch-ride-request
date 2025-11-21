@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from 'zod/v4';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
