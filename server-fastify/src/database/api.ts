@@ -6,7 +6,7 @@
  * with backward compatibility for MongoDB field names.
  */
 
-import type { PrismaClient } from '../../../prisma/generated/client/client.js';
+import type { PrismaClient } from '@prisma/client';
 import { createRideRepository } from './repositories/ride.repository.js';
 import { createUserRepository } from './repositories/user.repository.js';
 import { createProviderRepository } from './repositories/provider.repository.js';

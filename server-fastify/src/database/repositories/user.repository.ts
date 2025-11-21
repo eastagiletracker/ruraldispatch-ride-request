@@ -3,8 +3,7 @@
  * Handles all service user (rider) database operations
  */
 
-import type { PrismaClient } from '../../../../prisma/generated/client/client.js';
-import type { User } from '../../../../prisma/generated/client/client.js';
+import type { PrismaClient, User } from '@prisma/client';
 
 // ==================== TYPE DEFINITIONS ====================
 

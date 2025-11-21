@@ -3,8 +3,7 @@
  * Handles all service provider (driver) database operations
  */
 
-import type { PrismaClient } from '../../../../prisma/generated/client/client.js';
-import type { ServiceProvider } from '../../../../prisma/generated/client/client.js';
+import type { PrismaClient, ServiceProvider } from '@prisma/client';
 
 // ==================== TYPE DEFINITIONS ====================
 

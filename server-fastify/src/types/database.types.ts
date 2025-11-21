@@ -12,7 +12,7 @@ import type {
   SystemUser,
   Organization,
   Prisma,
-} from '../../../prisma/generated/client/client.js';
+} from '@prisma/client';
 
 // Re-export Prisma types
 export type {

@@ -3,8 +3,7 @@
  * Handles all system user authentication and management operations
  */
 
-import type { PrismaClient } from '../../../../prisma/generated/client/client.js';
-import type { SystemUser } from '../../../../prisma/generated/client/client.js';
+import type { PrismaClient, SystemUser } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
 // ==================== TYPE DEFINITIONS ====================

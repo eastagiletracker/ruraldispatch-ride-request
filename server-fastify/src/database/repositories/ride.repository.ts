@@ -3,7 +3,7 @@
  * Handles all ride/ride-request database operations
  */
 
-import type { PrismaClient, Ride, User, ServiceProvider, Vehicle, Notification } from '../../../../prisma/generated/client/client.js';
+import type { PrismaClient, Ride, User, ServiceProvider, Vehicle, Notification } from '@prisma/client';
 import { generateRideDisplayId } from '../displayId.js';
 
 // ==================== TYPE DEFINITIONS ====================

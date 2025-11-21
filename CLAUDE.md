@@ -57,7 +57,7 @@ bun start                    # Start production server
 ### Monorepo Structure
 - **`/client`** - React 18 + TypeScript + Vite frontend (7300+ LOC)
 - **`/server`** - Express.js + Prisma 7 backend (ESM modules)
-- **`/prisma`** - Prisma schema and generated client (`prisma/schema.prisma`)
+- **`/server-fastify/prisma`** - Prisma schema and generated client (`server-fastify/prisma/schema.prisma`)
 - **`/shared`** - Zod validation schemas shared between client and server
 - **`/docs`** - Documentation files
 
@@ -192,7 +192,7 @@ VONAGE_WEBHOOK_URL=
 - `server/routes/router.js` - Main router composition (imports modular route files)
 - `server/routes/*Routes.js` - Modular route files (rideRequestRoutes, userRoutes, etc.)
 - **`server/database/prismaApi.js`** - **Prisma-based database API** (replaces MongoDB `api.js`)
-- `prisma/schema.prisma` - Database schema definition (source of truth)
+- `server-fastify/prisma/schema.prisma` - Database schema definition (source of truth)
 - `prisma/generated/client/` - Generated Prisma Client (DO NOT edit manually)
 - `server/services/notificationService.js` - SMS orchestration with provider fallback
 - `server/services/scheduler/` - **Refactored scheduler module** (modular architecture):
@@ -234,11 +234,11 @@ The project uses **relaxed strict mode** for gradual migration (`client/tsconfig
 ## Working with Prisma 7
 
 ### Schema-First Development
-The database schema in `prisma/schema.prisma` is the **single source of truth**. All database changes start here.
+The database schema in `server-fastify/prisma/schema.prisma` is the **single source of truth**. All database changes start here.
 
 **Workflow for Schema Changes:**
 ```bash
-# 1. Edit prisma/schema.prisma
+# 1. Edit server-fastify/prisma/schema.prisma
 # 2. Create migration and apply to database
 bunx prisma migrate dev --name descriptive_migration_name
 
@@ -320,7 +320,7 @@ bunx prisma studio
 3. Use permission middleware if needed: `checkPermission(['admin', 'dispatcher'])`
 4. Follow RESTful conventions
 5. Update `server/database/prismaApi.js` if adding new database operations
-6. If adding new models, update `prisma/schema.prisma` and run `bunx prisma migrate dev`
+6. If adding new models, update `server-fastify/prisma/schema.prisma` and run `bunx prisma migrate dev --schema=./prisma/schema.prisma` from the server-fastify directory
 
 ### Adding a New Role Permission
 1. Update `server/middleware/permissions.js` - Backend validation
@@ -587,7 +587,7 @@ psql -U username -d ride_request_app -c "\dt"
 rm -rf prisma/generated/client
 bunx prisma generate
 
-# If using custom output path, verify prisma/schema.prisma has:
+# If using custom output path, verify server-fastify/prisma/schema.prisma has:
 # generator client {
 #   provider = "prisma-client"
 #   output   = "./generated/client"

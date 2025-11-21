@@ -3,8 +3,7 @@
  * Handles all notification/SMS database operations
  */
 
-import type { PrismaClient } from '../../../../prisma/generated/client/client.js';
-import type { Notification } from '../../../../prisma/generated/client/client.js';
+import type { PrismaClient, Notification } from '@prisma/client';
 
 // ==================== TYPE DEFINITIONS ====================
 

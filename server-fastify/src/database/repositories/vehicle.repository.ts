@@ -3,8 +3,7 @@
  * Handles all vehicle database operations
  */
 
-import type { PrismaClient } from '../../../../prisma/generated/client/client.js';
-import type { Vehicle } from '../../../../prisma/generated/client/client.js';
+import type { PrismaClient, Vehicle } from '@prisma/client';
 
 // ==================== TYPE DEFINITIONS ====================
 
