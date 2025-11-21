@@ -92,84 +92,83 @@ projects:
 
       # ==========================================
       # PRODUCTION ENVIRONMENT
-      # Uncomment when ready to deploy production (after merging to main)
       # ==========================================
-      # - name: Production
-      #   services:
-      #     # React Frontend - Production
-      #     - type: web
-      #       name: prod-ride-request-client
-      #       runtime: static
-      #       repo: https://github.com/swarmnyc/ruraldispatch-ride-request
-      #       branch: main
-      #       rootDir: client
-      #       buildCommand: bun install && bun run build
-      #       staticPublishPath: ./dist
-      #       domains:
-      #         - ruraldispatch.swarmnyc.com
-      #       envVars:
-      #         - key: VITE_GOOGLE_MAPS_API_KEY
-      #           sync: false
-      #         - key: VITE_API_URL
-      #           value: https://api-ruraldispatch.swarmnyc.com
-      #       routes:
-      #         - type: rewrite
-      #           source: /*
-      #           destination: /index.html
-      #       autoDeployTrigger: commit
-      #
-      #     # Fastify Backend - Production
-      #     - type: web
-      #       name: prod-ride-request-fastify
-      #       runtime: node
-      #       repo: https://github.com/swarmnyc/ruraldispatch-ride-request
-      #       branch: main
-      #       rootDir: server-fastify
-      #       plan: free
-      #       region: ohio
-      #       buildCommand: bun install && bun x prisma generate --schema=./prisma/schema.prisma && bun run build
-      #       startCommand: bun run start:prod
-      #       domains:
-      #         - api-ruraldispatch.swarmnyc.com
-      #       envVars:
-      #         - key: NODE_ENV
-      #           value: production
-      #         - key: PORT
-      #           value: 5000
-      #         - key: DATABASE_URL
-      #           sync: false
-      #         - key: CLIENT_URL
-      #           value: https://ruraldispatch.swarmnyc.com
-      #         - key: JWT_SECRET
-      #           generateValue: true
-      #         - key: TWILIO_ACCOUNT_SID
-      #           sync: false
-      #         - key: TWILIO_AUTH_TOKEN
-      #           sync: false
-      #         - key: TWILIO_PHONE_NUMBER
-      #           sync: false
-      #         - key: TWILIO_MESSAGING_SERVICE_SID
-      #           sync: false
-      #         - key: TWILIO_WEBHOOK_URL
-      #           sync: false
-      #         - key: TWILIO_STATUS_CALLBACK_URL
-      #           sync: false
-      #         - key: VONAGE_API_KEY
-      #           sync: false
-      #         - key: VONAGE_API_SECRET
-      #           sync: false
-      #         - key: VONAGE_FROM_NUMBER
-      #           sync: false
-      #         - key: VONAGE_WEBHOOK_URL
-      #           sync: false
-      #         - key: GOOGLE_MAPS_API_KEY
-      #           sync: false
-      #       autoDeployTrigger: commit
-      #
-      #   # Production Database
-      #   databases:
-      #     - name: prod-rural-dispatch-postgres
-      #       databaseName: prod_rural_dispatch
-      #       user: prod_user
-      #       plan: free
-      #       region: ohio
+      - name: Production
+        services:
+          # React Frontend - Production
+          - type: web
+            name: prod-ride-request-client
+            runtime: static
+            repo: https://github.com/swarmnyc/ruraldispatch-ride-request
+            branch: main
+            rootDir: client
+            buildCommand: bun install && bun run build
+            staticPublishPath: ./dist
+            domains:
+              - ruraldispatch.swarmnyc.com
+            envVars:
+              - key: VITE_GOOGLE_MAPS_API_KEY
+                sync: false
+              - key: VITE_API_URL
+                value: https://api-ruraldispatch.swarmnyc.com
+            routes:
+              - type: rewrite
+                source: /*
+                destination: /index.html
+            autoDeployTrigger: commit
+
+          # Fastify Backend - Production
+          - type: web
+            name: prod-ride-request-fastify
+            runtime: node
+            repo: https://github.com/swarmnyc/ruraldispatch-ride-request
+            branch: main
+            rootDir: server-fastify
+            plan: free
+            region: ohio
+            buildCommand: bun install && bun x prisma generate --schema=./prisma/schema.prisma && bun run build
+            startCommand: bun run start:prod
+            domains:
+              - api-ruraldispatch.swarmnyc.com
+            envVars:
+              - key: NODE_ENV
+                value: production
+              - key: PORT
+                value: 5000
+              - key: DATABASE_URL
+                sync: false
+              - key: CLIENT_URL
+                value: https://ruraldispatch.swarmnyc.com
+              - key: JWT_SECRET
+                generateValue: true
+              - key: TWILIO_ACCOUNT_SID
+                sync: false
+              - key: TWILIO_AUTH_TOKEN
+                sync: false
+              - key: TWILIO_PHONE_NUMBER
+                sync: false
+              - key: TWILIO_MESSAGING_SERVICE_SID
+                sync: false
+              - key: TWILIO_WEBHOOK_URL
+                sync: false
+              - key: TWILIO_STATUS_CALLBACK_URL
+                sync: false
+              - key: VONAGE_API_KEY
+                sync: false
+              - key: VONAGE_API_SECRET
+                sync: false
+              - key: VONAGE_FROM_NUMBER
+                sync: false
+              - key: VONAGE_WEBHOOK_URL
+                sync: false
+              - key: GOOGLE_MAPS_API_KEY
+                sync: false
+            autoDeployTrigger: commit
+
+        # Production Database
+        databases:
+          - name: prod-rural-dispatch-postgres
+            databaseName: prod_rural_dispatch
+            user: prod_user
+            plan: free
+            region: ohio
