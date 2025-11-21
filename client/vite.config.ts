@@ -19,6 +19,11 @@ export default defineConfig(({ mode }) => {
           find: /^zod\/v4\/(.+)$/,
           replacement: path.resolve(__dirname, 'node_modules', 'zod', 'v4', '$1'),
         },
+        // react-phone-number-input resolution
+        {
+          find: 'react-phone-number-input',
+          replacement: path.resolve(__dirname, 'node_modules', 'react-phone-number-input'),
+        },
         // Project aliases
         {
           find: '@',
