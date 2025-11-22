@@ -35,42 +35,6 @@ class NotificationScheduler {
   }
 
   /**
-   * Schedule 1 hour prior reminder to rider
-   */
-  scheduleOneHourPrior(ride: Ride, rider: User): void {
-    const timeInfo = timeCalculator.calculateOneHourPrior(ride);
-
-    if (timeInfo.isPast) {
-      console.log(`�  1-hour prior time has passed for ride #${ride.uuid}, skipping`);
-      return;
-    }
-
-    const { timeString, delayMinutes } = timeCalculator.formatTimeInfo(
-      timeInfo.targetTime,
-      timeInfo.delay
-    );
-
-    console.log(`� Scheduling 1-hour prior reminder for ride #${ride.uuid}`);
-    console.log(`   Pickup time: ${timeInfo.pickupTime.toLocaleString()}`);
-    console.log(`   Reminder at: ${timeString}`);
-    console.log(`   Delay: ${delayMinutes} minutes`);
-
-    const timeoutId = setTimeout(async () => {
-      try {
-        console.log(`� Sending 1-hour prior reminder for ride #${ride.uuid}`);
-        await notificationService.sendOneHourPriorReminder(ride, rider);
-      } catch (error) {
-        console.error('L Error sending 1-hour prior reminder:', error);
-      } finally {
-        // Remove task after execution (success or failure)
-        this.taskManager.removeTask(ride.uuid, '1_hour_prior');
-      }
-    }, timeInfo.delay);
-
-    this.taskManager.addTask(ride.uuid, '1_hour_prior', timeoutId);
-  }
-
-  /**
    * Schedule driver arrival check at pickup time
    */
   scheduleDriverArrivalCheck(ride: Ride, driver: ServiceProvider): void {

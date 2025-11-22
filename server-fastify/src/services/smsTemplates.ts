@@ -9,8 +9,6 @@ import type { Ride, ServiceProvider, User, Vehicle } from '../types/database.typ
 type RecipientType = 'rider' | 'driver' | 'case_manager' | 'dispatcher';
 type TemplateStatus =
   | RideStatus
-  | 'DRIVER_ASSIGNMENT'
-  | 'ONE_HOUR_PRIOR'
   | 'DRIVER_ARRIVAL_CHECK'
   | 'DRIVER_EN_ROUTE'
   | 'DRIVER_ARRIVED'
@@ -62,22 +60,7 @@ function formatAddress(address: string | { formattedAddress: string } | null | u
   return 'TBD';
 }
 
-/**
- * Get driver assignment SMS (sent when ride is matched to driver)
- */
-function getDriverAssignmentMessage(ride: Ride, rider: User): string {
-  const pickup = formatAddress(ride.pickupAddress);
-  const dropoff = formatAddress(ride.dropOffAddress);
-  const pickupTime = formatDateTime(ride.pickupRequestedTime);
-  const roundtripIndicator = ride.roundTrip ? 'R' : '';
 
-  return `New ride assigned to you!
-Rider: ${rider.fullName}
-Pickup: ${pickup}
-${pickupTime}
-Drop off: ${dropoff}
-${roundtripIndicator}`;
-}
 
 /**
  * Get ride confirmed SMS (Status 100)
@@ -102,10 +85,6 @@ Pickup: ${pickup}
 Drop off: ${dropoff}
 ${roundtripIndicator}
 To Cancel ride, type 3`;
-}
-
-export function getOneHourPriorMessage(): string {
-  return 'Your driver will arrive in 1 hour. Reply 1 to confirm ride. Reply 2 to cancel ride.';
 }
 
 export function getRideCanceledMessage(): string {
@@ -185,20 +164,10 @@ export function getSMSTemplate(
 
   // Map of status -> recipient -> message template
   const templates: Record<TemplateStatus, Partial<Record<RecipientType, () => string>>> = {
-    // Driver Assignment (before status 100)
-    DRIVER_ASSIGNMENT: {
-      driver: () => getDriverAssignmentMessage(ride!, rider!),
-    },
-
     // Status 100 - Ride Confirmed
     [RIDE_STATUSES.RIDE_CONFIRMED]: {
       rider: () => getRideConfirmedMessage(ride!, driver!, vehicle!),
       case_manager: () => getRideConfirmedMessage(ride!, driver!, vehicle!),
-    },
-
-    // One hour prior reminder
-    ONE_HOUR_PRIOR: {
-      rider: () => getOneHourPriorMessage(),
     },
 
     // Status 109 - Ride Canceled by Rider
@@ -304,4 +273,4 @@ export function getSMSTemplate(
   return null;
 }
 
-export { formatDateTime, formatAddress, getDriverAssignmentMessage, getRideConfirmedMessage };
+export { formatDateTime, formatAddress, getRideConfirmedMessage };

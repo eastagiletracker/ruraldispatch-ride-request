@@ -153,7 +153,6 @@ export type SMSTemplateType =
   | 'ride_complete'
   | 'ride_canceled'
   | 'confirmation_request'
-  | 'driver_assignment_notification'
   | 'roundtrip_return_reminder';
 
 export interface SMSTemplateData {

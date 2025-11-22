@@ -128,46 +128,7 @@ Thank you for using our service! If you have any feedback, please contact us.`;
     return await this.sendSMS(rider.phone, message);
   }
 
-  /**
-   * Send driver assignment notification to driver
-   */
-  async notifyDriverAssigned(ride: Ride, driver: ServiceProvider, rider: User): Promise<SMSResult> {
-    const message = smsTemplates.getSMSTemplate('DRIVER_ASSIGNMENT', 'driver', {
-      ride,
-      rider,
-    });
 
-    const driverPhone = driver.mobilePhone || driver.phone;
-
-    if (!driverPhone) {
-      console.error('L Driver has no phone number!', { driver });
-      return {
-        success: false,
-        provider: 'twilio',
-        error: 'Driver has no phone number configured',
-        to: '',
-        body: '',
-        timestamp: new Date(),
-      };
-    }
-
-    if (!message) {
-      console.error('L No SMS template found for driver assignment');
-      return {
-        success: false,
-        provider: 'twilio',
-        error: 'No SMS template found',
-        to: driverPhone,
-        body: '',
-        timestamp: new Date(),
-      };
-    }
-
-    console.log('=� Sending driver assignment SMS to:', driverPhone);
-    console.log('=� Message:', message);
-
-    return await this.sendSMS(driverPhone, message);
-  }
 
   /**
    * Send status update notification to dispatcher
@@ -216,25 +177,14 @@ Thank you for using our service! If you have any feedback, please contact us.`;
             userData.vehicle || null
           );
           notifications.push({ type: 'rider_accepted', ...riderNotif });
-          console.log(' Rider notification result:', riderNotif.success ? 'SUCCESS' : 'FAILED');
+          console.log(' Rider notification result:', riderNotif.success ? 'SUCCESS' : 'FAILED');
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : String(error);
           console.error('L Error sending rider notification:', errorMessage);
         }
 
-        try {
-          console.log('=� Sending driver notification...');
-          const driverNotif = await this.notifyDriverAssigned(
-            ride,
-            userData.driver,
-            userData.rider
-          );
-          notifications.push({ type: 'driver_assigned', ...driverNotif });
-          console.log(' Driver notification result:', driverNotif.success ? 'SUCCESS' : 'FAILED');
-        } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : String(error);
-          console.error('L Error sending driver notification:', errorMessage);
-        }
+        // NOTE: Driver approval notification removed - driver will be notified at pickup time
+        console.log('=� Driver will be notified at pickup time (no approval needed)');
       }
 
       // Status 200 (RIDE_STARTED) - Per CSV spec, NO SMS should be sent
@@ -471,13 +421,6 @@ Thank you for using our service! If you have any feedback, please contact us.`;
       default:
         return null;
     }
-  }
-
-  /**
-   * Send 1 hour prior reminder to rider
-   */
-  async sendOneHourPriorReminder(ride: Ride, rider: User): Promise<SMSResult> {
-    return await this.sendTemplateSMS(rider.phone, 'ONE_HOUR_PRIOR', 'rider', { ride, rider });
   }
 
   /**

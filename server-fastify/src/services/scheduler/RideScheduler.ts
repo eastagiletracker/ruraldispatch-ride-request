@@ -50,16 +50,18 @@ class RideScheduler {
   /**
    * Schedule all initial notifications when ride is confirmed
    */
-  scheduleRideConfirmationTasks(ride: Ride, driver: ServiceProvider): void {
-    console.log(`=� Scheduling all tasks for confirmed ride #${ride.uuid}`);
+  scheduleRideConfirmationTasks(
+    ride: Ride,
+    driver: ServiceProvider,
+    rider: User,
+    apiUpdateFunction: ApiUpdateFunction
+  ): void {
+    console.log(`=📅 Scheduling all tasks for confirmed ride #${ride.uuid}`);
 
-    // NOTE: One-hour prior reminder removed - rider gets confirmation when driver is assigned
-    // and can cancel at any time by replying '3'
-
-    // Schedule driver arrival check at pickup time
+    // Schedule driver arrival check at pickup time (driver should arrive at estimated time)
     this.notificationScheduler.scheduleDriverArrivalCheck(ride, driver);
 
-    console.log(` All tasks scheduled for ride #${ride.uuid}`);
+    console.log(`✅ All tasks scheduled for ride #${ride.uuid}`);
   }
 
   /**
@@ -106,20 +108,18 @@ class RideScheduler {
   /**
    * Alias for scheduleRideConfirmationTasks (for backwards compatibility)
    */
-  scheduleAllTasks(ride: Ride, driver: ServiceProvider): void {
-    return this.scheduleRideConfirmationTasks(ride, driver);
+  scheduleAllTasks(
+    ride: Ride,
+    driver: ServiceProvider,
+    rider: User,
+    apiUpdateFunction: ApiUpdateFunction
+  ): void {
+    return this.scheduleRideConfirmationTasks(ride, driver, rider, apiUpdateFunction);
   }
 
   // ========================================
   // Individual Scheduling Methods (Delegated)
   // ========================================
-
-  /**
-   * Schedule 1 hour prior reminder to rider
-   */
-  scheduleOneHourPrior(ride: Ride, rider: User): void {
-    return this.notificationScheduler.scheduleOneHourPrior(ride, rider);
-  }
 
   /**
    * Schedule driver arrival check at pickup time
