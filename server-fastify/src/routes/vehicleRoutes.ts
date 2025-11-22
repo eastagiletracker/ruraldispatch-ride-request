@@ -58,6 +58,27 @@ const vehicleRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   /**
+   * PUT /api/vehicles/:uuid
+   * Update a vehicle
+   */
+  fastify.put<{ Params: { uuid: string } }>('/:uuid', async (request, reply) => {
+    try {
+      const result = await api.updateVehicle(request.params.uuid, request.body as any);
+      return {
+        success: true,
+        message: 'Vehicle updated successfully',
+        vehicle: result,
+      };
+    } catch (error) {
+      fastify.log.error(error, 'Error updating vehicle');
+      return reply.status(500).send({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  });
+
+  /**
    * DELETE /api/vehicles/:uuid
    * Delete a vehicle (permission required)
    */

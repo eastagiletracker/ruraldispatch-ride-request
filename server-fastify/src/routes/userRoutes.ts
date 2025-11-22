@@ -72,6 +72,27 @@ const userRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   /**
+   * PUT /api/users/:uuid
+   * Update a user
+   */
+  fastify.put<{ Params: { uuid: string } }>('/:uuid', async (request, reply) => {
+    try {
+      const result = await api.updateUser(request.params.uuid, request.body as any);
+      return {
+        success: true,
+        message: 'User updated successfully',
+        user: result,
+      };
+    } catch (error) {
+      fastify.log.error(error, 'Error updating user');
+      return reply.status(500).send({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  });
+
+  /**
    * POST /api/users/sms-consent
    * Update user SMS consent (TCPA compliance)
    */

@@ -53,7 +53,7 @@ export class VonageProvider {
       console.log('=� Vonage response received:', JSON.stringify(response, null, 2));
 
       // Check if message was sent successfully
-      if (response.messages && response.messages[0]) {
+      if (response.messages?.[0]) {
         const msg = response.messages[0];
 
         if (msg.status === '0') {

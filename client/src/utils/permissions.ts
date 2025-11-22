@@ -25,7 +25,7 @@ export function isPortalAuthValid(): boolean {
 
   try {
     const parsed = JSON.parse(authData);
-    const now = new Date().getTime();
+    const now = Date.now();
 
     // Check if authenticated and not expired
     if (parsed.authenticated === true && parsed.expiresAt > now) {
@@ -36,7 +36,7 @@ export function isPortalAuthValid(): boolean {
     localStorage.removeItem('app_authenticated');
     sessionStorage.removeItem('app_authenticated');
     return false;
-  } catch (error) {
+  } catch (_error) {
     // If parsing fails (old format 'true' string), clean up
     localStorage.removeItem('app_authenticated');
     sessionStorage.removeItem('app_authenticated');

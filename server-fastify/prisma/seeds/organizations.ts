@@ -3,7 +3,7 @@
  * Transportation provider organizations
  */
 
-import type { PrismaClient } from '../generated/client/client.js';
+import type { PrismaClient } from '../../node_modules/.prisma/client/index.js';
 
 export async function seedOrganizations(prisma: PrismaClient) {
   console.log('\n🏢 Seeding Organizations...');

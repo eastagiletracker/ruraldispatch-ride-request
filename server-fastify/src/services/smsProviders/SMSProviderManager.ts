@@ -1,6 +1,6 @@
-import { VonageProvider } from './VonageProvider.js';
-import { TwilioProvider } from './TwilioProvider.js';
 import type { SMSProvider, SMSResult } from '../../types/sms.types.js';
+import { TwilioProvider } from './TwilioProvider.js';
+import { VonageProvider } from './VonageProvider.js';
 
 interface ProviderStatus {
   configured: boolean;
@@ -45,7 +45,7 @@ export class SMSProviderManager {
     }
 
     if (!this.primaryProvider && !this.fallbackProvider) {
-      console.warn('   No SMS providers are configured!');
+      console.warn('  No SMS providers are configured!');
     }
   }
 
@@ -138,7 +138,7 @@ export class SMSProviderManager {
   async sendViaProvider(
     providerName: SMSProvider,
     to: string,
-    message: string,
+    message: string
   ): Promise<SMSResult> {
     const provider = providerName === 'vonage' ? this.vonageProvider : this.twilioProvider;
 

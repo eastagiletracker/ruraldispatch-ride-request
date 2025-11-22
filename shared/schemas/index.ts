@@ -15,6 +15,8 @@ export * from './rideRequestStatuses';
 export * from './rideStatuses';
 // Service Provider schemas and types
 export * from './serviceProvider';
+// SystemUser schemas and types
+export * from './systemUser';
 // User schemas and types
 export * from './user';
 // Vehicle schemas and types

@@ -23,6 +23,8 @@ interface UserInput {
   uuid: string;
   fullName: string;
   phone: string;
+  email?: string;
+  address?: string;
   serviceUserRole?: string[];
   role?: string;
   smsConsent?: {
@@ -100,6 +102,8 @@ export function createUserRepository(prisma: PrismaClient) {
           uuid: user.uuid,
           fullName: user.fullName,
           phone: user.phone,
+          email: user.email || null,
+          address: user.address || null,
           role: user.serviceUserRole?.[0] || user.role || 'rider',
           smsConsentGiven: user.smsConsent?.given || user.smsConsentGiven || false,
           smsConsentTimestamp: user.smsConsent?.timestamp
@@ -108,6 +112,23 @@ export function createUserRepository(prisma: PrismaClient) {
               ? new Date(user.smsConsentTimestamp)
               : null,
           smsConsentIpAddress: user.smsConsent?.ipAddress || user.smsConsentIpAddress || null,
+        },
+      });
+    },
+
+    /**
+     * Update a user
+     */
+    updateUser: async (uuid: string, data: Partial<UserInput>): Promise<User> => {
+      return await prisma.user.update({
+        where: { uuid },
+        data: {
+          ...(data.fullName && { fullName: data.fullName }),
+          ...(data.phone && { phone: data.phone }),
+          ...(data.email !== undefined && { email: data.email }),
+          ...(data.address !== undefined && { address: data.address }),
+          ...(data.role && { role: data.role }),
+          ...(data.smsConsentGiven !== undefined && { smsConsentGiven: data.smsConsentGiven }),
         },
       });
     },

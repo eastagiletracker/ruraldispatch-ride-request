@@ -1,5 +1,6 @@
-import { Trash2 } from 'lucide-react';
+import { Pencil, Trash2 } from 'lucide-react';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -12,10 +13,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import VehicleForm from '@/components/VehicleForm';
 import { getApiUrl, useVehicles } from '@/lib/api';
-import { formatShortId } from '@/utils/formatters';
 import { TableSkeleton } from './TableSkeleton';
+import { VehicleEditModal } from './VehicleEditModal';
 
 interface VehiclesTabProps {
   searchTerm: string;
@@ -29,14 +29,45 @@ function getAuthHeaders() {
   };
 }
 
+// API response type - matches what the backend returns
+interface Vehicle {
+  uuid: string;
+  displayName: string;
+  fleetId?: string;
+  model?: string;
+  year?: number;
+  color?: string;
+  licensePlate?: string;
+  capacity?: number;
+  serviceArea?: string;
+  wheelchairAccessible: boolean;
+  walkerAccessible: boolean;
+  serviceAnimalFriendly: boolean;
+  oxygenTankAccessible: boolean;
+}
+
+// Helper function to format accessibility features
+function formatAccessibilityFeatures(vehicle: Vehicle): string {
+  const features: string[] = [];
+
+  if (vehicle.wheelchairAccessible) features.push('Wheelchair');
+  if (vehicle.walkerAccessible) features.push('Walker');
+  if (vehicle.serviceAnimalFriendly) features.push('Service Animal');
+  if (vehicle.oxygenTankAccessible) features.push('Oxygen Tank');
+
+  return features.length > 0 ? features.join(', ') : 'None';
+}
+
 export function VehiclesTab({ searchTerm }: VehiclesTabProps) {
-  const [showVehicleForm, setShowVehicleForm] = useState(false);
+  const navigate = useNavigate();
+  const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
   const { data: vehiclesData, isLoading, refetch } = useVehicles();
 
-  const vehicles =
-    (vehiclesData as any)?.vehicles || (Array.isArray(vehiclesData) ? vehiclesData : []);
+  const vehicles: Vehicle[] =
+    (vehiclesData as { vehicles?: Vehicle[] })?.vehicles ||
+    (Array.isArray(vehiclesData) ? vehiclesData : []);
 
-  const handleDeleteVehicle = async (uuid: number) => {
+  const handleDeleteVehicle = async (uuid: string) => {
     if (!confirm('Are you sure you want to delete this vehicle?')) return;
 
     try {
@@ -66,13 +97,14 @@ export function VehiclesTab({ searchTerm }: VehiclesTabProps) {
 
   return (
     <>
-      {showVehicleForm && (
-        <VehicleForm
+      {editingVehicle && (
+        <VehicleEditModal
+          vehicle={editingVehicle}
+          open={!!editingVehicle}
+          onClose={() => setEditingVehicle(null)}
           onSuccess={() => {
-            setShowVehicleForm(false);
             refetch();
           }}
-          onCancel={() => setShowVehicleForm(false)}
         />
       )}
 
@@ -83,9 +115,7 @@ export function VehiclesTab({ searchTerm }: VehiclesTabProps) {
               <CardTitle>Vehicles</CardTitle>
               <CardDescription>View and manage all vehicles in the fleet</CardDescription>
             </div>
-            <Button onClick={() => setShowVehicleForm(!showVehicleForm)}>
-              {showVehicleForm ? 'Hide Form' : 'Add Vehicle'}
-            </Button>
+            <Button onClick={() => navigate('/vehicle')}>Add Vehicle</Button>
           </div>
         </CardHeader>
         <CardContent>
@@ -106,30 +136,40 @@ export function VehiclesTab({ searchTerm }: VehiclesTabProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredVehicles.map((vehicle) => (
-                  <TableRow key={vehicle.uuid}>
-                    <TableCell>{vehicle.displayName || 'N/A'}</TableCell>
-                    <TableCell>{vehicle.fleetId || 'N/A'}</TableCell>
-                    <TableCell>{vehicle.capacity || 0} passengers</TableCell>
-                    <TableCell>{vehicle.serviceArea || 'N/A'}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={vehicle.accessibilityFeatures !== 'None' ? 'default' : 'secondary'}
-                      >
-                        {vehicle.accessibilityFeatures || 'None'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteVehicle(vehicle.uuid)}
-                      >
-                        <Trash2 className="w-4 h-4 text-destructive" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {filteredVehicles.map((vehicle) => {
+                  const accessibilityText = formatAccessibilityFeatures(vehicle);
+                  return (
+                    <TableRow key={vehicle.uuid}>
+                      <TableCell>{vehicle.displayName || 'N/A'}</TableCell>
+                      <TableCell>{vehicle.fleetId || 'N/A'}</TableCell>
+                      <TableCell>{vehicle.capacity || 0} passengers</TableCell>
+                      <TableCell>{vehicle.serviceArea || 'N/A'}</TableCell>
+                      <TableCell>
+                        <Badge variant={accessibilityText !== 'None' ? 'default' : 'secondary'}>
+                          {accessibilityText}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setEditingVehicle(vehicle)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteVehicle(vehicle.uuid)}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           )}

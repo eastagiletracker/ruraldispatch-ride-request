@@ -1,10 +1,10 @@
+import path from 'node:path';
 import react from '@vitejs/plugin-react';
-import path from 'path';
 import { defineConfig, loadEnv } from 'vite';
 
 export default defineConfig(({ mode }) => {
-  // Load env file from parent directory (root)
-  const env = loadEnv(mode, path.resolve(__dirname, '..'), '');
+  // Load env file from client directory
+  const env = loadEnv(mode, __dirname, '');
 
   return {
     plugins: [react()],
@@ -59,11 +59,11 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       host: '127.0.0.1', // Restrict to localhost only
-      port: 3001,
+      port: 5173,
       strictPort: true,
       proxy: {
         '/api': {
-          target: 'http://localhost:3000',
+          target: 'http://localhost:5001',
           changeOrigin: true,
         },
       },

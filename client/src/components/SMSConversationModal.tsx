@@ -8,7 +8,7 @@ import {
   User,
   XCircle,
 } from 'lucide-react';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -43,7 +43,6 @@ const SMSConversationModal: React.FC<SMSConversationModalProps> = ({
   rideUuid,
   riderPhone,
   driverPhone,
-  riderName,
 }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -51,23 +50,7 @@ const SMSConversationModal: React.FC<SMSConversationModalProps> = ({
   const [showCloseConfirm, setShowCloseConfirm] = useState<boolean>(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (rideUuid) {
-      loadNotifications();
-      // Poll for new messages every 20 seconds
-      const interval = setInterval(loadNotifications, 20000);
-      return () => clearInterval(interval);
-    }
-  }, [rideUuid]);
-
-  useEffect(() => {
-    // Scroll to bottom when new messages arrive
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [notifications]);
-
-  const loadNotifications = async () => {
+  const loadNotifications = useCallback(async () => {
     try {
       const data = await fetchNotificationsByRide(rideUuid);
       setNotifications(data);
@@ -82,7 +65,23 @@ const SMSConversationModal: React.FC<SMSConversationModalProps> = ({
       toast.error('Failed to load messages');
       setLoading(false);
     }
-  };
+  }, [rideUuid]);
+
+  useEffect(() => {
+    if (rideUuid) {
+      loadNotifications();
+      // Poll for new messages every 20 seconds
+      const interval = setInterval(loadNotifications, 20000);
+      return () => clearInterval(interval);
+    }
+  }, [rideUuid, loadNotifications]);
+
+  useEffect(() => {
+    // Scroll to bottom when new messages arrive
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, []);
 
   const handleCloseSession = async () => {
     try {
@@ -112,7 +111,7 @@ const SMSConversationModal: React.FC<SMSConversationModalProps> = ({
         return (
           <Tooltip>
             <TooltipTrigger asChild>
-              <CheckCircle2 className="h-3 w-3 text-green-600 cursor-help" />
+              <CheckCircle2 className="h-3 w-3 cursor-help text-green-600" />
             </TooltipTrigger>
             <TooltipContent>
               <p className="text-xs">Delivered - Message successfully delivered to recipient</p>
@@ -123,7 +122,7 @@ const SMSConversationModal: React.FC<SMSConversationModalProps> = ({
         return (
           <Tooltip>
             <TooltipTrigger asChild>
-              <CheckCircle2 className="h-3 w-3 text-blue-600 cursor-help" />
+              <CheckCircle2 className="h-3 w-3 cursor-help text-blue-600" />
             </TooltipTrigger>
             <TooltipContent>
               <p className="text-xs">
@@ -136,7 +135,7 @@ const SMSConversationModal: React.FC<SMSConversationModalProps> = ({
         return (
           <Tooltip>
             <TooltipTrigger asChild>
-              <CheckCircle2 className="h-3 w-3 text-blue-600 cursor-help" />
+              <CheckCircle2 className="h-3 w-3 cursor-help text-blue-600" />
             </TooltipTrigger>
             <TooltipContent>
               <p className="text-xs">Received - Incoming message received</p>
@@ -148,7 +147,7 @@ const SMSConversationModal: React.FC<SMSConversationModalProps> = ({
         return (
           <Tooltip>
             <TooltipTrigger asChild>
-              <Clock className="h-3 w-3 text-orange-600 cursor-help" />
+              <Clock className="h-3 w-3 cursor-help text-orange-600" />
             </TooltipTrigger>
             <TooltipContent>
               <p className="text-xs">Pending - Message queued or sending</p>
@@ -159,7 +158,7 @@ const SMSConversationModal: React.FC<SMSConversationModalProps> = ({
         return (
           <Tooltip>
             <TooltipTrigger asChild>
-              <XCircle className="h-3 w-3 text-red-600 cursor-help" />
+              <XCircle className="h-3 w-3 cursor-help text-red-600" />
             </TooltipTrigger>
             <TooltipContent>
               <p className="text-xs">Failed - Message failed to send</p>
@@ -170,7 +169,7 @@ const SMSConversationModal: React.FC<SMSConversationModalProps> = ({
         return (
           <Tooltip>
             <TooltipTrigger asChild>
-              <XCircle className="h-3 w-3 text-red-600 cursor-help" />
+              <XCircle className="h-3 w-3 cursor-help text-red-600" />
             </TooltipTrigger>
             <TooltipContent>
               <p className="text-xs">Undelivered - Message sent but not delivered to recipient</p>
@@ -181,7 +180,7 @@ const SMSConversationModal: React.FC<SMSConversationModalProps> = ({
         return (
           <Tooltip>
             <TooltipTrigger asChild>
-              <HelpCircle className="h-3 w-3 text-gray-400 cursor-help" />
+              <HelpCircle className="h-3 w-3 cursor-help text-gray-400" />
             </TooltipTrigger>
             <TooltipContent>
               <p className="text-xs">Unknown status{status ? `: ${status}` : ''}</p>
@@ -195,7 +194,7 @@ const SMSConversationModal: React.FC<SMSConversationModalProps> = ({
     return (
       <div className="flex items-center justify-center py-20">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto mb-4"></div>
+          <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-b-2 border-primary"></div>
           <p className="text-sm text-muted-foreground">Loading messages...</p>
         </div>
       </div>
@@ -204,9 +203,9 @@ const SMSConversationModal: React.FC<SMSConversationModalProps> = ({
 
   return (
     <TooltipProvider>
-      <div className="flex flex-col h-full">
+      <div className="flex h-full flex-col">
         {/* Header Section */}
-        <div className="px-6 py-3 bg-muted/30 border-b">
+        <div className="border-b bg-muted/30 px-6 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Badge variant={isSessionActive ? 'default' : 'secondary'} className="text-xs">
@@ -237,7 +236,7 @@ const SMSConversationModal: React.FC<SMSConversationModalProps> = ({
                 received. This action cannot be undone.
               </DialogDescription>
             </DialogHeader>
-            <DialogFooter className="flex-col sm:flex-row gap-2">
+            <DialogFooter className="flex-col gap-2 sm:flex-row">
               <Button
                 variant="outline"
                 onClick={() => setShowCloseConfirm(false)}
@@ -258,9 +257,9 @@ const SMSConversationModal: React.FC<SMSConversationModalProps> = ({
 
         {/* Messages Area */}
         {notifications.length === 0 ? (
-          <div className="flex-1 flex items-center justify-center py-20">
+          <div className="flex flex-1 items-center justify-center py-20">
             <div className="text-center text-muted-foreground">
-              <Phone className="h-12 w-12 mx-auto mb-3 opacity-50" />
+              <Phone className="mx-auto mb-3 h-12 w-12 opacity-50" />
               <p className="text-sm">No SMS messages sent for this ride yet.</p>
             </div>
           </div>
@@ -274,11 +273,11 @@ const SMSConversationModal: React.FC<SMSConversationModalProps> = ({
                   !prevNotif || formatDate(notif.sentAt) !== formatDate(prevNotif.sentAt);
 
                 return (
-                  <React.Fragment key={index}>
+                  <React.Fragment key={notif.uuid}>
                     {showDateDivider && (
-                      <div className="flex items-center gap-2 my-4">
+                      <div className="my-4 flex items-center gap-2">
                         <Separator className="flex-1" />
-                        <span className="text-xs text-muted-foreground font-medium">
+                        <span className="text-xs font-medium text-muted-foreground">
                           {formatDate(notif.sentAt)}
                         </span>
                         <Separator className="flex-1" />
@@ -295,7 +294,7 @@ const SMSConversationModal: React.FC<SMSConversationModalProps> = ({
                               : 'bg-primary text-primary-foreground rounded-tr-none'
                           }`}
                         >
-                          <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+                          <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">
                             {notif.messageBody}
                           </p>
                         </div>
@@ -329,7 +328,7 @@ const SMSConversationModal: React.FC<SMSConversationModalProps> = ({
         )}
 
         {/* Footer Section */}
-        <div className="px-6 py-3 bg-muted/30 border-t">
+        <div className="border-t bg-muted/30 px-6 py-3">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <div className="flex items-center gap-2">
               <User className="h-3 w-3" />

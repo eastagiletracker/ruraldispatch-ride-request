@@ -1,14 +1,14 @@
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import dotenv from 'dotenv';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import { z } from 'zod/v4';
 
 // ESM equivalent of __dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load .env from parent directory (shared with Express server)
-dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
+// Load .env from server-fastify directory
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 /**
  * Environment Variable Schema
@@ -17,7 +17,7 @@ dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 const envSchema = z.object({
   // Server Configuration
   NODE_ENV: z.enum(['development', 'production', 'staging', 'test']).default('development'),
-  PORT: z.string().transform(Number).pipe(z.number().int().positive()).default(5000),
+  PORT: z.string().transform(Number).pipe(z.number().int().positive()).default(5001),
   TZ: z.string().default('UTC'),
 
   // Database

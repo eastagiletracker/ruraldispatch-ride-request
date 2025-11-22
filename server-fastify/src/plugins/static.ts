@@ -1,7 +1,7 @@
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import fastifyStatic from '@fastify/static';
 import type { FastifyPluginAsync } from 'fastify';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import { env } from '../config/env.js';
 
 // ESM equivalent of __dirname

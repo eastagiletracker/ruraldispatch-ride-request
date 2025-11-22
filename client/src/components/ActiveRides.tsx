@@ -1,5 +1,5 @@
 import { Car, UserPlus } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -22,7 +22,7 @@ export default function ActiveRides({ callbackFn }: ActiveRidesProps) {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
-  const getRideRequests = async () => {
+  const getRideRequests = useCallback(async () => {
     try {
       const rideRequests = await fetchCollection<RideRequest>('riderequests');
       if (rideRequests) {
@@ -47,16 +47,16 @@ export default function ActiveRides({ callbackFn }: ActiveRidesProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const getUsers = async () => {
+  const getUsers = useCallback(async () => {
     try {
       const users = await fetchCollection<User>('users');
       setUsers(users);
     } catch (error) {
       console.error('Error fetching users:', error);
     }
-  };
+  }, []);
 
   useEffect(() => {
     getRideRequests();
@@ -67,7 +67,7 @@ export default function ActiveRides({ callbackFn }: ActiveRidesProps) {
     }, 20000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [getRideRequests, getUsers]);
 
   return (
     <Card className="w-full">

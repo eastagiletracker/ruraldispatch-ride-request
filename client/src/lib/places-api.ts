@@ -116,7 +116,7 @@ export async function getAutocompletePredictions(
  */
 export async function getPlaceDetails(
   placeId: string,
-  sessionToken: string
+  _sessionToken: string
 ): Promise<PlaceDetails> {
   console.log('🌐 [places-api] getPlaceDetails called with placeId:', placeId);
 

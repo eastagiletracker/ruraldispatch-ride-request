@@ -3,7 +3,7 @@ import CreateVehicle from '../components/CreateVehicle';
 
 export default function VehicleHome() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <div className="container mx-auto px-4 py-6 md:py-8">
         {/* Page Header */}
         <div className="mb-6 md:mb-8">

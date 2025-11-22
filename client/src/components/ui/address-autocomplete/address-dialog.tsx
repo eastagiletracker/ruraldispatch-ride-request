@@ -5,7 +5,7 @@
  */
 
 import { Loader2 } from 'lucide-react';
-import { memo, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -18,11 +18,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  type AddressType,
-  createDynamicAddressSchema,
-  type PartialAddressType,
-} from '@/schemas/address-schema';
+import type { AddressType, PartialAddressType } from '@/schemas/address-schema';
 
 interface AddressDialogProps {
   children: React.ReactNode;

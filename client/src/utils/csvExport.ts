@@ -80,22 +80,6 @@ function getFormattedCreatedDate(ride: RideRequest): string {
     return formatLocalDateTime(ride.updatedAt);
   }
 
-  // MongoDB ObjectId fallback (for legacy data)
-  if ((ride as any)._id) {
-    try {
-      const objectId = (ride as any)._id;
-      const timestamp =
-        typeof objectId === 'string' && objectId.length === 24
-          ? parseInt(objectId.substring(0, 8), 16) * 1000
-          : null;
-      if (timestamp) {
-        return formatLocalDateTime(new Date(timestamp).toISOString());
-      }
-    } catch (e) {
-      console.debug('Could not extract timestamp from _id');
-    }
-  }
-
   return 'N/A';
 }
 

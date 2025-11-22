@@ -1,4 +1,4 @@
-import { AlertCircle, Trash2 } from 'lucide-react';
+import { AlertCircle, Pencil, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import DeleteConfirmationModal from '@/components/DeleteConfirmationModal';
@@ -17,6 +17,8 @@ import {
 } from '@/components/ui/table';
 import { getApiUrl, useSystemUsers } from '@/lib/api';
 import { formatShortId } from '@/utils/formatters';
+import { SystemUserAddModal } from './SystemUserAddModal';
+import { SystemUserEditModal } from './SystemUserEditModal';
 import { TableSkeleton } from './TableSkeleton';
 
 interface DispatchersTabProps {
@@ -31,18 +33,23 @@ function getAuthHeaders() {
   };
 }
 
+import type { SystemUser } from '@shared/schemas';
+
 export function DispatchersTab({ searchTerm }: DispatchersTabProps) {
-  const [deleteModal, setDeleteModal] = useState({ isOpen: false, itemId: 0, itemName: '' });
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [editingUser, setEditingUser] = useState<SystemUser | null>(null);
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, itemId: '', itemName: '' });
   const [isDeleting, setIsDeleting] = useState(false);
   const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
 
   const { data: dispatchersData, isLoading, refetch } = useSystemUsers();
 
-  const allSystemUsers =
-    (dispatchersData as any)?.users || (Array.isArray(dispatchersData) ? dispatchersData : []);
-  const dispatchers = allSystemUsers.filter((u: any) => u.role === 'dispatcher');
+  const allSystemUsers: SystemUser[] =
+    (dispatchersData as { users?: SystemUser[] })?.users ||
+    (Array.isArray(dispatchersData) ? dispatchersData : []);
+  const dispatchers = allSystemUsers.filter((u) => u.role === 'dispatcher');
 
-  const handleDeleteDispatcher = async (uuid: number, name: string) => {
+  const handleDeleteDispatcher = async (uuid: string, name: string) => {
     setDeleteModal({ isOpen: true, itemId: uuid, itemName: name });
   };
 
@@ -56,7 +63,7 @@ export function DispatchersTab({ searchTerm }: DispatchersTabProps) {
       const data = await response.json();
       if (data.success) {
         toast.success('Dispatcher deleted successfully');
-        setDeleteModal({ isOpen: false, itemId: 0, itemName: '' });
+        setDeleteModal({ isOpen: false, itemId: '', itemName: '' });
         refetch();
       } else {
         toast.error(data.message || 'Failed to delete dispatcher');
@@ -69,7 +76,7 @@ export function DispatchersTab({ searchTerm }: DispatchersTabProps) {
     }
   };
 
-  const handleToggleDispatcherStatus = async (uuid: number, currentStatus: boolean) => {
+  const handleToggleDispatcherStatus = async (uuid: string, currentStatus: boolean) => {
     const actionKey = `dispatcher-toggle-${uuid}`;
     setLoadingActions((prev) => ({ ...prev, [actionKey]: true }));
 
@@ -98,11 +105,31 @@ export function DispatchersTab({ searchTerm }: DispatchersTabProps) {
     (dispatcher) =>
       dispatcher.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       dispatcher.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      dispatcher.email?.toLowerCase().includes(searchTerm.toLowerCase())
+      dispatcher.username?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
     <>
+      <SystemUserAddModal
+        open={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onSuccess={() => {
+          refetch();
+        }}
+        userType="dispatcher"
+      />
+
+      {editingUser && (
+        <SystemUserEditModal
+          user={editingUser}
+          open={!!editingUser}
+          onClose={() => setEditingUser(null)}
+          onSuccess={() => {
+            refetch();
+          }}
+        />
+      )}
+
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -112,6 +139,7 @@ export function DispatchersTab({ searchTerm }: DispatchersTabProps) {
                 Manage dispatcher accounts who can assign rides and manage operations
               </CardDescription>
             </div>
+            <Button onClick={() => setShowAddModal(true)}>Add Dispatcher</Button>
           </div>
         </CardHeader>
         <CardContent>
@@ -123,7 +151,7 @@ export function DispatchersTab({ searchTerm }: DispatchersTabProps) {
             </AlertDescription>
           </Alert>
           {isLoading ? (
-            <TableSkeleton rows={5} cols={7} />
+            <TableSkeleton rows={5} cols={5} />
           ) : filteredDispatchers.length === 0 ? (
             <p className="py-8 text-center text-muted-foreground">No dispatchers found</p>
           ) : (
@@ -133,8 +161,6 @@ export function DispatchersTab({ searchTerm }: DispatchersTabProps) {
                   <TableHead>ID</TableHead>
                   <TableHead>Username</TableHead>
                   <TableHead>Full Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Phone</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -145,8 +171,6 @@ export function DispatchersTab({ searchTerm }: DispatchersTabProps) {
                     <TableCell className="font-medium">{formatShortId(dispatcher.uuid)}</TableCell>
                     <TableCell className="font-mono">{dispatcher.username}</TableCell>
                     <TableCell>{dispatcher.fullName || 'N/A'}</TableCell>
-                    <TableCell>{dispatcher.email || 'N/A'}</TableCell>
-                    <TableCell>{dispatcher.phone || 'N/A'}</TableCell>
                     <TableCell>
                       <Badge variant={dispatcher.isActive ? 'default' : 'secondary'}>
                         {dispatcher.isActive ? 'Active' : 'Inactive'}
@@ -154,6 +178,13 @@ export function DispatchersTab({ searchTerm }: DispatchersTabProps) {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setEditingUser(dispatcher)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
                         <StatusToggleButton
                           isActive={dispatcher.isActive}
                           isLoading={
@@ -184,7 +215,7 @@ export function DispatchersTab({ searchTerm }: DispatchersTabProps) {
 
       <DeleteConfirmationModal
         isOpen={deleteModal.isOpen}
-        onClose={() => setDeleteModal({ isOpen: false, itemId: 0, itemName: '' })}
+        onClose={() => setDeleteModal({ isOpen: false, itemId: '', itemName: '' })}
         onConfirm={performDeleteDispatcher}
         title="Delete Dispatcher"
         description={`Are you sure you want to delete ${deleteModal.itemName}? This action cannot be undone.`}

@@ -296,7 +296,7 @@ export function getSMSTemplate(
 
   // Get template for status and recipient
   const statusTemplates = templates[status];
-  if (statusTemplates && statusTemplates[recipient]) {
+  if (statusTemplates?.[recipient]) {
     return statusTemplates[recipient]!();
   }
 

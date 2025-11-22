@@ -18,6 +18,7 @@ model User {
   fullName  String
   phone     String   @unique
   email     String?
+  address   String?
   role      String   @default("rider")
 
   // SMS Consent (TCPA compliance)

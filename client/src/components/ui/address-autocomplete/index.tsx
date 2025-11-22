@@ -5,7 +5,7 @@
  */
 
 import { AlertCircle, Loader2, MapPin, Pencil, X } from 'lucide-react';
-import { memo, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Command,
@@ -113,6 +113,7 @@ const AddressAutocompleteComponent: React.FC<AddressAutocompleteProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const isInternalUpdate = useRef(false);
+  const inputId = useId();
 
   const {
     value: inputValue,
@@ -143,7 +144,7 @@ const AddressAutocompleteComponent: React.FC<AddressAutocompleteProps> = ({
     if (valuesAreDifferent) {
       setSelectedAddress(value || null);
     }
-  }, [value]); // Don't include selectedAddress in deps to avoid loops
+  }, [value, selectedAddress]); // Don't include selectedAddress in deps to avoid loops
 
   // Handle clicks outside to close suggestions
   useEffect(() => {
@@ -270,7 +271,10 @@ const AddressAutocompleteComponent: React.FC<AddressAutocompleteProps> = ({
   return (
     <div className={cn('space-y-2', className)} ref={containerRef}>
       {label && (
-        <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+        <label
+          htmlFor={inputId}
+          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+        >
           {label}
           {required && <span className="text-destructive ml-1">*</span>}
         </label>
@@ -335,6 +339,7 @@ const AddressAutocompleteComponent: React.FC<AddressAutocompleteProps> = ({
           {/* Search Input */}
           <div className="relative">
             <Input
+              id={inputId}
               ref={inputRef}
               type="text"
               value={inputValue}

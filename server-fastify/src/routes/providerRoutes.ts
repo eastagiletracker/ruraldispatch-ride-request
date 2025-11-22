@@ -56,6 +56,27 @@ export const providerRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post('/', async (request) => {
     return await api.addProvider(request.body as any);
   });
+
+  /**
+   * PUT /api/providers/:uuid
+   * Update a provider
+   */
+  fastify.put<{ Params: { uuid: string } }>('/:uuid', async (request, reply) => {
+    try {
+      const result = await api.updateProvider(request.params.uuid, request.body as any);
+      return {
+        success: true,
+        message: 'Provider updated successfully',
+        provider: result,
+      };
+    } catch (error) {
+      fastify.log.error(error, 'Error updating provider');
+      return reply.status(500).send({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  });
 };
 
 /**

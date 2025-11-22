@@ -3,7 +3,7 @@
  */
 
 import { v7 as uuidv7 } from 'uuid';
-import type { PrismaClient } from '../generated/client/client.js';
+import type { PrismaClient } from '../../node_modules/.prisma/client/index.js';
 
 export async function seedRiders(prisma: PrismaClient) {
   console.log('\n👥 Seeding Service Users (Riders)...');
@@ -14,6 +14,7 @@ export async function seedRiders(prisma: PrismaClient) {
       fullName: 'Maria Rodriguez',
       phone: '+15551234567',
       email: 'maria.rodriguez@example.com',
+      address: '456 Broadway, New York, NY 10013',
       role: 'rider',
       smsConsentGiven: true,
       smsConsentTimestamp: new Date(),
@@ -33,6 +34,7 @@ export async function seedRiders(prisma: PrismaClient) {
       uuid: uuidv7(),
       fullName: 'Emily Chen',
       phone: '+15551234569',
+      address: '789 5th Avenue, New York, NY 10022',
       role: 'rider',
       smsConsentGiven: true,
       smsConsentTimestamp: new Date(),
@@ -43,6 +45,7 @@ export async function seedRiders(prisma: PrismaClient) {
       fullName: 'Robert Taylor',
       phone: '+15551234570',
       email: 'rtaylor@placeholder.com',
+      address: '321 West 42nd Street, New York, NY 10036',
       role: 'rider',
       smsConsentGiven: true,
       smsConsentTimestamp: new Date(),
@@ -53,19 +56,31 @@ export async function seedRiders(prisma: PrismaClient) {
       fullName: 'Sarah Johnson',
       phone: '+15551234571',
       role: 'caregiver',
-      smsConsentGiven: true,
-      smsConsentTimestamp: new Date(),
-      smsConsentIpAddress: '192.168.1.5',
+      smsConsentGiven: false,
+      smsConsentTimestamp: null,
+      smsConsentIpAddress: null,
     },
     {
       uuid: uuidv7(),
       fullName: 'David Martinez',
       phone: '+15551234572',
       email: 'david.m@example.com',
+      address: '123 East 86th Street, New York, NY 10028',
       role: 'rider',
       smsConsentGiven: true,
       smsConsentTimestamp: new Date(),
       smsConsentIpAddress: '192.168.1.6',
+    },
+    {
+      uuid: uuidv7(),
+      fullName: 'Patricia Anderson',
+      phone: '+15551234573',
+      email: 'patricia.a@example.com',
+      address: '567 Park Avenue, New York, NY 10065',
+      role: 'rider',
+      smsConsentGiven: false,
+      smsConsentTimestamp: null,
+      smsConsentIpAddress: null,
     },
   ];
 

@@ -72,7 +72,7 @@ export const fetchDocument = async <T = unknown>(
 
   try {
     return JSON.parse(text);
-  } catch (error) {
+  } catch (_error) {
     console.error('Invalid JSON response:', text);
     throw new Error('Invalid JSON response from server');
   }

@@ -193,7 +193,7 @@ export default function SchedulerStatus() {
                   <div className="space-y-2">
                     {ride.tasks.map((task, index) => (
                       <div
-                        key={index}
+                        key={`${ride.rideUuid}-${task}-${index}`}
                         className="flex items-center gap-2 pl-2 text-sm text-gray-700"
                       >
                         {getTaskIcon(task)}

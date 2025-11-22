@@ -22,17 +22,18 @@ export default function VehicleSearch({ onVehicleSelect }: VehicleSearchProps) {
     handleElementSelect: (vehicle: Vehicle) => void
   ): React.JSX.Element {
     return (
-      <div
+      <button
         key={vehicle.uuid}
+        type="button"
         onClick={() => {
           handleElementSelect(vehicle);
           onVehicleSelect(vehicle);
         }}
-        className="px-4 py-2 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0"
+        className="w-full px-4 py-2 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0 text-left"
       >
         <div className="font-medium text-gray-900">{vehicle.displayName}</div>
         <div className="text-sm text-gray-500">ID: {formatShortId(vehicle.uuid)}</div>
-      </div>
+      </button>
     );
   }
 }

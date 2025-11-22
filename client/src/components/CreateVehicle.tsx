@@ -1,4 +1,3 @@
-import { zodResolver } from '@hookform/resolvers/zod';
 import { AlertCircle } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -13,10 +12,18 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { type VehicleFormData, vehicleFormSchema } from '@/schemas/validation';
+import { type VehicleFormData } from '@/schemas/validation';
 import { createDocument } from '../utils/database';
+
+interface ExtendedVehicleFormData extends Omit<VehicleFormData, 'accessibilityFeatures'> {
+  walkerAccessible: boolean;
+  wheelchairAccessible: boolean;
+  serviceAnimalFriendly: boolean;
+  oxygenTankAccessible: boolean;
+}
 
 export default function CreateVehicle() {
   const [submitSuccess, setSubmitSuccess] = useState<boolean>(false);
@@ -27,24 +34,51 @@ export default function CreateVehicle() {
     handleSubmit,
     formState: { errors, isSubmitting },
     reset,
-  } = useForm<VehicleFormData>({
-    resolver: zodResolver(vehicleFormSchema),
+    watch,
+    setValue,
+  } = useForm<ExtendedVehicleFormData>({
     defaultValues: {
       displayName: '',
       fleetId: '',
       capacity: 0,
       serviceArea: '',
-      accessibilityFeatures: '',
+      walkerAccessible: false,
+      wheelchairAccessible: false,
+      serviceAnimalFriendly: false,
+      oxygenTankAccessible: false,
     },
   });
 
-  const onSubmit = async (data: VehicleFormData) => {
+  const watchAccessibility = watch([
+    'walkerAccessible',
+    'wheelchairAccessible',
+    'serviceAnimalFriendly',
+    'oxygenTankAccessible',
+  ]);
+
+  const onSubmit = async (data: ExtendedVehicleFormData) => {
     setSubmitError('');
     setSubmitSuccess(false);
 
     try {
-      // Backend will generate UUID
-      const response = await createDocument('vehicles', data);
+      // Prepare data for backend with boolean accessibility fields
+      const vehicleData = {
+        uuid: crypto.randomUUID(),
+        displayName: data.displayName,
+        fleetId: data.fleetId || null,
+        model: null,
+        year: null,
+        color: null,
+        licensePlate: null,
+        capacity: data.capacity || null,
+        serviceArea: data.serviceArea || null,
+        walkerAccessible: data.walkerAccessible || false,
+        wheelchairAccessible: data.wheelchairAccessible || false,
+        serviceAnimalFriendly: data.serviceAnimalFriendly || false,
+        oxygenTankAccessible: data.oxygenTankAccessible || false,
+      };
+
+      const response = await createDocument('vehicles', vehicleData);
 
       if (response.ok) {
         setSubmitSuccess(true);
@@ -79,7 +113,7 @@ export default function CreateVehicle() {
   };
 
   return (
-    <Card className="max-w-4xl mx-auto">
+    <Card className="mx-auto max-w-4xl">
       <CardHeader>
         <CardTitle>Create Vehicle</CardTitle>
         <CardDescription>Fill in the information to add a new vehicle to the fleet</CardDescription>
@@ -87,15 +121,15 @@ export default function CreateVehicle() {
 
       <CardContent>
         {submitSuccess && (
-          <Alert className="mb-6 text-green-900 border-green-500 bg-green-50 dark:border-green-700 dark:bg-green-950 dark:text-green-100">
-            <AlertCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
+          <Alert className="mb-6 border-green-500 bg-green-50 text-green-900 dark:border-green-700 dark:bg-green-950 dark:text-green-100">
+            <AlertCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
             <AlertDescription>Vehicle created successfully!</AlertDescription>
           </Alert>
         )}
 
         {submitError && (
           <Alert variant="destructive" className="mb-6">
-            <AlertCircle className="w-4 h-4" />
+            <AlertCircle className="h-4 w-4" />
             <AlertDescription>{submitError}</AlertDescription>
           </Alert>
         )}
@@ -167,22 +201,65 @@ export default function CreateVehicle() {
           </div>
 
           {/* Accessibility Features */}
-          <div className="space-y-2">
-            <Label htmlFor="accessibilityFeatures">
-              Accessibility Features <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="accessibilityFeatures"
-              {...register('accessibilityFeatures')}
-              placeholder="e.g., Wheelchair accessible, Walker storage"
-              className={errors.accessibilityFeatures ? 'border-destructive' : ''}
-            />
-            {errors.accessibilityFeatures && (
-              <p className="text-sm text-destructive">{errors.accessibilityFeatures.message}</p>
-            )}
-            <p className="text-xs text-muted-foreground">
-              List special accessibility features and equipment
-            </p>
+          <div className="space-y-4">
+            <div>
+              <Label className="text-base font-semibold">Accessibility Feature Type</Label>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Select any accessibility features needed for this vehicle.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="walkerAccessible"
+                  checked={watchAccessibility[0]}
+                  onCheckedChange={(checked) => setValue('walkerAccessible', checked as boolean)}
+                />
+                <Label htmlFor="walkerAccessible" className="cursor-pointer font-normal">
+                  Walker Accessible
+                </Label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="wheelchairAccessible"
+                  checked={watchAccessibility[1]}
+                  onCheckedChange={(checked) =>
+                    setValue('wheelchairAccessible', checked as boolean)
+                  }
+                />
+                <Label htmlFor="wheelchairAccessible" className="cursor-pointer font-normal">
+                  Wheelchair Accessible
+                </Label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="serviceAnimalFriendly"
+                  checked={watchAccessibility[2]}
+                  onCheckedChange={(checked) =>
+                    setValue('serviceAnimalFriendly', checked as boolean)
+                  }
+                />
+                <Label htmlFor="serviceAnimalFriendly" className="cursor-pointer font-normal">
+                  Service Animal Friendly
+                </Label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="oxygenTankAccessible"
+                  checked={watchAccessibility[3]}
+                  onCheckedChange={(checked) =>
+                    setValue('oxygenTankAccessible', checked as boolean)
+                  }
+                />
+                <Label htmlFor="oxygenTankAccessible" className="cursor-pointer font-normal">
+                  Oxygen Tank/Medical Device Accessible
+                </Label>
+              </div>
+            </div>
           </div>
         </form>
       </CardContent>

@@ -4,6 +4,7 @@ CREATE TABLE "users" (
     "fullName" TEXT NOT NULL,
     "phone" TEXT NOT NULL,
     "email" TEXT,
+    "address" TEXT,
     "role" TEXT NOT NULL DEFAULT 'rider',
     "smsConsentGiven" BOOLEAN DEFAULT false,
     "smsConsentTimestamp" TIMESTAMP(3),

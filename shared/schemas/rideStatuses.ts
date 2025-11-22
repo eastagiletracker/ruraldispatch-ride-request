@@ -141,11 +141,11 @@ export const RIDE_STATUS_TRANSITIONS: Record<number, number[]> = {
  * Helper functions
  */
 export const isRideClosingStatus = (status: number): boolean => {
-  return RIDE_CLOSING_STATUSES.includes(status as any);
+  return (RIDE_CLOSING_STATUSES as readonly number[]).includes(status);
 };
 
 export const isRideProblematicStatus = (status: number): boolean => {
-  return RIDE_PROBLEMATIC_STATUSES.includes(status as any);
+  return (RIDE_PROBLEMATIC_STATUSES as readonly number[]).includes(status);
 };
 
 export const isValidRideStatus = (status: number): boolean => {

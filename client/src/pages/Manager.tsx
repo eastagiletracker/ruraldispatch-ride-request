@@ -5,7 +5,6 @@ import { DispatchersTab } from '@/components/manager/DispatchersTab';
 import { ProvidersTab } from '@/components/manager/ProvidersTab';
 import { RidersTab } from '@/components/manager/RidersTab';
 import { VehiclesTab } from '@/components/manager/VehiclesTab';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 

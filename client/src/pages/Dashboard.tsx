@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import AssignDriver from '../components/AssignDriver';
 import RideRequests from '../components/RideRequests';
-import SchedulerStatus from '../components/SchedulerStatus';
 import { getCurrentUserRole, hasAnyRole } from '../utils/permissions';
 
 export default function Dashboard() {
@@ -22,12 +21,12 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <div className="container mx-auto px-4 py-6 md:py-8">
         {/* Page Header */}
         <div className="mb-6 md:mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">Dashboard</h1>
-          <p className="text-muted-foreground text-sm md:text-base">
+          <h1 className="mb-2 text-3xl font-bold text-foreground md:text-4xl">Dashboard</h1>
+          <p className="text-sm text-muted-foreground md:text-base">
             Manage ride requests and assignments
           </p>
         </div>

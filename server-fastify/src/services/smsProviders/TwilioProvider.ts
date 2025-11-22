@@ -1,7 +1,7 @@
 import type { Twilio } from 'twilio';
+import { env } from '../../config/env.js';
 import { twilioConfig } from '../../config/twilio.js';
 import type { SMSResult } from '../../types/sms.types.js';
-import { env } from '../../config/env.js';
 
 /**
  * Twilio SMS Provider
@@ -16,7 +16,7 @@ export class TwilioProvider {
 
   constructor() {
     if (!twilioConfig) {
-      console.warn('   Twilio is not configured');
+      console.warn('  Twilio is not configured');
       this.client = null;
       this.fromNumber = undefined;
       this.messagingServiceSid = undefined;
@@ -66,17 +66,19 @@ export class TwilioProvider {
         messageOptions.from = this.fromNumber;
         console.log(`Sending SMS via Twilio from: ${this.fromNumber}`);
       } else {
-        throw new Error('Neither TWILIO_MESSAGING_SERVICE_SID nor TWILIO_PHONE_NUMBER is configured');
+        throw new Error(
+          'Neither TWILIO_MESSAGING_SERVICE_SID nor TWILIO_PHONE_NUMBER is configured'
+        );
       }
 
       // Add status callback if configured and not disabled
       if (this.statusCallbackUrl && !this.disableStatusCallback) {
         messageOptions.statusCallback = this.statusCallbackUrl;
-        console.log(`=Ê Status callback set to: ${this.statusCallbackUrl}`);
+        console.log(`= Status callback set to: ${this.statusCallbackUrl}`);
       } else if (this.disableStatusCallback) {
-        console.log('   Status callback disabled via TWILIO_DISABLE_STATUS_CALLBACK');
+        console.log('  Status callback disabled via TWILIO_DISABLE_STATUS_CALLBACK');
       } else {
-        console.log("   No status callback URL configured - delivery status won't be tracked");
+        console.log("  No status callback URL configured - delivery status won't be tracked");
       }
 
       const result = await this.client.messages.create(messageOptions);

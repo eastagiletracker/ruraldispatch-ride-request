@@ -522,7 +522,7 @@ const notificationRoutes: FastifyPluginAsync = async (fastify) => {
           }
         } else if (isDriver) {
           senderRole = 'driver';
-          if (activeRide.rider && activeRide.rider.phone) {
+          if (activeRide.rider?.phone) {
             const recipientPhone = activeRide.rider.phone;
             const senderName = activeRide.driver?.fullName || 'Driver';
             const forwardMessage = `Message from ${senderName} (Driver):\n${text}`;

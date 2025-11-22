@@ -111,12 +111,12 @@ export default function RideRequestForm({
   // Reset travel time calculation state when addresses change
   useEffect(() => {
     setTravelTimeCalculated(false);
-  }, [pickupLocation, dropoffLocation]);
+  }, []);
 
   // Auto-calculate travel time when both addresses are selected
   useEffect(() => {
     // Get address strings from either string or AddressType
-    const getAddressString = (location: any): string => {
+    const getAddressString = (location: string | { formattedAddress: string } | null): string => {
       if (!location) return '';
       return typeof location === 'string' ? location : location.formattedAddress;
     };
@@ -170,7 +170,7 @@ export default function RideRequestForm({
 
     try {
       // Helper to extract address string from AddressType or string
-      const getAddressString = (location: any): string => {
+      const getAddressString = (location: string | { formattedAddress: string } | null): string => {
         if (!location) return '';
         return typeof location === 'string' ? location : location.formattedAddress;
       };
@@ -194,7 +194,7 @@ export default function RideRequestForm({
       let estimatedTravelTimeNum: number | undefined;
       if (data.estimatedTravelTime) {
         const travelTimeNum = parseInt(data.estimatedTravelTime, 10);
-        if (!isNaN(travelTimeNum)) {
+        if (!Number.isNaN(travelTimeNum)) {
           estimatedTravelTimeNum = travelTimeNum;
         }
       }
@@ -260,7 +260,7 @@ export default function RideRequestForm({
           description: errorMessage,
         });
       }
-    } catch (error) {
+    } catch (_error) {
       const errorMessage = 'Please try again or contact support.';
       setSubmitError(errorMessage);
       toast.error('Error submitting form', {

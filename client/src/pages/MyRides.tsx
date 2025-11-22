@@ -1,5 +1,5 @@
 import { RIDE_REQUEST_STATUSES, RIDE_STATUSES } from '@shared/schemas';
-import { Calendar, Car, Clock, MapPin, User } from 'lucide-react';
+import { Car, Clock, MapPin, User } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -38,7 +38,7 @@ export default function MyRides() {
         // Filter to only show assigned rides (rideRequestStatus >= RIDE_CONFIRMATION_NEEDED)
         const assignedRides = fetchedRideRequests.filter(
           (rr) =>
-            parseInt(rr.rideRequestStatus.toString()) >=
+            parseInt(rr.rideRequestStatus.toString(), 10) >=
             RIDE_REQUEST_STATUSES.RIDE_CONFIRMATION_NEEDED
         );
 
@@ -67,7 +67,7 @@ export default function MyRides() {
     }, 20000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [getRideRequests]);
 
   // Categorize rides by status
   const now = new Date();
@@ -218,7 +218,7 @@ export default function MyRides() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <div className="container mx-auto px-4 py-6 md:py-8">
         {/* Page Header */}
         <div className="mb-6 md:mb-8">

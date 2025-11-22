@@ -20,10 +20,13 @@ interface VehicleWithFeatures extends Vehicle {
 interface VehicleInput {
   uuid: string;
   displayName: string;
+  fleetId?: string | null;
   model?: string | null;
   year?: number | null;
   color?: string | null;
   licensePlate?: string | null;
+  capacity?: number | null;
+  serviceArea?: string | null;
   walkerAccessible?: boolean;
   wheelchairAccessible?: boolean;
   serviceAnimalFriendly?: boolean;
@@ -90,14 +93,46 @@ export function createVehicleRepository(prisma: PrismaClient) {
         data: {
           uuid: vehicle.uuid,
           displayName: vehicle.displayName,
+          fleetId: vehicle.fleetId || null,
           model: vehicle.model || null,
           year: vehicle.year || null,
           color: vehicle.color || null,
           licensePlate: vehicle.licensePlate || null,
+          capacity: vehicle.capacity || null,
+          serviceArea: vehicle.serviceArea || null,
           walkerAccessible: vehicle.walkerAccessible || false,
           wheelchairAccessible: vehicle.wheelchairAccessible || false,
           serviceAnimalFriendly: vehicle.serviceAnimalFriendly || false,
           oxygenTankAccessible: vehicle.oxygenTankAccessible || false,
+        },
+      });
+    },
+
+    /**
+     * Update a vehicle
+     */
+    updateVehicle: async (uuid: string, data: Partial<VehicleInput>): Promise<Vehicle> => {
+      return await prisma.vehicle.update({
+        where: { uuid },
+        data: {
+          ...(data.displayName && { displayName: data.displayName }),
+          ...(data.fleetId !== undefined && { fleetId: data.fleetId }),
+          ...(data.model !== undefined && { model: data.model }),
+          ...(data.year !== undefined && { year: data.year }),
+          ...(data.color !== undefined && { color: data.color }),
+          ...(data.licensePlate !== undefined && { licensePlate: data.licensePlate }),
+          ...(data.capacity !== undefined && { capacity: data.capacity }),
+          ...(data.serviceArea !== undefined && { serviceArea: data.serviceArea }),
+          ...(data.walkerAccessible !== undefined && { walkerAccessible: data.walkerAccessible }),
+          ...(data.wheelchairAccessible !== undefined && {
+            wheelchairAccessible: data.wheelchairAccessible,
+          }),
+          ...(data.serviceAnimalFriendly !== undefined && {
+            serviceAnimalFriendly: data.serviceAnimalFriendly,
+          }),
+          ...(data.oxygenTankAccessible !== undefined && {
+            oxygenTankAccessible: data.oxygenTankAccessible,
+          }),
         },
       });
     },

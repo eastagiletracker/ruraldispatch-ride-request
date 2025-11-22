@@ -13,7 +13,7 @@ This is the new Fastify-based backend for Rural Dispatch, migrated from Express.
 ## Development
 
 ```bash
-# Install dependencies
+# Install dependencies (from root or here)
 bun install
 
 # Run development server with hot reload
@@ -28,6 +28,29 @@ bun run build
 # Run production build
 bun start
 ```
+
+## Database Setup
+
+```bash
+# Generate Prisma client
+bun run prisma:generate
+
+# Run migrations
+bun run prisma:migrate
+
+# Seed database
+bunx tsx prisma/seed.ts
+
+# Reset and reseed database
+bun run prisma:migrate
+
+# Open Prisma Studio
+bun run prisma:studio
+```
+
+## Environment Variables
+
+The server uses its own `.env` file in the `server-fastify` directory. Create a `.env` file with:
 
 ## Architecture
 

@@ -47,7 +47,7 @@ async function start() {
     const now = new Date();
     try {
       app.log.info(`Current server time (${tz}): ${now.toLocaleString('en-US', { timeZone: tz })}`);
-    } catch (err) {
+    } catch (_err) {
       app.log.info(`Current server time (system locale): ${now.toString()}`);
       app.log.warn(`Unable to format server time with timezone "${tz}"`);
     }

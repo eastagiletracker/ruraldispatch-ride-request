@@ -29,10 +29,26 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { getApiUrl } from '@/lib/api';
 
+interface UserData {
+  uuid: string;
+  fullName: string;
+  phone: string;
+  email?: string;
+  address?: string;
+  smsConsent?:
+    | boolean
+    | {
+        given: boolean;
+        timestamp?: string;
+        ipAddress?: string;
+      };
+  [key: string]: any;
+}
+
 interface UserDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
-  user: any;
+  user: UserData;
   type: 'rider' | 'driver';
 }
 
@@ -43,7 +59,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
   type,
 }) => {
   // Local copy so we can optimistically update consent without full reload
-  const [currentUser, setCurrentUser] = useState<any>(user);
+  const [currentUser, setCurrentUser] = useState<UserData>(user);
 
   useEffect(() => {
     setCurrentUser(user);
@@ -79,9 +95,9 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
     // Ensure phone starts with + for consistency if country code implied (assume US if 10 digits)
     if (!phone.startsWith('+')) {
       if (phone.length === 10) {
-        phone = '+1' + phone; // naive US default; adapt as needed
+        phone = `+1${phone}`; // naive US default; adapt as needed
       } else {
-        phone = '+' + phone; // fallback prefix
+        phone = `+${phone}`; // fallback prefix
       }
     }
 
@@ -100,7 +116,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
         const now = new Date().toISOString();
         toast.success('Verbal consent recorded', { description: 'Confirmation SMS sent to user.' });
         // Optimistically update local state
-        setCurrentUser((prev: any) => ({
+        setCurrentUser((prev: UserData) => ({
           ...prev,
           phone: prev.phone || phone, // persist phone if it was manually entered
           smsConsent: {
@@ -113,9 +129,10 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
         const data = await resp.json().catch(() => ({}));
         throw new Error(data.message || 'Server rejected consent request');
       }
-    } catch (e: any) {
-      console.error('Verbal consent error', e);
-      toast.error('Failed to record consent', { description: e.message });
+    } catch (e) {
+      const error = e as Error;
+      console.error('Verbal consent error', error);
+      toast.error('Failed to record consent', { description: error.message });
     }
   };
 
@@ -154,7 +171,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             <User className="h-6 w-6 text-primary" />
@@ -168,14 +185,14 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
         <div className="space-y-6 py-4">
           {/* Basic Information Section */}
           <div>
-            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3 flex items-center gap-2">
+            <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
               <User className="h-4 w-4" />
               Basic Information
             </h3>
             <div className="space-y-4 pl-6">
               {/* Name */}
               <div className="flex items-start gap-3">
-                <User className="h-5 w-5 text-muted-foreground mt-0.5" />
+                <User className="mt-0.5 h-5 w-5 text-muted-foreground" />
                 <div className="flex-1">
                   <p className="text-sm font-medium text-muted-foreground">Full Name</p>
                   <p className="text-base font-semibold">
@@ -187,10 +204,10 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
               {/* UUID */}
               {currentUser.uuid && (
                 <div className="flex items-start gap-3">
-                  <Hash className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <Hash className="mt-0.5 h-5 w-5 text-muted-foreground" />
                   <div className="flex-1">
                     <p className="text-sm font-medium text-muted-foreground">User ID</p>
-                    <p className="text-xs font-mono text-muted-foreground break-all">
+                    <p className="break-all font-mono text-xs text-muted-foreground">
                       {currentUser.uuid}
                     </p>
                   </div>
@@ -200,11 +217,11 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
               {/* Date of Birth (Riders only) */}
               {type === 'rider' && currentUser.dob && (
                 <div className="flex items-start gap-3">
-                  <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <Calendar className="mt-0.5 h-5 w-5 text-muted-foreground" />
                   <div className="flex-1">
                     <p className="text-sm font-medium text-muted-foreground">Date of Birth</p>
                     <p className="text-base font-semibold">{formatDate(currentUser.dob)}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
+                    <p className="mt-0.5 text-xs text-muted-foreground">
                       Age: {formatAge(currentUser.dob)} years
                     </p>
                   </div>
@@ -213,9 +230,9 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
 
               {/* Role Badge */}
               <div className="flex items-start gap-3">
-                <Shield className="h-5 w-5 text-muted-foreground mt-0.5" />
+                <Shield className="mt-0.5 h-5 w-5 text-muted-foreground" />
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-muted-foreground mb-1">Role</p>
+                  <p className="mb-1 text-sm font-medium text-muted-foreground">Role</p>
                   <Badge variant="outline" className="text-sm">
                     {type === 'rider' ? 'Rider' : 'Driver'}
                   </Badge>
@@ -228,14 +245,14 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
 
           {/* Contact Information Section */}
           <div>
-            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3 flex items-center gap-2">
+            <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
               <Phone className="h-4 w-4" />
               Contact Information
             </h3>
             <div className="space-y-4 pl-6">
               {/* Phone Number */}
               <div className="flex items-start gap-3">
-                <Phone className="h-5 w-5 text-muted-foreground mt-0.5" />
+                <Phone className="mt-0.5 h-5 w-5 text-muted-foreground" />
                 <div className="flex-1">
                   <p className="text-sm font-medium text-muted-foreground">Phone Number</p>
                   <p className="text-base font-semibold">
@@ -249,7 +266,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
               {/* Fax Phone (Drivers/Service Providers only) */}
               {type === 'driver' && currentUser.faxPhone && (
                 <div className="flex items-start gap-3">
-                  <Phone className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <Phone className="mt-0.5 h-5 w-5 text-muted-foreground" />
                   <div className="flex-1">
                     <p className="text-sm font-medium text-muted-foreground">Fax Phone</p>
                     <p className="text-base font-semibold">{currentUser.faxPhone}</p>
@@ -259,35 +276,37 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
 
               {/* SMS Consent Status & Verbal Opt-In */}
               <div className="flex items-start gap-3 pt-2">
-                <MessageSquarePlus className="h-5 w-5 text-muted-foreground mt-0.5" />
+                <MessageSquarePlus className="mt-0.5 h-5 w-5 text-muted-foreground" />
                 <div className="flex-1">
                   <p className="text-sm font-medium text-muted-foreground">SMS Consent</p>
-                  {currentUser.smsConsent?.given ? (
+                  {typeof currentUser.smsConsent === 'object' && currentUser.smsConsent?.given ? (
                     <div className="flex flex-col gap-1">
-                      <Badge className="bg-green-600 hover:bg-green-700 w-fit">Opted-In</Badge>
-                      {currentUser.smsConsent?.timestamp && (
-                        <p className="text-xs text-muted-foreground">
-                          Since: {new Date(currentUser.smsConsent.timestamp).toLocaleString()}
-                        </p>
-                      )}
-                      {currentUser.smsConsent?.ipAddress === 'verbal' && (
-                        <p className="text-xs text-muted-foreground">Method: Verbal</p>
-                      )}
+                      <Badge className="w-fit bg-green-600 hover:bg-green-700">Opted-In</Badge>
+                      {typeof currentUser.smsConsent === 'object' &&
+                        currentUser.smsConsent?.timestamp && (
+                          <p className="text-xs text-muted-foreground">
+                            Since: {new Date(currentUser.smsConsent.timestamp).toLocaleString()}
+                          </p>
+                        )}
+                      {typeof currentUser.smsConsent === 'object' &&
+                        currentUser.smsConsent?.ipAddress === 'verbal' && (
+                          <p className="text-xs text-muted-foreground">Method: Verbal</p>
+                        )}
                     </div>
                   ) : (
                     <div className="space-y-3">
                       <Badge variant="destructive" className="w-fit">
                         Not Opted-In
                       </Badge>
-                      <p className="text-xs text-muted-foreground max-w-sm">
+                      <p className="max-w-sm text-xs text-muted-foreground">
                         User has not provided SMS consent. Obtain explicit verbal permission before
                         enabling.
                       </p>
                       <Button size="sm" onClick={handleRecordVerbalConsent}>
-                        <MessageSquarePlus className="h-4 w-4 mr-2" />
+                        <MessageSquarePlus className="mr-2 h-4 w-4" />
                         Record Verbal Consent
                       </Button>
-                      <div className="text-xs text-muted-foreground space-y-2 bg-blue-50 p-3 rounded border border-blue-200">
+                      <div className="space-y-2 rounded border border-blue-200 bg-blue-50 p-3 text-xs text-muted-foreground">
                         <p className="font-semibold text-blue-900">
                           📋 VERBAL OPT-IN SCRIPT (Read Verbatim):
                         </p>
@@ -315,10 +334,10 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                             <strong>ruraldispatch.swarmnyc.com/sms-terms</strong> and Privacy Policy
                             at <strong>ruraldispatch.swarmnyc.com/privacy</strong>."
                           </p>
-                          <p className="font-semibold text-blue-900 mt-2">
+                          <p className="mt-2 font-semibold text-blue-900">
                             "May we send you text updates at this number? Please say 'yes' or 'no'."
                           </p>
-                          <p className="text-[10px] text-muted-foreground italic mt-2">
+                          <p className="mt-2 text-[10px] italic text-muted-foreground">
                             [Wait for clear verbal "Yes", then click "Record Consent" button above]
                           </p>
                           <p className="text-[10px] text-muted-foreground">
@@ -339,7 +358,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
             <>
               <Separator />
               <div>
-                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3 flex items-center gap-2">
+                <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                   <Briefcase className="h-4 w-4" />
                   Professional Information
                 </h3>
@@ -347,7 +366,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                   {/* Title */}
                   {currentUser.title && (
                     <div className="flex items-start gap-3">
-                      <Briefcase className="h-5 w-5 text-muted-foreground mt-0.5" />
+                      <Briefcase className="mt-0.5 h-5 w-5 text-muted-foreground" />
                       <div className="flex-1">
                         <p className="text-sm font-medium text-muted-foreground">Title</p>
                         <p className="text-base font-semibold">{currentUser.title}</p>
@@ -358,7 +377,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                   {/* Organization */}
                   {currentUser.organization && (
                     <div className="flex items-start gap-3">
-                      <Building2 className="h-5 w-5 text-muted-foreground mt-0.5" />
+                      <Building2 className="mt-0.5 h-5 w-5 text-muted-foreground" />
                       <div className="flex-1">
                         <p className="text-sm font-medium text-muted-foreground">Organization</p>
                         <p className="text-base font-semibold">{currentUser.organization}</p>
@@ -369,7 +388,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                   {/* Service Provider Role */}
                   {currentUser.serviceProviderRole && (
                     <div className="flex items-start gap-3">
-                      <Shield className="h-5 w-5 text-muted-foreground mt-0.5" />
+                      <Shield className="mt-0.5 h-5 w-5 text-muted-foreground" />
                       <div className="flex-1">
                         <p className="text-sm font-medium text-muted-foreground">
                           Service Provider Role
@@ -384,7 +403,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                   {/* Specializations */}
                   {currentUser.specializations && (
                     <div className="flex items-start gap-3">
-                      <Activity className="h-5 w-5 text-muted-foreground mt-0.5" />
+                      <Activity className="mt-0.5 h-5 w-5 text-muted-foreground" />
                       <div className="flex-1">
                         <p className="text-sm font-medium text-muted-foreground">Specializations</p>
                         <p className="text-base font-semibold">{currentUser.specializations}</p>
@@ -401,7 +420,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
             <>
               <Separator />
               <div>
-                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3 flex items-center gap-2">
+                <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                   <Heart className="h-4 w-4" />
                   Personal Information
                 </h3>
@@ -409,7 +428,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                   {/* Race */}
                   {currentUser.race && (
                     <div className="flex items-start gap-3">
-                      <User className="h-5 w-5 text-muted-foreground mt-0.5" />
+                      <User className="mt-0.5 h-5 w-5 text-muted-foreground" />
                       <div className="flex-1">
                         <p className="text-sm font-medium text-muted-foreground">Race</p>
                         <p className="text-base font-semibold">
@@ -422,7 +441,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                   {/* Marital Status */}
                   {currentUser.maritalStatus && (
                     <div className="flex items-start gap-3">
-                      <Heart className="h-5 w-5 text-muted-foreground mt-0.5" />
+                      <Heart className="mt-0.5 h-5 w-5 text-muted-foreground" />
                       <div className="flex-1">
                         <p className="text-sm font-medium text-muted-foreground">Marital Status</p>
                         <p className="text-base font-semibold">
@@ -435,7 +454,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                   {/* Veteran Status */}
                   {currentUser.veteranStatus && (
                     <div className="flex items-start gap-3">
-                      <Flag className="h-5 w-5 text-muted-foreground mt-0.5" />
+                      <Flag className="mt-0.5 h-5 w-5 text-muted-foreground" />
                       <div className="flex-1">
                         <p className="text-sm font-medium text-muted-foreground">Veteran Status</p>
                         <Badge
@@ -452,7 +471,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                   {/* Disability Status */}
                   {currentUser.disabilityStatus && (
                     <div className="flex items-start gap-3">
-                      <Activity className="h-5 w-5 text-muted-foreground mt-0.5" />
+                      <Activity className="mt-0.5 h-5 w-5 text-muted-foreground" />
                       <div className="flex-1">
                         <p className="text-sm font-medium text-muted-foreground">
                           Disability Status
@@ -469,14 +488,14 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                   {/* Service User Roles */}
                   {currentUser.serviceUserRole && currentUser.serviceUserRole.length > 0 && (
                     <div className="flex items-start gap-3">
-                      <Shield className="h-5 w-5 text-muted-foreground mt-0.5" />
+                      <Shield className="mt-0.5 h-5 w-5 text-muted-foreground" />
                       <div className="flex-1">
-                        <p className="text-sm font-medium text-muted-foreground mb-2">
+                        <p className="mb-2 text-sm font-medium text-muted-foreground">
                           Service User Roles
                         </p>
                         <div className="flex flex-wrap gap-2">
-                          {currentUser.serviceUserRole.map((role: string, index: number) => (
-                            <Badge key={index} variant="outline">
+                          {currentUser.serviceUserRole.map((role: string) => (
+                            <Badge key={role} variant="outline">
                               {capitalizeFirst(role)}
                             </Badge>
                           ))}
@@ -491,7 +510,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
 
               {/* Residence Information */}
               <div>
-                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3 flex items-center gap-2">
+                <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                   <Home className="h-4 w-4" />
                   Residence History
                 </h3>
@@ -499,7 +518,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                   {/* Current Residence */}
                   {currentUser.residence?.current && (
                     <div className="flex items-start gap-3">
-                      <Home className="h-5 w-5 text-muted-foreground mt-0.5" />
+                      <Home className="mt-0.5 h-5 w-5 text-muted-foreground" />
                       <div className="flex-1">
                         <p className="text-sm font-medium text-muted-foreground">
                           Current Residence
@@ -512,7 +531,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                   {/* Last Residence */}
                   {currentUser.residence?.last && (
                     <div className="flex items-start gap-3">
-                      <Home className="h-5 w-5 text-muted-foreground mt-0.5" />
+                      <Home className="mt-0.5 h-5 w-5 text-muted-foreground" />
                       <div className="flex-1">
                         <p className="text-sm font-medium text-muted-foreground">Last Residence</p>
                         <p className="text-base font-semibold">{currentUser.residence.last}</p>
@@ -526,7 +545,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
 
               {/* Income Information */}
               <div>
-                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3 flex items-center gap-2">
+                <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                   <DollarSign className="h-4 w-4" />
                   Income History
                 </h3>
@@ -534,7 +553,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                   {/* Current Income */}
                   {currentUser.income?.current && (
                     <div className="flex items-start gap-3">
-                      <DollarSign className="h-5 w-5 text-muted-foreground mt-0.5" />
+                      <DollarSign className="mt-0.5 h-5 w-5 text-muted-foreground" />
                       <div className="flex-1">
                         <p className="text-sm font-medium text-muted-foreground">Current Income</p>
                         <p className="text-base font-semibold">{currentUser.income.current}</p>
@@ -545,7 +564,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                   {/* Last Income */}
                   {currentUser.income?.last && (
                     <div className="flex items-start gap-3">
-                      <DollarSign className="h-5 w-5 text-muted-foreground mt-0.5" />
+                      <DollarSign className="mt-0.5 h-5 w-5 text-muted-foreground" />
                       <div className="flex-1">
                         <p className="text-sm font-medium text-muted-foreground">Last Income</p>
                         <p className="text-base font-semibold">{currentUser.income.last}</p>
@@ -563,7 +582,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
               <Separator />
 
               <div>
-                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3 flex items-center gap-2">
+                <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                   <Calendar className="h-4 w-4" />
                   Account Information
                 </h3>
@@ -571,13 +590,13 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                   {/* Created At */}
                   {currentUser.createdAt && (
                     <div className="flex items-start gap-3">
-                      <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
+                      <Calendar className="mt-0.5 h-5 w-5 text-muted-foreground" />
                       <div className="flex-1">
                         <p className="text-sm font-medium text-muted-foreground">Created</p>
                         <p className="text-base font-semibold">
                           {formatDate(currentUser.createdAt)}
                         </p>
-                        <p className="text-xs text-muted-foreground mt-0.5">
+                        <p className="mt-0.5 text-xs text-muted-foreground">
                           {formatDateTime(currentUser.createdAt)}
                         </p>
                       </div>
@@ -587,13 +606,13 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                   {/* Updated At */}
                   {currentUser.updatedAt && (
                     <div className="flex items-start gap-3">
-                      <Clock className="h-5 w-5 text-muted-foreground mt-0.5" />
+                      <Clock className="mt-0.5 h-5 w-5 text-muted-foreground" />
                       <div className="flex-1">
                         <p className="text-sm font-medium text-muted-foreground">Last Updated</p>
                         <p className="text-base font-semibold">
                           {formatDate(currentUser.updatedAt)}
                         </p>
-                        <p className="text-xs text-muted-foreground mt-0.5">
+                        <p className="mt-0.5 text-xs text-muted-foreground">
                           {formatDateTime(currentUser.updatedAt)}
                         </p>
                       </div>

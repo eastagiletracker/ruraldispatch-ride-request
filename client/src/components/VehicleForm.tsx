@@ -250,9 +250,23 @@ export default function VehicleForm({ onSuccess, onCancel }: VehicleFormProps) {
 
           {/* Accessibility Features */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold">Accessibility Features</h3>
+            <h3 className="text-sm font-semibold">Accessibility Feature Type</h3>
+            <p className="text-sm text-muted-foreground">
+              Select any accessibility features needed for this vehicle.
+            </p>
 
             <div className="space-y-3">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="walkerAccessible"
+                  checked={watchAccessibility[0]}
+                  onCheckedChange={(checked) => setValue('walkerAccessible', checked as boolean)}
+                />
+                <Label htmlFor="walkerAccessible" className="cursor-pointer">
+                  Walker Accessible
+                </Label>
+              </div>
+
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="wheelchairAccessible"
@@ -263,17 +277,6 @@ export default function VehicleForm({ onSuccess, onCancel }: VehicleFormProps) {
                 />
                 <Label htmlFor="wheelchairAccessible" className="cursor-pointer">
                   Wheelchair Accessible
-                </Label>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="walkerAccessible"
-                  checked={watchAccessibility[0]}
-                  onCheckedChange={(checked) => setValue('walkerAccessible', checked as boolean)}
-                />
-                <Label htmlFor="walkerAccessible" className="cursor-pointer">
-                  Walker Accessible
                 </Label>
               </div>
 
@@ -299,7 +302,7 @@ export default function VehicleForm({ onSuccess, onCancel }: VehicleFormProps) {
                   }
                 />
                 <Label htmlFor="oxygenTankAccessible" className="cursor-pointer">
-                  Oxygen Tank Accessible
+                  Oxygen Tank/Medical Device Accessible
                 </Label>
               </div>
             </div>

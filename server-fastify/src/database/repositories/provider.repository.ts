@@ -62,6 +62,26 @@ export function createProviderRepository(prisma: PrismaClient) {
     },
 
     /**
+     * Update a provider
+     */
+    updateProvider: async (
+      uuid: string,
+      data: Partial<ProviderInput & { title?: string; role?: string; organizationId?: number }>
+    ): Promise<ServiceProvider> => {
+      return await prisma.serviceProvider.update({
+        where: { uuid },
+        data: {
+          ...(data.fullName && { fullName: data.fullName }),
+          ...(data.phone !== undefined && { phone: data.phone }),
+          ...(data.mobilePhone !== undefined && { mobilePhone: data.mobilePhone }),
+          ...(data.title !== undefined && { title: data.title }),
+          ...(data.role && { role: data.role }),
+          ...(data.organizationId !== undefined && { organizationId: data.organizationId }),
+        },
+      });
+    },
+
+    /**
      * Delete a provider
      */
     deleteProvider: async (uuid: string): Promise<ServiceProvider> => {

@@ -1,6 +1,6 @@
 import { AlertCircle } from 'lucide-react';
 import type React from 'react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,16 +24,7 @@ const SMSConversation: React.FC<SMSConversationProps> = ({ rideUuid, riderPhone,
   const [loading, setLoading] = useState<boolean>(true);
   const [isSessionActive, setIsSessionActive] = useState<boolean>(true);
 
-  useEffect(() => {
-    if (rideUuid) {
-      loadNotifications();
-      // Poll for new messages every 20 seconds
-      const interval = setInterval(loadNotifications, 20000);
-      return () => clearInterval(interval);
-    }
-  }, [rideUuid]);
-
-  const loadNotifications = async () => {
+  const loadNotifications = useCallback(async () => {
     try {
       const data = await fetchNotificationsByRide(rideUuid);
       setNotifications(data);
@@ -47,7 +38,16 @@ const SMSConversation: React.FC<SMSConversationProps> = ({ rideUuid, riderPhone,
       console.error('Error loading notifications:', error);
       setLoading(false);
     }
-  };
+  }, [rideUuid]);
+
+  useEffect(() => {
+    if (rideUuid) {
+      loadNotifications();
+      // Poll for new messages every 20 seconds
+      const interval = setInterval(loadNotifications, 20000);
+      return () => clearInterval(interval);
+    }
+  }, [rideUuid, loadNotifications]);
 
   const handleCloseSession = async () => {
     if (window.confirm('Are you sure you want to close the SMS session for this ride?')) {
@@ -153,9 +153,9 @@ const SMSConversation: React.FC<SMSConversationProps> = ({ rideUuid, riderPhone,
       <CardContent className="space-y-4">
         <ScrollArea className="h-[500px] pr-4">
           <div className="flex flex-col gap-3">
-            {notifications.map((notif, index) => (
+            {notifications.map((notif) => (
               <div
-                key={index}
+                key={notif.uuid}
                 className={`p-3 rounded-lg border transition-shadow ${
                   notif.direction === 'inbound'
                     ? 'bg-amber-50 border-l-4 border-l-amber-500'

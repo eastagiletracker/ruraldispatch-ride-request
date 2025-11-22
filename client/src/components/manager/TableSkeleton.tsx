@@ -14,27 +14,34 @@ interface TableSkeletonProps {
 }
 
 export function TableSkeleton({ rows = 5, cols = 6 }: TableSkeletonProps) {
+  // Generate stable unique keys for skeleton elements
+  const headerKeys = Array.from({ length: cols }, (_, i) => `header-${crypto.randomUUID()}-${i}`);
+  const rowKeys = Array.from({ length: rows }, (_, i) => `row-${crypto.randomUUID()}-${i}`);
+
   return (
     <Table>
       <TableHeader>
         <TableRow>
-          {Array.from({ length: cols }).map((_, i) => (
-            <TableHead key={i}>
-              <Skeleton className="w-20 h-4" />
+          {headerKeys.map((key) => (
+            <TableHead key={key}>
+              <Skeleton className="h-4 w-20" />
             </TableHead>
           ))}
         </TableRow>
       </TableHeader>
       <TableBody>
-        {Array.from({ length: rows }).map((_, rowIndex) => (
-          <TableRow key={rowIndex}>
-            {Array.from({ length: cols }).map((_, colIndex) => (
-              <TableCell key={colIndex}>
-                <Skeleton className="w-full h-4" />
-              </TableCell>
-            ))}
-          </TableRow>
-        ))}
+        {rowKeys.map((rowKey) => {
+          const cellKeys = Array.from({ length: cols }, (_, i) => `${rowKey}-cell-${i}`);
+          return (
+            <TableRow key={rowKey}>
+              {cellKeys.map((cellKey) => (
+                <TableCell key={cellKey}>
+                  <Skeleton className="h-4 w-full" />
+                </TableCell>
+              ))}
+            </TableRow>
+          );
+        })}
       </TableBody>
     </Table>
   );

@@ -75,7 +75,7 @@ export default function UserForm({ setShowBaseForm, setShowUserForm }: FormCompo
 
     try {
       // Helper to extract address string from AddressType or string
-      const getAddressString = (location: any): string => {
+      const getAddressString = (location: string | { formattedAddress: string } | null): string => {
         if (!location) return '';
         return typeof location === 'string' ? location : location.formattedAddress;
       };
@@ -376,7 +376,11 @@ export default function UserForm({ setShowBaseForm, setShowUserForm }: FormCompo
               render={({ field }) => (
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   {SERVICE_USER_ROLES.map((role) => (
-                    <label key={role} className="flex items-center space-x-2 cursor-pointer">
+                    <label
+                      key={role}
+                      htmlFor={`role-${role}`}
+                      className="flex items-center space-x-2 cursor-pointer"
+                    >
                       <Checkbox
                         id={`role-${role}`}
                         checked={field.value.includes(role)}

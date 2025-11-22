@@ -15,7 +15,6 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatRideId } from '@/utils/formatters';
 import { getCurrentUser } from '@/utils/permissions';
@@ -69,7 +68,7 @@ export default function DispatcherHub() {
     }, 20000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [getRideRequests]);
 
   // Calculate metrics
   const today = new Date();
@@ -82,7 +81,7 @@ export default function DispatcherHub() {
   });
 
   const unassignedRides = allRides.filter(
-    (ride) => parseInt(ride.rideRequestStatus.toString()) < 400
+    (ride) => parseInt(ride.rideRequestStatus.toString(), 10) < 400
   );
 
   const activeRides = allRides.filter((ride) => {
@@ -104,7 +103,7 @@ export default function DispatcherHub() {
   const urgentRides = unassignedRides.filter((ride) => {
     const pickupTime = ride.pickupRequestedTime ? new Date(ride.pickupRequestedTime) : null;
     if (!pickupTime) return false;
-    const hoursDiff = (pickupTime.getTime() - new Date().getTime()) / (1000 * 60 * 60);
+    const hoursDiff = (pickupTime.getTime() - Date.now()) / (1000 * 60 * 60);
     return hoursDiff <= 24 && hoursDiff > 0;
   });
 
@@ -119,7 +118,7 @@ export default function DispatcherHub() {
     const date = new Date(dateString);
 
     // Check if date is valid
-    if (isNaN(date.getTime())) {
+    if (Number.isNaN(date.getTime())) {
       return dateString; // Return original string if invalid date
     }
 
@@ -169,7 +168,7 @@ export default function DispatcherHub() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <div className="container mx-auto px-4 py-6 md:py-8">
         {/* Page Header */}
         <div className="mb-6 md:mb-8">

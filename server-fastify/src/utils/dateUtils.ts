@@ -31,7 +31,7 @@ export function isValidISODate(dateString: string): boolean {
   if (!dateString) return false;
 
   const date = new Date(dateString);
-  return !isNaN(date.getTime());
+  return !Number.isNaN(date.getTime());
 }
 
 /**
@@ -42,7 +42,7 @@ export function toUTCString(dateInput: DateInput): string | null {
   if (!dateInput) return null;
 
   const date = new Date(dateInput);
-  if (isNaN(date.getTime())) {
+  if (Number.isNaN(date.getTime())) {
     console.warn('Invalid date input:', dateInput);
     return null;
   }
@@ -55,7 +55,7 @@ export function toUTCString(dateInput: DateInput): string | null {
  */
 export function addMinutes(dateInput: DateInput, minutes: number): string {
   const date = new Date(dateInput);
-  if (isNaN(date.getTime())) {
+  if (Number.isNaN(date.getTime())) {
     throw new Error('Invalid date input');
   }
 
@@ -75,7 +75,7 @@ export function addHours(dateInput: DateInput, hours: number): string {
  */
 export function isPast(dateInput: DateInput): boolean {
   const date = new Date(dateInput);
-  if (isNaN(date.getTime())) return false;
+  if (Number.isNaN(date.getTime())) return false;
 
   return date.getTime() < Date.now();
 }
@@ -85,7 +85,7 @@ export function isPast(dateInput: DateInput): boolean {
  */
 export function isFuture(dateInput: DateInput): boolean {
   const date = new Date(dateInput);
-  if (isNaN(date.getTime())) return false;
+  if (Number.isNaN(date.getTime())) return false;
 
   return date.getTime() > Date.now();
 }
@@ -97,7 +97,7 @@ export function getDifferenceInMinutes(date1: DateInput, date2: DateInput): numb
   const d1 = new Date(date1);
   const d2 = new Date(date2);
 
-  if (isNaN(d1.getTime()) || isNaN(d2.getTime())) {
+  if (Number.isNaN(d1.getTime()) || Number.isNaN(d2.getTime())) {
     throw new Error('Invalid date input');
   }
 
@@ -118,7 +118,7 @@ export function formatForLogging(dateInput: DateInput): string {
   if (!dateInput) return 'N/A';
 
   const date = new Date(dateInput);
-  if (isNaN(date.getTime())) return 'Invalid Date';
+  if (Number.isNaN(date.getTime())) return 'Invalid Date';
 
   // Returns format like: "2024-01-15 14:30:00 UTC"
   return `${date.toISOString().replace('T', ' ').substring(0, 19)} UTC`;
@@ -134,18 +134,18 @@ export function sanitizeDateField(value: any): string | null {
   // If already ISO string, validate and return
   if (typeof value === 'string') {
     const date = new Date(value);
-    return isNaN(date.getTime()) ? null : date.toISOString();
+    return Number.isNaN(date.getTime()) ? null : date.toISOString();
   }
 
   // If Date object, convert to ISO string
   if (value instanceof Date) {
-    return isNaN(value.getTime()) ? null : value.toISOString();
+    return Number.isNaN(value.getTime()) ? null : value.toISOString();
   }
 
   // If timestamp number
   if (typeof value === 'number') {
     const date = new Date(value);
-    return isNaN(date.getTime()) ? null : date.toISOString();
+    return Number.isNaN(date.getTime()) ? null : date.toISOString();
   }
 
   return null;

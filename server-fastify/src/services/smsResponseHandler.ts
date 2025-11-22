@@ -1,5 +1,5 @@
-import { RIDE_STATUSES, type RideStatus } from '../constants/rideStatuses.js';
 import { RIDE_REQUEST_STATUSES } from '../constants/rideRequestStatuses.js';
+import { RIDE_STATUSES, type RideStatus } from '../constants/rideStatuses.js';
 import type { Ride } from '../types/database.types.js';
 
 /**
@@ -138,12 +138,12 @@ export function determineContext(ride: Ride, senderRole: SenderRole): ContextTyp
 export function processSMSResponse(
   ride: Ride,
   senderRole: SenderRole,
-  messageBody: string,
+  messageBody: string
 ): SMSResponseResult {
   const responseCode = parseResponse(messageBody);
   const context = determineContext(ride, senderRole);
 
-  console.log('=å Processing SMS Response:', {
+  console.log('= Processing SMS Response:', {
     rideUuid: ride.uuid,
     senderRole,
     currentStatus: ride.rideStatus,

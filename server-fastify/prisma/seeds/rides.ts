@@ -3,7 +3,7 @@
  */
 
 import { v7 as uuidv7 } from 'uuid';
-import type { PrismaClient } from '../generated/client/client.js';
+import type { PrismaClient } from '../../node_modules/.prisma/client/index.js';
 
 // Helper to create datetime for today
 const createDateTime = (hour: number, minute: number) => {

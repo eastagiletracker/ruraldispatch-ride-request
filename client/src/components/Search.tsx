@@ -1,4 +1,4 @@
-import { MouseEvent, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { SearchableElement } from '@/types';
 
 interface SearchProps<T extends SearchableElement> {
@@ -21,33 +21,55 @@ export default function Search<T extends SearchableElement>({
   const [error, setError] = useState<string>('');
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Filter elements based on search term
-  useEffect(() => {
-    if (searchTerm.trim() === '') {
-      setFilteredElements([]);
-      setIsDropdownOpen(false);
-      setError('');
-    } else {
-      setElementsToMatchesAsync(searchTerm);
-    }
-  }, [searchTerm]);
+  // Track the latest request to avoid race conditions
+  const abortControllerRef = useRef<AbortController | null>(null);
 
-  // Possible race conditions if network lags?
-  async function setElementsToMatchesAsync(searchTerm: string): Promise<void> {
-    setIsLoading(true);
-    setError('');
-    try {
-      const filtered = await fetchMatchesFn(searchTerm);
-      setFilteredElements(filtered);
-      setIsDropdownOpen(true);
-    } catch (err) {
-      console.error('Search error:', err);
-      setError(`Failed to search for ${searchElementName}s`);
-      setFilteredElements([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }
+  const performSearch = useCallback(
+    async (searchTerm: string): Promise<void> => {
+      // Cancel any in-flight request
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+
+      // Empty search term - clear results immediately
+      if (searchTerm.trim() === '') {
+        setFilteredElements([]);
+        setIsDropdownOpen(false);
+        setError('');
+        setIsLoading(false);
+        return;
+      }
+
+      // Create new abort controller for this request
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+
+      setIsLoading(true);
+      setError('');
+      try {
+        const filtered = await fetchMatchesFn(searchTerm);
+
+        // Only update state if this request wasn't cancelled
+        if (!controller.signal.aborted) {
+          setFilteredElements(filtered);
+          setIsDropdownOpen(true);
+        }
+      } catch (err) {
+        // Only handle errors if this request wasn't cancelled
+        if (!controller.signal.aborted) {
+          console.error('Search error:', err);
+          setError(`Failed to search for ${searchElementName}s`);
+          setFilteredElements([]);
+        }
+      } finally {
+        // Only update loading state if this request wasn't cancelled
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
+      }
+    },
+    [fetchMatchesFn, searchElementName]
+  );
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -86,34 +108,35 @@ export default function Search<T extends SearchableElement>({
 
   return (
     <div className="relative w-full" ref={dropdownRef}>
-      <label className="block text-sm font-medium text-gray-700 mb-2">
+      <label htmlFor="search-input" className="mb-2 block text-sm font-medium text-gray-700">
         Search for existing {searchElementName}
       </label>
       <div className="relative">
         <input
+          id="search-input"
           type="text"
           value={searchTerm}
           onChange={handleInputChange}
           onFocus={handleInputFocus}
           placeholder={placeHolderText}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+          className="focus:ring-primary-500 focus:border-primary-500 w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2"
         />
         {isLoading && (
-          <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600"></div>
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 transform">
+            <div className="border-primary-600 h-4 w-4 animate-spin rounded-full border-b-2"></div>
           </div>
         )}
       </div>
 
       {/* Dropdown */}
       {isDropdownOpen && (
-        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+        <div className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md border border-gray-300 bg-white shadow-lg">
           {error ? (
-            <div className="px-4 py-3 text-amber-600 text-sm bg-amber-50 border-l-4 border-amber-500">
+            <div className="border-l-4 border-amber-500 bg-amber-50 px-4 py-3 text-sm text-amber-600">
               {error}
             </div>
           ) : filteredElements.length === 0 ? (
-            <div className="px-4 py-3 text-gray-500 text-sm">No {searchElementName}s found</div>
+            <div className="px-4 py-3 text-sm text-gray-500">No {searchElementName}s found</div>
           ) : (
             filteredElements.map((element) => renderElementFn(element, handleElementSelect))
           )}

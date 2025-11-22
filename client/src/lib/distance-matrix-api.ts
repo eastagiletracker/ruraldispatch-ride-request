@@ -5,7 +5,7 @@
 
 import { getApiUrl } from './api';
 
-const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+const _API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
 export interface DistanceMatrixResult {
   distance: {

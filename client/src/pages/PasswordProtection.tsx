@@ -20,7 +20,7 @@ export default function PasswordProtection() {
 
     if (password === APP_PASSWORD) {
       // Store in localStorage and sessionStorage with 24-hour expiration
-      const expirationTime = new Date().getTime() + 24 * 60 * 60 * 1000; // 24 hours from now
+      const expirationTime = Date.now() + 24 * 60 * 60 * 1000; // 24 hours from now
       const authData = JSON.stringify({
         authenticated: true,
         expiresAt: expirationTime,

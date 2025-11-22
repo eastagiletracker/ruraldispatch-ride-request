@@ -5,7 +5,7 @@
 
 import bcrypt from 'bcryptjs';
 import { v7 as uuidv7 } from 'uuid';
-import type { PrismaClient } from '../generated/client/client.js';
+import type { PrismaClient } from '../../node_modules/.prisma/client/index.js';
 
 export async function seedSystemUsers(prisma: PrismaClient) {
   console.log('\n👤 Seeding System Users...');

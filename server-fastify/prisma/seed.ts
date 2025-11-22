@@ -5,9 +5,19 @@
  * Run: npx prisma db seed
  */
 
+import * as dotenv from 'dotenv';
+import { dirname, resolve } from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Load .env from server-fastify directory (one level up from this file)
+dotenv.config({ path: resolve(__dirname, '../.env') });
+
 import { PrismaPg } from '@prisma/adapter-pg';
 import pg from 'pg';
-import { PrismaClient } from './generated/client/client.js';
+import { PrismaClient } from '../node_modules/.prisma/client/index.js';
 import { seedDrivers } from './seeds/drivers.js';
 import { seedOrganizations } from './seeds/organizations.js';
 import { seedRiders } from './seeds/riders.js';
@@ -38,7 +48,7 @@ async function main() {
   const ridesCount = await seedRides(prisma, riders, drivers, vehicles);
 
   // ==================== SUMMARY ====================
-  console.log('\n' + '═'.repeat(70));
+  console.log(`\n${'═'.repeat(70)}`);
   console.log('✨ Seed completed successfully!');
   console.log('═'.repeat(70));
 
