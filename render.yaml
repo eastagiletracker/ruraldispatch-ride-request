@@ -79,7 +79,7 @@ projects:
                 sync: false
               - key: VONAGE_WEBHOOK_URL
                 sync: false
-              - key: GOOGLE_MAPS_API_KEY
+              - key: GOOGLE_MAPS_SERVER_API_KEY
                 sync: false
             autoDeployTrigger: commit
 
@@ -163,7 +163,7 @@ projects:
                 sync: false
               - key: VONAGE_WEBHOOK_URL
                 sync: false
-              - key: GOOGLE_MAPS_API_KEY
+              - key: GOOGLE_MAPS_SERVER_API_KEY
                 sync: false
             autoDeployTrigger: commit
 
