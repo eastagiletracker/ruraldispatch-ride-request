@@ -3,7 +3,7 @@
  * Handles all notification/SMS database operations
  */
 
-import type { PrismaClient, Notification } from '@prisma/client';
+import type { Notification, PrismaClient } from '@prisma/client';
 
 // ==================== TYPE DEFINITIONS ====================
 

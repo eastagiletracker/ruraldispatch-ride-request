@@ -1,10 +1,10 @@
-import { defineConfig, loadEnv } from 'vite'
-import react from '@vitejs/plugin-react'
-import path from 'path'
+import react from '@vitejs/plugin-react';
+import path from 'path';
+import { defineConfig, loadEnv } from 'vite';
 
 export default defineConfig(({ mode }) => {
   // Load env file from parent directory (root)
-  const env = loadEnv(mode, path.resolve(__dirname, '..'), '')
+  const env = loadEnv(mode, path.resolve(__dirname, '..'), '');
 
   return {
     plugins: [react()],
@@ -37,11 +37,11 @@ export default defineConfig(({ mode }) => {
     },
     // Expose VITE_ prefixed env vars to the client
     define: {
-      'import.meta.env.VITE_GOOGLE_MAPS_API_KEY': JSON.stringify(env.VITE_GOOGLE_MAPS_API_KEY)
+      'import.meta.env.VITE_GOOGLE_MAPS_API_KEY': JSON.stringify(env.VITE_GOOGLE_MAPS_API_KEY),
     },
     // Optimize dependencies
     optimizeDeps: {
-      include: ['react-phone-number-input']
+      include: ['react-phone-number-input'],
     },
     // Build configuration
     build: {
@@ -51,11 +51,11 @@ export default defineConfig(({ mode }) => {
           // Suppress sourcemap warnings from dependencies
           if (warning.code === 'SOURCEMAP_ERROR') return;
           warn(warning);
-        }
+        },
       },
       commonjsOptions: {
-        include: [/react-phone-number-input/, /node_modules/]
-      }
+        include: [/react-phone-number-input/, /node_modules/],
+      },
     },
     server: {
       host: '127.0.0.1', // Restrict to localhost only
@@ -64,9 +64,9 @@ export default defineConfig(({ mode }) => {
       proxy: {
         '/api': {
           target: 'http://localhost:3000',
-          changeOrigin: true
-        }
-      }
-    }
-  }
-}) 
+          changeOrigin: true,
+        },
+      },
+    },
+  };
+});

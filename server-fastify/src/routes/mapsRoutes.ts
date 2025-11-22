@@ -2,9 +2,9 @@ import type { FastifyPluginAsync } from 'fastify';
 import { env } from '../config/env.js';
 import {
   calculateTravelTimeSchema,
-  travelTimeResultSchema,
   type DistanceMatrixResponse,
   type TravelTimeResult,
+  travelTimeResultSchema,
 } from '../schemas/maps.schemas.js';
 
 /**
@@ -73,7 +73,7 @@ const mapsRoutes: FastifyPluginAsync = async (fastify) => {
         if (data.status !== 'OK') {
           fastify.log.error(
             { status: data.status, errorMessage: data.error_message },
-            'Distance Matrix API error',
+            'Distance Matrix API error'
           );
           return reply.status(400).send({
             error: `Distance Matrix API error: ${data.status}`,
@@ -120,7 +120,7 @@ const mapsRoutes: FastifyPluginAsync = async (fastify) => {
           message: error instanceof Error ? error.message : 'Unknown error',
         });
       }
-    },
+    }
   );
 };
 

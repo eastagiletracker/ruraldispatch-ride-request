@@ -78,9 +78,7 @@ const Footer = () => {
         {/* Bottom Bar */}
         <div className="border-t border-gray-700 mt-8 pt-6">
           <div className="text-center space-y-3">
-            <p className="text-gray-400 text-sm">
-              © {currentYear} SWARM LLC. All rights reserved.
-            </p>
+            <p className="text-gray-400 text-sm">© {currentYear} SWARM LLC. All rights reserved.</p>
           </div>
         </div>
       </div>

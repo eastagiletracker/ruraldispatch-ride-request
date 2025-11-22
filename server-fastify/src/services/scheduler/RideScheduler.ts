@@ -1,8 +1,8 @@
-import { TaskManager } from './TaskManager.js';
-import NotificationScheduler from './NotificationScheduler.js';
 import { RIDE_STATUSES } from '../../constants/rideStatuses.js';
-import type { Ride, User, ServiceProvider } from '../../types/database.types.js';
+import type { Ride, ServiceProvider, User } from '../../types/database.types.js';
+import NotificationScheduler from './NotificationScheduler.js';
 import type { ScheduledTask } from './TaskManager.js';
+import { TaskManager } from './TaskManager.js';
 
 /**
  * Ride Scheduler Service
@@ -68,7 +68,7 @@ class RideScheduler {
   schedulePickupTasks(
     ride: Ride,
     driver: ServiceProvider,
-    apiUpdateFunction: ApiUpdateFunction,
+    apiUpdateFunction: ApiUpdateFunction
   ): void {
     console.log(`=� Scheduling pickup tasks for ride #${ride.uuid}`);
 
@@ -77,7 +77,7 @@ class RideScheduler {
       ride,
       RIDE_STATUSES.RIDE_STARTED,
       5,
-      apiUpdateFunction,
+      apiUpdateFunction
     );
 
     // Schedule dropoff check
@@ -149,13 +149,13 @@ class RideScheduler {
     ride: Ride,
     newStatus: number,
     delayMinutes: number,
-    apiUpdateFunction: ApiUpdateFunction,
+    apiUpdateFunction: ApiUpdateFunction
   ): void {
     return this.notificationScheduler.scheduleStatusChange(
       ride,
       newStatus,
       delayMinutes,
-      apiUpdateFunction,
+      apiUpdateFunction
     );
   }
 
@@ -167,14 +167,14 @@ class RideScheduler {
     recipient: RecipientRole,
     template: string,
     delayMinutes: number,
-    data: TemplateData,
+    data: TemplateData
   ): void {
     return this.notificationScheduler.scheduleNotification(
       ride,
       recipient,
       template,
       delayMinutes,
-      data,
+      data
     );
   }
 

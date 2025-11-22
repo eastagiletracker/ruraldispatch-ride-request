@@ -1,9 +1,9 @@
+import { Building, Car, Gauge, LayoutDashboard, LogOut, Plus, Settings } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
-import { Car, LayoutDashboard, Plus, Building, LogOut, Gauge, Settings } from "lucide-react";
-import { hasPermission, getCurrentUser } from '@/utils/permissions';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import { getCurrentUser, hasPermission } from '@/utils/permissions';
 
 const Navbar = () => {
   const location = useLocation();
@@ -26,60 +26,58 @@ const Navbar = () => {
   // Define all possible nav links with their permission requirements
   const allNavLinks = [
     {
-      to: "/dashboard",
-      label: "Dashboard",
+      to: '/dashboard',
+      label: 'Dashboard',
       icon: LayoutDashboard,
-      permission: 'canViewDashboard' as const
+      permission: 'canViewDashboard' as const,
     },
     {
-      to: "/dispatcher-hub",
-      label: "Dispatcher Hub",
+      to: '/dispatcher-hub',
+      label: 'Dispatcher Hub',
       icon: Gauge,
-      permission: 'canViewDispatcherHub' as const
+      permission: 'canViewDispatcherHub' as const,
     },
     {
-      to: "/my-rides",
-      label: "My Rides",
+      to: '/my-rides',
+      label: 'My Rides',
       icon: Car,
-      permission: 'canViewMyRides' as const
+      permission: 'canViewMyRides' as const,
     },
     {
-      to: "/",
-      label: "Create Ride Request",
+      to: '/',
+      label: 'Create Ride Request',
       icon: Plus,
-      permission: 'canCreateInternalRideRequest' as const
+      permission: 'canCreateInternalRideRequest' as const,
     },
     {
-      to: "/service-provider",
-      label: "Create Service Provider",
+      to: '/service-provider',
+      label: 'Create Service Provider',
       icon: Building,
-      permission: 'canCreateServiceProvider' as const
+      permission: 'canCreateServiceProvider' as const,
     },
     {
-      to: "/vehicle",
-      label: "Create Vehicle",
+      to: '/vehicle',
+      label: 'Create Vehicle',
       icon: Car,
-      permission: 'canCreateVehicle' as const
+      permission: 'canCreateVehicle' as const,
     },
     {
-      to: "/manager",
-      label: "Manager",
+      to: '/manager',
+      label: 'Manager',
       icon: Settings,
-      permission: 'canAccessManager' as const
+      permission: 'canAccessManager' as const,
     },
   ];
 
   // Filter nav links based on user permissions
-  const navLinks = allNavLinks.filter(link => hasPermission(link.permission));
+  const navLinks = allNavLinks.filter((link) => hasPermission(link.permission));
 
   return (
     <nav className="bg-white border-b shadow-sm">
       <div className="mx-auto container px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo/App Name */}
-            <span className="text-xl font-bold text-primary">
-              Rural Dispatch
-            </span>
+          <span className="text-xl font-bold text-primary">Rural Dispatch</span>
 
           {/* Navigation */}
           <div className="flex flex-wrap items-center gap-2">
@@ -89,9 +87,9 @@ const Navbar = () => {
                 <Button
                   key={link.to}
                   asChild
-                  variant={isActive(link.to) ? "default" : "outline"}
+                  variant={isActive(link.to) ? 'default' : 'outline'}
                   size="sm"
-                  className={isActive(link.to) ? "" : "border-gray-300 hover:bg-gray-50"}
+                  className={isActive(link.to) ? '' : 'border-gray-300 hover:bg-gray-50'}
                 >
                   <Link to={link.to} className="flex items-center gap-2">
                     <Icon className="h-4 w-4" />
@@ -126,4 +124,4 @@ const Navbar = () => {
   );
 };
 
-export default Navbar; 
+export default Navbar;

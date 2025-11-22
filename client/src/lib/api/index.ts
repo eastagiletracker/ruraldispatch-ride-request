@@ -1,42 +1,37 @@
 /**
  * API Library - Centralized exports
- * 
+ *
  * This is the main entry point for all API-related functionality.
  * Import from '@/lib/api' to access any API function or hook.
  */
 
-// Configuration
-export { getApiUrl, isUsingProxy, getApiInfo } from './config';
-
 // Base hooks
-export { useFetch, useApiMutation } from './base';
-
-// Users
-export { 
-  useUsers, 
-  useCreateUser, 
-  useUpdateUser, 
-  useDeleteUser 
-} from './users';
+export { useApiMutation, useFetch } from './base';
+// Configuration
+export { getApiInfo, getApiUrl, isUsingProxy } from './config';
+// Rides
+export { useRideRequests } from './rides';
 
 // Service Providers
 export {
-  useServiceProviders,
   useCreateServiceProvider,
-  useUpdateServiceProvider,
   useDeleteServiceProvider,
+  useServiceProviders,
+  useUpdateServiceProvider,
 } from './service-providers';
-
-// Vehicles
-export {
-  useVehicles,
-  useCreateVehicle,
-  useUpdateVehicle,
-  useDeleteVehicle,
-} from './vehicles';
-
 // System Users
 export { useSystemUsers } from './system-users';
-
-// Rides
-export { useRideRequests } from './rides';
+// Users
+export {
+  useCreateUser,
+  useDeleteUser,
+  useUpdateUser,
+  useUsers,
+} from './users';
+// Vehicles
+export {
+  useCreateVehicle,
+  useDeleteVehicle,
+  useUpdateVehicle,
+  useVehicles,
+} from './vehicles';

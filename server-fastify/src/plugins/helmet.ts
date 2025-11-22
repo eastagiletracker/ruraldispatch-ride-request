@@ -1,5 +1,5 @@
-import { FastifyPluginAsync } from 'fastify';
 import fastifyHelmet from '@fastify/helmet';
+import type { FastifyPluginAsync } from 'fastify';
 
 /**
  * Helmet Plugin

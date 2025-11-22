@@ -1,11 +1,18 @@
+import { Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Trash2 } from "lucide-react";
 import { toast } from 'sonner';
-import { formatShortId } from "@/utils/formatters";
-import { useUsers, getApiUrl } from '@/lib/api';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { getApiUrl, useUsers } from '@/lib/api';
+import { formatShortId } from '@/utils/formatters';
 import { TableSkeleton } from './TableSkeleton';
 
 interface RidersTabProps {
@@ -16,7 +23,7 @@ function getAuthHeaders() {
   const userRole = sessionStorage.getItem('user_role');
   return {
     'Content-Type': 'application/json',
-    'x-user-role': userRole || ''
+    'x-user-role': userRole || '',
   };
 }
 
@@ -27,11 +34,11 @@ export function RidersTab({ searchTerm }: RidersTabProps) {
 
   const handleDeleteRider = async (uuid: number) => {
     if (!confirm('Are you sure you want to delete this rider?')) return;
-    
+
     try {
       const response = await fetch(getApiUrl(`/api/users/${uuid}`), {
         method: 'DELETE',
-        headers: getAuthHeaders()
+        headers: getAuthHeaders(),
       });
       const data = await response.json();
       if (data.success) {
@@ -46,9 +53,10 @@ export function RidersTab({ searchTerm }: RidersTabProps) {
     }
   };
 
-  const filteredRiders = riders.filter(rider =>
-    rider.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    rider.phone?.includes(searchTerm)
+  const filteredRiders = riders.filter(
+    (rider) =>
+      rider.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      rider.phone?.includes(searchTerm)
   );
 
   return (
@@ -87,11 +95,7 @@ export function RidersTab({ searchTerm }: RidersTabProps) {
                   <TableCell>{rider.email || 'N/A'}</TableCell>
                   <TableCell>{rider.address || 'N/A'}</TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDeleteRider(rider.uuid)}
-                    >
+                    <Button variant="ghost" size="sm" onClick={() => handleDeleteRider(rider.uuid)}>
                       <Trash2 className="w-4 h-4 text-destructive" />
                     </Button>
                   </TableCell>

@@ -1,5 +1,5 @@
-import { FastifyPluginAsync } from 'fastify';
 import fastifyStatic from '@fastify/static';
+import type { FastifyPluginAsync } from 'fastify';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { env } from '../config/env.js';

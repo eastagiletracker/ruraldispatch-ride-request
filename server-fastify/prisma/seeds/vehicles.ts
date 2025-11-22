@@ -2,8 +2,8 @@
  * Vehicles Seed
  */
 
-import { PrismaClient } from '../generated/client/client.js';
 import { v7 as uuidv7 } from 'uuid';
+import type { PrismaClient } from '../generated/client/client.js';
 
 export async function seedVehicles(prisma: PrismaClient) {
   console.log('\n🚐 Seeding Vehicles...');

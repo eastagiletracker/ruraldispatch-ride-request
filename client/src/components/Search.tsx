@@ -1,123 +1,124 @@
-import { useState, useEffect, useRef, MouseEvent } from 'react';
+import { MouseEvent, useEffect, useRef, useState } from 'react';
 import type { SearchableElement } from '@/types';
 
 interface SearchProps<T extends SearchableElement> {
-    searchElementName: string;
-    fetchMatchesFn: (searchTerm: string) => Promise<T[]>;
-    placeHolderText: string;
-    renderElementFn: (element: T, handleElementSelect: (element: T) => void) => React.JSX.Element;
+  searchElementName: string;
+  fetchMatchesFn: (searchTerm: string) => Promise<T[]>;
+  placeHolderText: string;
+  renderElementFn: (element: T, handleElementSelect: (element: T) => void) => React.JSX.Element;
 }
 
 export default function Search<T extends SearchableElement>({
-    searchElementName,
-    fetchMatchesFn,
-    placeHolderText,
-    renderElementFn
+  searchElementName,
+  fetchMatchesFn,
+  placeHolderText,
+  renderElementFn,
 }: SearchProps<T>) {
-    const [searchTerm, setSearchTerm] = useState<string>('');
-    const [filteredElements, setFilteredElements] = useState<T[]>([]);
-    const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
-    const [isLoading, setIsLoading] = useState<boolean>(false);
-    const [error, setError] = useState<string>('');
-    const dropdownRef = useRef<HTMLDivElement>(null);
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [filteredElements, setFilteredElements] = useState<T[]>([]);
+  const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>('');
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-    // Filter elements based on search term
-    useEffect(() => {
-        if (searchTerm.trim() === '') {
-            setFilteredElements([]);
-            setIsDropdownOpen(false);
-            setError('');
-        } else {
-            setElementsToMatchesAsync(searchTerm);
-        }
-    }, [searchTerm]);
-
-    // Possible race conditions if network lags?
-    async function setElementsToMatchesAsync(searchTerm: string): Promise<void> {
-        setIsLoading(true);
-        setError('');
-        try {
-            const filtered = await fetchMatchesFn(searchTerm);
-            setFilteredElements(filtered);
-            setIsDropdownOpen(true);
-        } catch (err) {
-            console.error('Search error:', err);
-            setError(`Failed to search for ${searchElementName}s`);
-            setFilteredElements([]);
-        } finally {
-            setIsLoading(false);
-        }
+  // Filter elements based on search term
+  useEffect(() => {
+    if (searchTerm.trim() === '') {
+      setFilteredElements([]);
+      setIsDropdownOpen(false);
+      setError('');
+    } else {
+      setElementsToMatchesAsync(searchTerm);
     }
+  }, [searchTerm]);
 
-    // Close dropdown when clicking outside
-    useEffect(() => {
-        const handleClickOutside = (event: Event) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-                setIsDropdownOpen(false);
-            }
-        };
+  // Possible race conditions if network lags?
+  async function setElementsToMatchesAsync(searchTerm: string): Promise<void> {
+    setIsLoading(true);
+    setError('');
+    try {
+      const filtered = await fetchMatchesFn(searchTerm);
+      setFilteredElements(filtered);
+      setIsDropdownOpen(true);
+    } catch (err) {
+      console.error('Search error:', err);
+      setError(`Failed to search for ${searchElementName}s`);
+      setFilteredElements([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }
 
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, []);
-
-    const handleElementSelect = (element: T): void => {
-        const displayName = 'fullName' in element ? element.fullName :
-                          'displayName' in element ? element.displayName : '';
-        setSearchTerm(displayName);
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: Event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsDropdownOpen(false);
+      }
     };
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-        setSearchTerm(e.target.value);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
     };
+  }, []);
 
-    const handleInputFocus = (): void => {
-        if (filteredElements.length > 0) {
-            setIsDropdownOpen(true);
-        }
-    };
+  const handleElementSelect = (element: T): void => {
+    const displayName =
+      'fullName' in element
+        ? element.fullName
+        : 'displayName' in element
+          ? element.displayName
+          : '';
+    setSearchTerm(displayName);
+    setIsDropdownOpen(false);
+  };
 
-    return (
-        <div className="relative w-full" ref={dropdownRef}>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-                Search for existing {searchElementName}
-            </label>
-            <div className="relative">
-                <input
-                    type="text"
-                    value={searchTerm}
-                    onChange={handleInputChange}
-                    onFocus={handleInputFocus}
-                    placeholder={placeHolderText}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                />
-                {isLoading && (
-                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600"></div>
-                    </div>
-                )}
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    setSearchTerm(e.target.value);
+  };
+
+  const handleInputFocus = (): void => {
+    if (filteredElements.length > 0) {
+      setIsDropdownOpen(true);
+    }
+  };
+
+  return (
+    <div className="relative w-full" ref={dropdownRef}>
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        Search for existing {searchElementName}
+      </label>
+      <div className="relative">
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={handleInputChange}
+          onFocus={handleInputFocus}
+          placeholder={placeHolderText}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+        />
+        {isLoading && (
+          <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600"></div>
+          </div>
+        )}
+      </div>
+
+      {/* Dropdown */}
+      {isDropdownOpen && (
+        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+          {error ? (
+            <div className="px-4 py-3 text-amber-600 text-sm bg-amber-50 border-l-4 border-amber-500">
+              {error}
             </div>
-
-            {/* Dropdown */}
-            {isDropdownOpen && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
-                    {error ? (
-                        <div className="px-4 py-3 text-amber-600 text-sm bg-amber-50 border-l-4 border-amber-500">
-                            {error}
-                        </div>
-                    ) : filteredElements.length === 0 ? (
-                        <div className="px-4 py-3 text-gray-500 text-sm">
-                            No {searchElementName}s found
-                        </div>
-                    ) : (
-                        filteredElements.map(element => renderElementFn(element, handleElementSelect))
-                    )}
-                </div>
-            )}
-
+          ) : filteredElements.length === 0 ? (
+            <div className="px-4 py-3 text-gray-500 text-sm">No {searchElementName}s found</div>
+          ) : (
+            filteredElements.map((element) => renderElementFn(element, handleElementSelect))
+          )}
         </div>
-    );
-} 
+      )}
+    </div>
+  );
+}

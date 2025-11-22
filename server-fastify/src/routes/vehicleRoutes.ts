@@ -38,7 +38,7 @@ const vehicleRoutes: FastifyPluginAsync = async (fastify) => {
           error: error instanceof Error ? error.message : 'Unknown error',
         });
       }
-    },
+    }
   );
 
   /**
@@ -81,7 +81,7 @@ const vehicleRoutes: FastifyPluginAsync = async (fastify) => {
           error: error instanceof Error ? error.message : 'Unknown error',
         });
       }
-    },
+    }
   );
 };
 

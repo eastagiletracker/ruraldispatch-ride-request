@@ -32,8 +32,7 @@ export const addressSchema = z
   .optional()
   .nullable();
 
-export const dateTimeSchema = z
-  .iso
+export const dateTimeSchema = z.iso
   .datetime('Invalid ISO 8601 datetime format')
   .or(z.date())
   .transform((val) => (typeof val === 'string' ? new Date(val) : val));

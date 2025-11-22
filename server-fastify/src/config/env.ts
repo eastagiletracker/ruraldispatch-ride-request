@@ -1,7 +1,7 @@
-import { z } from 'zod/v4';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { z } from 'zod/v4';
 
 // ESM equivalent of __dirname
 const __filename = fileURLToPath(import.meta.url);

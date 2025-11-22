@@ -3,9 +3,9 @@
  * Admin, Dispatcher, Case Manager, Driver accounts
  */
 
-import { PrismaClient } from '../generated/client/client.js';
 import bcrypt from 'bcryptjs';
 import { v7 as uuidv7 } from 'uuid';
+import type { PrismaClient } from '../generated/client/client.js';
 
 export async function seedSystemUsers(prisma: PrismaClient) {
   console.log('\n👤 Seeding System Users...');

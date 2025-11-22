@@ -1,7 +1,7 @@
-import { FastifyPluginAsync } from 'fastify';
+import type { FastifyPluginAsync } from 'fastify';
 import fp from 'fastify-plugin';
-import { prisma, disconnectPrisma } from '../database/prisma.client.js';
 import { createDatabaseApi, type DatabaseAPI } from '../database/api.js';
+import { disconnectPrisma, prisma } from '../database/prisma.client.js';
 
 /**
  * Prisma Plugin

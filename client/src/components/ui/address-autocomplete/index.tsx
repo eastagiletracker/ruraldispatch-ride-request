@@ -4,22 +4,26 @@
  * Adapted from: https://github.com/NiazMorshed2007/shadcn-address-autocomplete
  */
 
-import { useState, useRef, useEffect, useMemo, memo } from "react";
-import { MapPin, Pencil, X, Loader2, AlertCircle } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { AlertCircle, Loader2, MapPin, Pencil, X } from 'lucide-react';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
+import { Button } from '@/components/ui/button';
 import {
   Command,
   CommandEmpty,
   CommandGroup,
   CommandItem,
   CommandList,
-} from "@/components/ui/command";
-import { usePlacesAutocomplete } from "@/hooks/use-places-autocomplete";
-import { getPlaceDetails, parseAddressComponents } from "@/lib/places-api";
-import { AddressType, PartialAddressType, isValidAddress } from "@/schemas/address-schema";
-import { AddressDialog } from "./address-dialog";
-import { cn } from "@/lib/utils";
+} from '@/components/ui/command';
+import { Input } from '@/components/ui/input';
+import { usePlacesAutocomplete } from '@/hooks/use-places-autocomplete';
+import { getPlaceDetails, parseAddressComponents } from '@/lib/places-api';
+import { cn } from '@/lib/utils';
+import {
+  type AddressType,
+  isValidAddress,
+  type PartialAddressType,
+} from '@/schemas/address-schema';
+import { AddressDialog } from './address-dialog';
 
 export interface AddressAutocompleteProps {
   /**
@@ -89,12 +93,12 @@ export interface AddressAutocompleteProps {
 const AddressAutocompleteComponent: React.FC<AddressAutocompleteProps> = ({
   value,
   onChange,
-  placeholder = "Search for an address...",
+  placeholder = 'Search for an address...',
   required = false,
   error = false,
   errorMessage,
   disabled = false,
-  includedRegionCodes = ["US"],
+  includedRegionCodes = ['US'],
   locationBias,
   label,
   className,
@@ -149,8 +153,8 @@ const AddressAutocompleteComponent: React.FC<AddressAutocompleteProps> = ({
       }
     }
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -183,10 +187,10 @@ const AddressAutocompleteComponent: React.FC<AddressAutocompleteProps> = ({
       const address: AddressType = {
         address1: components.address1 || undefined,
         address2: components.address2,
-        city: components.city || "",
-        region: components.state || "",
+        city: components.city || '',
+        region: components.state || '',
         postalCode: components.postalCode || undefined,
-        country: components.country || "",
+        country: components.country || '',
         formattedAddress: details.formattedAddress,
         lat: details.location.latitude,
         lng: details.location.longitude,
@@ -196,11 +200,11 @@ const AddressAutocompleteComponent: React.FC<AddressAutocompleteProps> = ({
       const isIncomplete = !address.address1 || !address.postalCode;
 
       setSelectedAddress(address);
-      
+
       // Mark as internal update before calling onChange
       isInternalUpdate.current = true;
       onChange(address);
-      setInputValue("");
+      setInputValue('');
       setHasUserTyped(false);
       clearPredictions();
 
@@ -216,7 +220,7 @@ const AddressAutocompleteComponent: React.FC<AddressAutocompleteProps> = ({
         }, 100); // Small delay to ensure state updates
       }
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : "Failed to get address details";
+      const errorMsg = err instanceof Error ? err.message : 'Failed to get address details';
       setDetailsError(errorMsg);
     } finally {
       setIsLoadingDetails(false);
@@ -225,12 +229,12 @@ const AddressAutocompleteComponent: React.FC<AddressAutocompleteProps> = ({
 
   const handleClear = () => {
     setSelectedAddress(null);
-    
+
     // Mark as internal update before calling onChange
     isInternalUpdate.current = true;
     onChange(null);
-    
-    setInputValue("");
+
+    setInputValue('');
     setHasUserTyped(false);
     clearPredictions();
     setDetailsError(null);
@@ -242,29 +246,29 @@ const AddressAutocompleteComponent: React.FC<AddressAutocompleteProps> = ({
 
   const handleSaveFromDialog = (address: AddressType) => {
     setSelectedAddress(address);
-    
+
     // Mark as internal update before calling onChange
     isInternalUpdate.current = true;
     onChange(address);
-    
+
     setDialogOpen(false);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Escape") {
+    if (e.key === 'Escape') {
       setShowSuggestions(false);
     }
   };
 
   const showValidationError = hasUserTyped && inputValue && predictions.length === 0 && !isLoading;
-  
+
   // Memoize validation check to prevent unnecessary re-renders
   const addressIsValid = useMemo(() => {
     return selectedAddress ? isValidAddress(selectedAddress) : false;
   }, [selectedAddress]);
 
   return (
-    <div className={cn("space-y-2", className)} ref={containerRef}>
+    <div className={cn('space-y-2', className)} ref={containerRef}>
       {label && (
         <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
           {label}
@@ -277,12 +281,12 @@ const AddressAutocompleteComponent: React.FC<AddressAutocompleteProps> = ({
         <div>
           <div
             className={cn(
-              "flex items-center gap-2 p-1.5 border rounded-md",
+              'flex items-center gap-2 p-1.5 border rounded-md',
               // Highlight incomplete addresses
               !selectedAddress.address1 || !selectedAddress.postalCode
-                ? "bg-yellow-50 border-yellow-300 dark:bg-yellow-950 dark:border-yellow-700"
-                : "bg-muted/50",
-              error && "border-destructive"
+                ? 'bg-yellow-50 border-yellow-300 dark:bg-yellow-950 dark:border-yellow-700'
+                : 'bg-muted/50',
+              error && 'border-destructive'
             )}
           >
             <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
@@ -295,34 +299,34 @@ const AddressAutocompleteComponent: React.FC<AddressAutocompleteProps> = ({
               )}
             </div>
             <div className="flex gap-1">
-            <AddressDialog
-              address={selectedAddress}
-              onSave={handleSaveFromDialog}
-              open={dialogOpen}
-              onOpenChange={setDialogOpen}
-            >
+              <AddressDialog
+                address={selectedAddress}
+                onSave={handleSaveFromDialog}
+                open={dialogOpen}
+                onOpenChange={setDialogOpen}
+              >
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  disabled={disabled}
+                  title="Edit address details"
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+              </AddressDialog>
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="h-8 w-8 p-0"
+                className="h-8 w-8 p-0 text-destructive hover:text-destructive"
                 disabled={disabled}
-                title="Edit address details"
+                onClick={handleClear}
+                title="Clear address"
               >
-                <Pencil className="h-4 w-4" />
+                <X className="h-4 w-4" />
               </Button>
-            </AddressDialog>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-              disabled={disabled}
-              onClick={handleClear}
-              title="Clear address"
-            >
-              <X className="h-4 w-4" />
-            </Button>
             </div>
           </div>
         </div>
@@ -340,8 +344,8 @@ const AddressAutocompleteComponent: React.FC<AddressAutocompleteProps> = ({
               placeholder={placeholder}
               disabled={disabled || isLoadingDetails}
               className={cn(
-                error && "border-destructive",
-                (isLoading || isLoadingDetails) && "pr-10"
+                error && 'border-destructive',
+                (isLoading || isLoadingDetails) && 'pr-10'
               )}
             />
             {(isLoading || isLoadingDetails) && (
@@ -415,7 +419,7 @@ const AddressAutocompleteComponent: React.FC<AddressAutocompleteProps> = ({
       )}
     </div>
   );
-}
+};
 
 // Memoize component to prevent unnecessary re-renders
 export const AddressAutocomplete = memo(AddressAutocompleteComponent, (prevProps, nextProps) => {

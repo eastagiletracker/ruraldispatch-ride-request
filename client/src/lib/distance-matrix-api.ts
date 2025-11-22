@@ -9,12 +9,12 @@ const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
 export interface DistanceMatrixResult {
   distance: {
-    text: string;    // "25.5 km"
-    value: number;   // 25500 (in meters)
+    text: string; // "25.5 km"
+    value: number; // 25500 (in meters)
   };
   duration: {
-    text: string;    // "30 mins"
-    value: number;   // 1800 (in seconds)
+    text: string; // "30 mins"
+    value: number; // 1800 (in seconds)
   };
   status: string;
 }
@@ -61,7 +61,7 @@ export async function calculateTravelTime(
       durationMinutes: data.durationMinutes,
       durationText: data.durationText,
       distanceText: data.distanceText,
-      distanceMeters: data.distanceMeters
+      distanceMeters: data.distanceMeters,
     };
 
     return result;

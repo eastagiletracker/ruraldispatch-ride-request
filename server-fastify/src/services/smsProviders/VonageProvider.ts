@@ -1,7 +1,7 @@
 import type { Vonage } from '@vonage/server-sdk';
+import { env } from '../../config/env.js';
 import { vonageConfig } from '../../config/vonage.js';
 import type { SMSResult } from '../../types/sms.types.js';
-import { env } from '../../config/env.js';
 
 /**
  * Vonage SMS Provider
@@ -57,7 +57,9 @@ export class VonageProvider {
         const msg = response.messages[0];
 
         if (msg.status === '0') {
-          console.log(` SMS sent successfully via Vonage to ${to}. Message ID: ${msg['message-id']}`);
+          console.log(
+            ` SMS sent successfully via Vonage to ${to}. Message ID: ${msg['message-id']}`
+          );
 
           return {
             success: true,

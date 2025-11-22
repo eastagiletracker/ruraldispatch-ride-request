@@ -7,12 +7,12 @@
  */
 
 import type { PrismaClient } from '@prisma/client';
-import { createRideRepository } from './repositories/ride.repository.js';
-import { createUserRepository } from './repositories/user.repository.js';
-import { createProviderRepository } from './repositories/provider.repository.js';
-import { createVehicleRepository } from './repositories/vehicle.repository.js';
 import { createNotificationRepository } from './repositories/notification.repository.js';
+import { createProviderRepository } from './repositories/provider.repository.js';
+import { createRideRepository } from './repositories/ride.repository.js';
 import { createSystemUserRepository } from './repositories/systemUser.repository.js';
+import { createUserRepository } from './repositories/user.repository.js';
+import { createVehicleRepository } from './repositories/vehicle.repository.js';
 
 /**
  * Create a fully-typed database API from a PrismaClient instance

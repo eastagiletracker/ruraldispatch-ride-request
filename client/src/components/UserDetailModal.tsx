@@ -1,4 +1,24 @@
-import React, { useEffect, useState } from 'react';
+import {
+  Activity,
+  Briefcase,
+  Building2,
+  Calendar,
+  Clock,
+  DollarSign,
+  Flag,
+  Hash,
+  Heart,
+  Home,
+  MessageSquarePlus,
+  Phone,
+  Shield,
+  User,
+} from 'lucide-react';
+import type React from 'react';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -6,10 +26,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
-import { User, Phone, Calendar, Clock, Hash, Shield, Activity, Briefcase, Building2, Heart, Home, DollarSign, Flag, MessageSquarePlus } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { getApiUrl } from '@/lib/api';
 
@@ -42,7 +58,9 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
 
     // Allow staff to manually enter if missing
     if (!phone) {
-      const entered = window.prompt('Enter the user phone number (E.164 like +18669017244 or digits):');
+      const entered = window.prompt(
+        'Enter the user phone number (E.164 like +18669017244 or digits):'
+      );
       if (!entered) {
         toast.error('Cannot record consent', { description: 'Phone number required.' });
         return;
@@ -52,7 +70,9 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
 
     // Basic normalization / validation
     if (!/^\+?\d{10,15}$/.test(phone)) {
-      toast.error('Invalid phone number', { description: 'Use digits, optionally starting with +, 10-15 total.' });
+      toast.error('Invalid phone number', {
+        description: 'Use digits, optionally starting with +, 10-15 total.',
+      });
       return;
     }
 
@@ -73,8 +93,8 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
           phoneNumber: phone,
           consentGiven: true,
           timestamp: new Date().toISOString(),
-          ipAddress: 'verbal' // flag for audit trail
-        })
+          ipAddress: 'verbal', // flag for audit trail
+        }),
       });
       if (resp.ok) {
         const now = new Date().toISOString();
@@ -83,11 +103,11 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
         setCurrentUser((prev: any) => ({
           ...prev,
           phone: prev.phone || phone, // persist phone if it was manually entered
-            smsConsent: {
-              given: true,
-              timestamp: now,
-              ipAddress: 'verbal'
-            }
+          smsConsent: {
+            given: true,
+            timestamp: now,
+            ipAddress: 'verbal',
+          },
         }));
       } else {
         const data = await resp.json().catch(() => ({}));
@@ -158,7 +178,9 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                 <User className="h-5 w-5 text-muted-foreground mt-0.5" />
                 <div className="flex-1">
                   <p className="text-sm font-medium text-muted-foreground">Full Name</p>
-                  <p className="text-base font-semibold">{currentUser.fullName || currentUser.name || 'N/A'}</p>
+                  <p className="text-base font-semibold">
+                    {currentUser.fullName || currentUser.name || 'N/A'}
+                  </p>
                 </div>
               </div>
 
@@ -168,7 +190,9 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                   <Hash className="h-5 w-5 text-muted-foreground mt-0.5" />
                   <div className="flex-1">
                     <p className="text-sm font-medium text-muted-foreground">User ID</p>
-                    <p className="text-xs font-mono text-muted-foreground break-all">{currentUser.uuid}</p>
+                    <p className="text-xs font-mono text-muted-foreground break-all">
+                      {currentUser.uuid}
+                    </p>
                   </div>
                 </div>
               )}
@@ -180,7 +204,9 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                   <div className="flex-1">
                     <p className="text-sm font-medium text-muted-foreground">Date of Birth</p>
                     <p className="text-base font-semibold">{formatDate(currentUser.dob)}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">Age: {formatAge(currentUser.dob)} years</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Age: {formatAge(currentUser.dob)} years
+                    </p>
                   </div>
                 </div>
               )}
@@ -213,7 +239,9 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                 <div className="flex-1">
                   <p className="text-sm font-medium text-muted-foreground">Phone Number</p>
                   <p className="text-base font-semibold">
-                    {type === 'driver' ? (currentUser.mobilePhone || currentUser.phone || 'N/A') : (currentUser.phone || 'N/A')}
+                    {type === 'driver'
+                      ? currentUser.mobilePhone || currentUser.phone || 'N/A'
+                      : currentUser.phone || 'N/A'}
                   </p>
                 </div>
               </div>
@@ -238,7 +266,9 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                     <div className="flex flex-col gap-1">
                       <Badge className="bg-green-600 hover:bg-green-700 w-fit">Opted-In</Badge>
                       {currentUser.smsConsent?.timestamp && (
-                        <p className="text-xs text-muted-foreground">Since: {new Date(currentUser.smsConsent.timestamp).toLocaleString()}</p>
+                        <p className="text-xs text-muted-foreground">
+                          Since: {new Date(currentUser.smsConsent.timestamp).toLocaleString()}
+                        </p>
                       )}
                       {currentUser.smsConsent?.ipAddress === 'verbal' && (
                         <p className="text-xs text-muted-foreground">Method: Verbal</p>
@@ -246,23 +276,55 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      <Badge variant="destructive" className="w-fit">Not Opted-In</Badge>
-                      <p className="text-xs text-muted-foreground max-w-sm">User has not provided SMS consent. Obtain explicit verbal permission before enabling.</p>
+                      <Badge variant="destructive" className="w-fit">
+                        Not Opted-In
+                      </Badge>
+                      <p className="text-xs text-muted-foreground max-w-sm">
+                        User has not provided SMS consent. Obtain explicit verbal permission before
+                        enabling.
+                      </p>
                       <Button size="sm" onClick={handleRecordVerbalConsent}>
                         <MessageSquarePlus className="h-4 w-4 mr-2" />
                         Record Verbal Consent
                       </Button>
                       <div className="text-xs text-muted-foreground space-y-2 bg-blue-50 p-3 rounded border border-blue-200">
-                        <p className="font-semibold text-blue-900">📋 VERBAL OPT-IN SCRIPT (Read Verbatim):</p>
+                        <p className="font-semibold text-blue-900">
+                          📋 VERBAL OPT-IN SCRIPT (Read Verbatim):
+                        </p>
                         <div className="space-y-1 text-[11px] leading-relaxed">
-                          <p>"This is [Your Name] from <strong>SWARM LLC</strong>, calling about your Rural Dispatch transportation."</p>
-                          <p>"We can send you text message updates with ride confirmations, driver information, pickup times, and arrival notifications from our toll-free number <strong>(866) 901-7244</strong>."</p>
-                          <p>"If you prefer not to receive texts, we'll contact you by phone instead. You'll receive approximately <strong>1 to 5 messages per ride</strong>. Standard message and data rates may apply."</p>
-                          <p>"At any time you can reply <strong>HELP</strong> for support or <strong>STOP</strong> to opt out of text messages."</p>
-                          <p>"Our Mobile Terms are at <strong>ruraldispatch.swarmnyc.com/sms-terms</strong> and Privacy Policy at <strong>ruraldispatch.swarmnyc.com/privacy</strong>."</p>
-                          <p className="font-semibold text-blue-900 mt-2">"May we send you text updates at this number? Please say 'yes' or 'no'."</p>
-                          <p className="text-[10px] text-muted-foreground italic mt-2">[Wait for clear verbal "Yes", then click "Record Consent" button above]</p>
-                          <p className="text-[10px] text-muted-foreground">After recording: "Thank you! You'll receive a confirmation text shortly. Remember, you can reply STOP at any time to opt out."</p>
+                          <p>
+                            "This is [Your Name] from <strong>SWARM LLC</strong>, calling about your
+                            Rural Dispatch transportation."
+                          </p>
+                          <p>
+                            "We can send you text message updates with ride confirmations, driver
+                            information, pickup times, and arrival notifications from our toll-free
+                            number <strong>(866) 901-7244</strong>."
+                          </p>
+                          <p>
+                            "If you prefer not to receive texts, we'll contact you by phone instead.
+                            You'll receive approximately <strong>1 to 5 messages per ride</strong>.
+                            Standard message and data rates may apply."
+                          </p>
+                          <p>
+                            "At any time you can reply <strong>HELP</strong> for support or{' '}
+                            <strong>STOP</strong> to opt out of text messages."
+                          </p>
+                          <p>
+                            "Our Mobile Terms are at{' '}
+                            <strong>ruraldispatch.swarmnyc.com/sms-terms</strong> and Privacy Policy
+                            at <strong>ruraldispatch.swarmnyc.com/privacy</strong>."
+                          </p>
+                          <p className="font-semibold text-blue-900 mt-2">
+                            "May we send you text updates at this number? Please say 'yes' or 'no'."
+                          </p>
+                          <p className="text-[10px] text-muted-foreground italic mt-2">
+                            [Wait for clear verbal "Yes", then click "Record Consent" button above]
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">
+                            After recording: "Thank you! You'll receive a confirmation text shortly.
+                            Remember, you can reply STOP at any time to opt out."
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -309,7 +371,9 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                     <div className="flex items-start gap-3">
                       <Shield className="h-5 w-5 text-muted-foreground mt-0.5" />
                       <div className="flex-1">
-                        <p className="text-sm font-medium text-muted-foreground">Service Provider Role</p>
+                        <p className="text-sm font-medium text-muted-foreground">
+                          Service Provider Role
+                        </p>
                         <Badge variant="default" className="mt-1">
                           {currentUser.serviceProviderRole}
                         </Badge>
@@ -348,7 +412,9 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                       <User className="h-5 w-5 text-muted-foreground mt-0.5" />
                       <div className="flex-1">
                         <p className="text-sm font-medium text-muted-foreground">Race</p>
-                        <p className="text-base font-semibold">{capitalizeFirst(currentUser.race)}</p>
+                        <p className="text-base font-semibold">
+                          {capitalizeFirst(currentUser.race)}
+                        </p>
                       </div>
                     </div>
                   )}
@@ -359,7 +425,9 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                       <Heart className="h-5 w-5 text-muted-foreground mt-0.5" />
                       <div className="flex-1">
                         <p className="text-sm font-medium text-muted-foreground">Marital Status</p>
-                        <p className="text-base font-semibold">{capitalizeFirst(currentUser.maritalStatus)}</p>
+                        <p className="text-base font-semibold">
+                          {capitalizeFirst(currentUser.maritalStatus)}
+                        </p>
                       </div>
                     </div>
                   )}
@@ -370,7 +438,11 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                       <Flag className="h-5 w-5 text-muted-foreground mt-0.5" />
                       <div className="flex-1">
                         <p className="text-sm font-medium text-muted-foreground">Veteran Status</p>
-                        <Badge variant={currentUser.veteranStatus === 'veteran' ? 'default' : 'secondary'}>
+                        <Badge
+                          variant={
+                            currentUser.veteranStatus === 'veteran' ? 'default' : 'secondary'
+                          }
+                        >
                           {capitalizeFirst(currentUser.veteranStatus)}
                         </Badge>
                       </div>
@@ -382,8 +454,12 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                     <div className="flex items-start gap-3">
                       <Activity className="h-5 w-5 text-muted-foreground mt-0.5" />
                       <div className="flex-1">
-                        <p className="text-sm font-medium text-muted-foreground">Disability Status</p>
-                        <Badge variant={currentUser.disabilityStatus === 'yes' ? 'default' : 'secondary'}>
+                        <p className="text-sm font-medium text-muted-foreground">
+                          Disability Status
+                        </p>
+                        <Badge
+                          variant={currentUser.disabilityStatus === 'yes' ? 'default' : 'secondary'}
+                        >
                           {capitalizeFirst(currentUser.disabilityStatus)}
                         </Badge>
                       </div>
@@ -395,7 +471,9 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                     <div className="flex items-start gap-3">
                       <Shield className="h-5 w-5 text-muted-foreground mt-0.5" />
                       <div className="flex-1">
-                        <p className="text-sm font-medium text-muted-foreground mb-2">Service User Roles</p>
+                        <p className="text-sm font-medium text-muted-foreground mb-2">
+                          Service User Roles
+                        </p>
                         <div className="flex flex-wrap gap-2">
                           {currentUser.serviceUserRole.map((role: string, index: number) => (
                             <Badge key={index} variant="outline">
@@ -423,7 +501,9 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                     <div className="flex items-start gap-3">
                       <Home className="h-5 w-5 text-muted-foreground mt-0.5" />
                       <div className="flex-1">
-                        <p className="text-sm font-medium text-muted-foreground">Current Residence</p>
+                        <p className="text-sm font-medium text-muted-foreground">
+                          Current Residence
+                        </p>
                         <p className="text-base font-semibold">{currentUser.residence.current}</p>
                       </div>
                     </div>
@@ -481,7 +561,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
           {(currentUser.createdAt || currentUser.updatedAt) && (
             <>
               <Separator />
-              
+
               <div>
                 <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3 flex items-center gap-2">
                   <Calendar className="h-4 w-4" />
@@ -494,7 +574,9 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                       <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
                       <div className="flex-1">
                         <p className="text-sm font-medium text-muted-foreground">Created</p>
-                        <p className="text-base font-semibold">{formatDate(currentUser.createdAt)}</p>
+                        <p className="text-base font-semibold">
+                          {formatDate(currentUser.createdAt)}
+                        </p>
                         <p className="text-xs text-muted-foreground mt-0.5">
                           {formatDateTime(currentUser.createdAt)}
                         </p>
@@ -508,7 +590,9 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                       <Clock className="h-5 w-5 text-muted-foreground mt-0.5" />
                       <div className="flex-1">
                         <p className="text-sm font-medium text-muted-foreground">Last Updated</p>
-                        <p className="text-base font-semibold">{formatDate(currentUser.updatedAt)}</p>
+                        <p className="text-base font-semibold">
+                          {formatDate(currentUser.updatedAt)}
+                        </p>
                         <p className="text-xs text-muted-foreground mt-0.5">
                           {formatDateTime(currentUser.updatedAt)}
                         </p>

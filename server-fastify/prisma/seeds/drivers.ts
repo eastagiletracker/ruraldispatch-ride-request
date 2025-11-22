@@ -2,15 +2,15 @@
  * Service Providers (Drivers) Seed
  */
 
-import { PrismaClient } from '../generated/client/client.js';
 import { v7 as uuidv7 } from 'uuid';
+import type { PrismaClient } from '../generated/client/client.js';
 
 export async function seedDrivers(prisma: PrismaClient, organizations: any[]) {
   console.log('\n🚗 Seeding Service Providers (Drivers)...');
 
   // Get organization IDs
-  const eastconn = organizations.find(o => o.name === 'EASTCONN');
-  const generationsHealth = organizations.find(o => o.name === 'Generations Health');
+  const eastconn = organizations.find((o) => o.name === 'EASTCONN');
+  const generationsHealth = organizations.find((o) => o.name === 'Generations Health');
 
   const drivers = [
     {

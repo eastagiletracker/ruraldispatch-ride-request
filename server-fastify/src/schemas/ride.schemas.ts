@@ -1,6 +1,6 @@
 import { z } from 'zod/v4';
-import { RIDE_STATUSES } from '../constants/rideStatuses.js';
 import { RIDE_REQUEST_STATUSES } from '../constants/rideRequestStatuses.js';
+import { RIDE_STATUSES } from '../constants/rideStatuses.js';
 
 /**
  * Ride Request Validation Schemas
@@ -93,7 +93,7 @@ export const createRideRequestSchema = z
     {
       message: 'Either riderUuid or both riderName and riderPhone must be provided',
       path: ['riderUuid'],
-    },
+    }
   )
   .refine(
     (data) => {
@@ -104,7 +104,7 @@ export const createRideRequestSchema = z
     {
       message: 'Pickup time must be in the future',
       path: ['pickupRequestedTime'],
-    },
+    }
   )
   .refine(
     (data) => {
@@ -119,7 +119,7 @@ export const createRideRequestSchema = z
     {
       message: 'Drop-off time must be after pickup time',
       path: ['dropOffRequestedTime'],
-    },
+    }
   );
 
 // ==================== UPDATE RIDE REQUEST SCHEMA ====================
@@ -179,7 +179,7 @@ export const updateRideRequestSchema = z
     },
     {
       message: 'Driver and vehicle must be assigned when setting status >= 400',
-    },
+    }
   );
 
 // ==================== PARAMS SCHEMAS ====================

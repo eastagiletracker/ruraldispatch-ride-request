@@ -108,4 +108,9 @@ Thumbs.db
 
 # Backup files
 *.bak
-*.backup 
+*.backup
+
+# Prisma generated client
+**/prisma/generated/
+prisma/generated/
+server-fastify/prisma/generated/ 

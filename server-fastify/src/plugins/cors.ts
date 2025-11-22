@@ -1,5 +1,5 @@
-import { FastifyPluginAsync } from 'fastify';
 import fastifyCors from '@fastify/cors';
+import type { FastifyPluginAsync } from 'fastify';
 
 /**
  * CORS Plugin

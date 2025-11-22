@@ -4,14 +4,14 @@
  */
 
 import type {
-  Ride,
-  User,
-  ServiceProvider,
-  Vehicle,
   Notification,
-  SystemUser,
   Organization,
   Prisma,
+  Ride,
+  ServiceProvider,
+  SystemUser,
+  User,
+  Vehicle,
 } from '@prisma/client';
 
 // Re-export Prisma types

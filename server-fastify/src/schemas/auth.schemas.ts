@@ -45,7 +45,10 @@ export const createSystemUserSchema = z.object({
     .min(3, 'Username must be at least 3 characters')
     .max(50, 'Username must not exceed 50 characters')
     .trim()
-    .regex(/^[a-zA-Z0-9_-]+$/, 'Username can only contain letters, numbers, underscores, and hyphens'),
+    .regex(
+      /^[a-zA-Z0-9_-]+$/,
+      'Username can only contain letters, numbers, underscores, and hyphens'
+    ),
   password: z
     .string()
     .min(8, 'Password must be at least 8 characters')
@@ -70,14 +73,7 @@ export const updateSystemUserSchema = z.object({
     .trim()
     .regex(/^[a-zA-Z0-9_-]+$/)
     .optional(),
-  password: z
-    .string()
-    .min(8)
-    .max(100)
-    .regex(/[A-Z]/)
-    .regex(/[a-z]/)
-    .regex(/[0-9]/)
-    .optional(),
+  password: z.string().min(8).max(100).regex(/[A-Z]/).regex(/[a-z]/).regex(/[0-9]/).optional(),
   fullName: z.string().min(1).max(100).trim().optional(),
   role: systemUserRoleSchema.optional(),
   isActive: z.boolean().optional(),

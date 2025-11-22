@@ -1,13 +1,20 @@
+import { Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Trash2 } from "lucide-react";
 import { toast } from 'sonner';
-import { formatShortId } from "@/utils/formatters";
-import { useVehicles, getApiUrl } from '@/lib/api';
-import VehicleForm from "@/components/VehicleForm";
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import VehicleForm from '@/components/VehicleForm';
+import { getApiUrl, useVehicles } from '@/lib/api';
+import { formatShortId } from '@/utils/formatters';
 import { TableSkeleton } from './TableSkeleton';
 
 interface VehiclesTabProps {
@@ -18,7 +25,7 @@ function getAuthHeaders() {
   const userRole = sessionStorage.getItem('user_role');
   return {
     'Content-Type': 'application/json',
-    'x-user-role': userRole || ''
+    'x-user-role': userRole || '',
   };
 }
 
@@ -26,15 +33,16 @@ export function VehiclesTab({ searchTerm }: VehiclesTabProps) {
   const [showVehicleForm, setShowVehicleForm] = useState(false);
   const { data: vehiclesData, isLoading, refetch } = useVehicles();
 
-  const vehicles = (vehiclesData as any)?.vehicles || (Array.isArray(vehiclesData) ? vehiclesData : []);
+  const vehicles =
+    (vehiclesData as any)?.vehicles || (Array.isArray(vehiclesData) ? vehiclesData : []);
 
   const handleDeleteVehicle = async (uuid: number) => {
     if (!confirm('Are you sure you want to delete this vehicle?')) return;
-    
+
     try {
       const response = await fetch(getApiUrl(`/api/vehicles/${uuid}`), {
         method: 'DELETE',
-        headers: getAuthHeaders()
+        headers: getAuthHeaders(),
       });
       const data = await response.json();
       if (data.success) {
@@ -49,10 +57,11 @@ export function VehiclesTab({ searchTerm }: VehiclesTabProps) {
     }
   };
 
-  const filteredVehicles = vehicles.filter(vehicle =>
-    vehicle.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    vehicle.fleetId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    vehicle.serviceArea?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredVehicles = vehicles.filter(
+    (vehicle) =>
+      vehicle.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      vehicle.fleetId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      vehicle.serviceArea?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -98,13 +107,15 @@ export function VehiclesTab({ searchTerm }: VehiclesTabProps) {
               </TableHeader>
               <TableBody>
                 {filteredVehicles.map((vehicle) => (
-                <TableRow key={vehicle.uuid}>
-                  <TableCell>{vehicle.displayName || 'N/A'}</TableCell>
-                  <TableCell>{vehicle.fleetId || 'N/A'}</TableCell>
-                  <TableCell>{vehicle.capacity || 0} passengers</TableCell>
+                  <TableRow key={vehicle.uuid}>
+                    <TableCell>{vehicle.displayName || 'N/A'}</TableCell>
+                    <TableCell>{vehicle.fleetId || 'N/A'}</TableCell>
+                    <TableCell>{vehicle.capacity || 0} passengers</TableCell>
                     <TableCell>{vehicle.serviceArea || 'N/A'}</TableCell>
                     <TableCell>
-                      <Badge variant={vehicle.accessibilityFeatures !== 'None' ? 'default' : 'secondary'}>
+                      <Badge
+                        variant={vehicle.accessibilityFeatures !== 'None' ? 'default' : 'secondary'}
+                      >
                         {vehicle.accessibilityFeatures || 'None'}
                       </Badge>
                     </TableCell>

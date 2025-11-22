@@ -1,4 +1,4 @@
-import twilio, { Twilio } from 'twilio';
+import twilio, { type Twilio } from 'twilio';
 import { env, smsConfig } from './env.js';
 
 export interface TwilioConfig {

@@ -2,8 +2,8 @@
  * Ride Requests Seed
  */
 
-import { PrismaClient } from '../generated/client/client.js';
 import { v7 as uuidv7 } from 'uuid';
+import type { PrismaClient } from '../generated/client/client.js';
 
 // Helper to create datetime for today
 const createDateTime = (hour: number, minute: number) => {
@@ -64,8 +64,7 @@ export async function seedRides(
   let createdRidesCount = 0;
   for (const rideData of demoRides) {
     const riderUuid = riders[rideData.riderIndex].uuid;
-    const driverUuid =
-      rideData.driverIndex !== null ? drivers[rideData.driverIndex].uuid : null;
+    const driverUuid = rideData.driverIndex !== null ? drivers[rideData.driverIndex].uuid : null;
     const vehicleUuid =
       rideData.vehicleIndex !== null ? vehicles[rideData.vehicleIndex].uuid : null;
 
@@ -106,14 +105,14 @@ export async function seedRides(
       rideData.rideStatus === 0
         ? 'UNASSIGNED'
         : rideData.rideStatus === 100
-        ? 'CONFIRMED'
-        : rideData.rideStatus === 200
-        ? 'STARTED'
-        : rideData.rideStatus === 300
-        ? 'PICKED_UP'
-        : rideData.rideStatus === 500
-        ? 'COMPLETE'
-        : 'UNKNOWN';
+          ? 'CONFIRMED'
+          : rideData.rideStatus === 200
+            ? 'STARTED'
+            : rideData.rideStatus === 300
+              ? 'PICKED_UP'
+              : rideData.rideStatus === 500
+                ? 'COMPLETE'
+                : 'UNKNOWN';
 
     console.log(`  ✅ Created ride: ${riderName.padEnd(20)} | ${statusName}`);
     createdRidesCount++;

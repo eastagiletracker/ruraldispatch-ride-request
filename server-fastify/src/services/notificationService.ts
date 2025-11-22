@@ -1,17 +1,11 @@
 import { randomUUID } from 'node:crypto';
-import { SMSProviderManager } from './smsProviders/SMSProviderManager.js';
 import { RIDE_REQUEST_STATUSES } from '../constants/rideRequestStatuses.js';
-import * as smsTemplates from './smsTemplates.js';
-import { processSMSResponse, type SMSResponseResult } from './smsResponseHandler.js';
-import type {
-  Ride,
-  User,
-  ServiceProvider,
-  Vehicle,
-  SystemUser,
-} from '../types/database.types.js';
-import type { SMSResult } from '../types/sms.types.js';
 import type { DatabaseAPI } from '../database/api.js';
+import type { Ride, ServiceProvider, SystemUser, User, Vehicle } from '../types/database.types.js';
+import type { SMSResult } from '../types/sms.types.js';
+import { SMSProviderManager } from './smsProviders/SMSProviderManager.js';
+import { processSMSResponse, type SMSResponseResult } from './smsResponseHandler.js';
+import * as smsTemplates from './smsTemplates.js';
 
 /**
  * Notification Service
@@ -63,7 +57,10 @@ export class NotificationService {
   /**
    * Get SMS provider status
    */
-  getProviderStatus(): { twilio: { configured: boolean; isPrimary?: boolean }; vonage: { configured: boolean; isFallback?: boolean } } {
+  getProviderStatus(): {
+    twilio: { configured: boolean; isPrimary?: boolean };
+    vonage: { configured: boolean; isFallback?: boolean };
+  } {
     return this.smsProvider.getStatus();
   }
 
@@ -74,7 +71,7 @@ export class NotificationService {
     ride: Ride,
     rider: User,
     driver: ServiceProvider,
-    vehicle: Vehicle | null,
+    vehicle: Vehicle | null
   ): Promise<SMSResult> {
     const vehicleInfo = vehicle ? `Vehicle: ${vehicle.displayName}` : 'Vehicle: TBD';
     const message = `Your ride has been accepted!
@@ -90,11 +87,7 @@ Questions? Reply to this message.`;
   /**
    * Send ride started notification to rider
    */
-  async notifyRideStarted(
-    ride: Ride,
-    rider: User,
-    driver: ServiceProvider,
-  ): Promise<SMSResult> {
+  async notifyRideStarted(ride: Ride, rider: User, driver: ServiceProvider): Promise<SMSResult> {
     const message = `Your ride has started!
 Driver ${driver.fullName} is on the way to pick you up at ${ride.pickupAddress}.
 We'll notify you when you arrive.`;
@@ -105,11 +98,7 @@ We'll notify you when you arrive.`;
   /**
    * Send rider picked up notification
    */
-  async notifyRiderPickedUp(
-    ride: Ride,
-    rider: User,
-    driver: ServiceProvider,
-  ): Promise<SMSResult> {
+  async notifyRiderPickedUp(ride: Ride, rider: User, driver: ServiceProvider): Promise<SMSResult> {
     const message = `You've been picked up by ${driver.fullName}.
 Heading to: ${ride.dropOffAddress}
 Have a safe trip!`;
@@ -142,11 +131,7 @@ Thank you for using our service! If you have any feedback, please contact us.`;
   /**
    * Send driver assignment notification to driver
    */
-  async notifyDriverAssigned(
-    ride: Ride,
-    driver: ServiceProvider,
-    rider: User,
-  ): Promise<SMSResult> {
+  async notifyDriverAssigned(ride: Ride, driver: ServiceProvider, rider: User): Promise<SMSResult> {
     const message = smsTemplates.getSMSTemplate('DRIVER_ASSIGNMENT', 'driver', {
       ride,
       rider,
@@ -187,11 +172,7 @@ Thank you for using our service! If you have any feedback, please contact us.`;
   /**
    * Send status update notification to dispatcher
    */
-  async notifyDispatcher(
-    dispatcherPhone: string,
-    _ride: Ride,
-    status: number,
-  ): Promise<SMSResult> {
+  async notifyDispatcher(dispatcherPhone: string, _ride: Ride, status: number): Promise<SMSResult> {
     const statusText = this.getStatusText(status);
     const message = `Ride status update: ${statusText}`;
     return await this.sendSMS(dispatcherPhone, message);
@@ -204,7 +185,7 @@ Thank you for using our service! If you have any feedback, please contact us.`;
     ride: Ride,
     _oldStatus: number,
     newStatus: number,
-    userData: NotificationData,
+    userData: NotificationData
   ): Promise<Array<{ type: string } & SMSResult>> {
     const notifications: Array<{ type: string } & SMSResult> = [];
 
@@ -214,7 +195,7 @@ Thank you for using our service! If you have any feedback, please contact us.`;
       console.log(
         '  requestStatus === 400 (RIDE_CONFIRMATION_NEEDED)?',
         newStatus === RIDE_REQUEST_STATUSES.RIDE_CONFIRMATION_NEEDED.code,
-        `(${newStatus} === ${RIDE_REQUEST_STATUSES.RIDE_CONFIRMATION_NEEDED.code})`,
+        `(${newStatus} === ${RIDE_REQUEST_STATUSES.RIDE_CONFIRMATION_NEEDED.code})`
       );
       console.log('  Has rider?', !!userData.rider);
       console.log('  Has driver?', !!userData.driver);
@@ -232,7 +213,7 @@ Thank you for using our service! If you have any feedback, please contact us.`;
             ride,
             userData.rider,
             userData.driver,
-            userData.vehicle || null,
+            userData.vehicle || null
           );
           notifications.push({ type: 'rider_accepted', ...riderNotif });
           console.log(' Rider notification result:', riderNotif.success ? 'SUCCESS' : 'FAILED');
@@ -246,7 +227,7 @@ Thank you for using our service! If you have any feedback, please contact us.`;
           const driverNotif = await this.notifyDriverAssigned(
             ride,
             userData.driver,
-            userData.rider,
+            userData.rider
           );
           notifications.push({ type: 'driver_assigned', ...driverNotif });
           console.log(' Driver notification result:', driverNotif.success ? 'SUCCESS' : 'FAILED');
@@ -304,7 +285,7 @@ Thank you for using our service! If you have any feedback, please contact us.`;
     phoneNumber: string,
     template: string | number,
     recipient: 'rider' | 'driver' | 'case_manager' | 'dispatcher',
-    _data: NotificationData,
+    _data: NotificationData
   ): Promise<SMSResult> {
     const data = _data; // Workaround for unused parameter
     const message = smsTemplates.getSMSTemplate(template as any, recipient, data);
@@ -346,7 +327,9 @@ Thank you for using our service! If you have any feedback, please contact us.`;
         };
 
         await this.api.addNotification(notificationRecord);
-        console.log(`=� Notification saved to database (ID: ${result.messageSid || result.messageId})`);
+        console.log(
+          `=� Notification saved to database (ID: ${result.messageSid || result.messageId})`
+        );
       } catch (dbError) {
         console.error('L Failed to save notification to database:', dbError);
         // Don't fail the SMS send if DB save fails
@@ -363,7 +346,7 @@ Thank you for using our service! If you have any feedback, please contact us.`;
     fromPhone: string,
     messageBody: string,
     ride: Ride,
-    senderRole: 'driver' | 'rider' | 'case_manager',
+    senderRole: 'driver' | 'rider' | 'case_manager'
   ): Promise<SMSResponseResult> {
     console.log('=� Processing incoming SMS:', {
       from: fromPhone,
@@ -392,7 +375,7 @@ Thank you for using our service! If you have any feedback, please contact us.`;
   async sendBulkNotifications(
     ride: Ride,
     notifications: NotificationToSend[],
-    data: NotificationData,
+    data: NotificationData
   ): Promise<Array<{ recipient: string } & Partial<SMSResult>>> {
     const results: Array<{ recipient: string } & Partial<SMSResult>> = [];
 
@@ -416,12 +399,10 @@ Thank you for using our service! If you have any feedback, please contact us.`;
           result = await this.sendSMS(phoneNumber, notif.message);
         } else if (notif.template) {
           // Use template
-          result = await this.sendTemplateSMS(
-            phoneNumber,
-            notif.template,
-            notif.recipient,
-            { ride, ...data },
-          );
+          result = await this.sendTemplateSMS(phoneNumber, notif.template, notif.recipient, {
+            ride,
+            ...data,
+          });
         } else {
           results.push({
             recipient: notif.recipient,
@@ -454,7 +435,7 @@ Thank you for using our service! If you have any feedback, please contact us.`;
    */
   async getRecipientPhone(
     recipient: 'rider' | 'driver' | 'case_manager' | 'dispatcher',
-    data: NotificationData,
+    data: NotificationData
   ): Promise<string | null> {
     switch (recipient) {
       case 'rider':
@@ -482,7 +463,9 @@ Thank you for using our service! If you have any feedback, please contact us.`;
           return (data.dispatcher as any).phone || null;
         }
 
-        console.warn('⚠️ Dispatcher phone number not available - SystemUser schema has no phone field');
+        console.warn(
+          '⚠️ Dispatcher phone number not available - SystemUser schema has no phone field'
+        );
         return null;
 
       default:

@@ -5,17 +5,16 @@
  * Run: npx prisma db seed
  */
 
-import { PrismaClient } from './generated/client/client.js';
 import { PrismaPg } from '@prisma/adapter-pg';
 import pg from 'pg';
-
+import { PrismaClient } from './generated/client/client.js';
+import { seedDrivers } from './seeds/drivers.js';
+import { seedOrganizations } from './seeds/organizations.js';
+import { seedRiders } from './seeds/riders.js';
+import { seedRides } from './seeds/rides.js';
 // Import modular seed functions
 import { seedSystemUsers } from './seeds/systemUsers.js';
-import { seedRiders } from './seeds/riders.js';
-import { seedOrganizations } from './seeds/organizations.js';
-import { seedDrivers } from './seeds/drivers.js';
 import { seedVehicles } from './seeds/vehicles.js';
-import { seedRides } from './seeds/rides.js';
 
 const { Pool } = pg;
 

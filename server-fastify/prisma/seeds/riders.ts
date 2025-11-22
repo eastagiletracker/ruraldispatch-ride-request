@@ -2,8 +2,8 @@
  * Service Users (Riders) Seed
  */
 
-import { PrismaClient } from '../generated/client/client.js';
 import { v7 as uuidv7 } from 'uuid';
+import type { PrismaClient } from '../generated/client/client.js';
 
 export async function seedRiders(prisma: PrismaClient) {
   console.log('\n👥 Seeding Service Users (Riders)...');

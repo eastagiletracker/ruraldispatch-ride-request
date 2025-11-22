@@ -1,4 +1,10 @@
-import { useQuery, useMutation, useQueryClient, UseQueryOptions, UseMutationOptions } from '@tanstack/react-query';
+import {
+  type UseMutationOptions,
+  type UseQueryOptions,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { getApiUrl } from './config';
 
 /**
@@ -9,7 +15,7 @@ function getAuthHeaders() {
   console.log('[API] Getting auth headers - userRole:', userRole); // Debug log
   return {
     'Content-Type': 'application/json',
-    'x-user-role': userRole || ''
+    'x-user-role': userRole || '',
   };
 }
 
@@ -24,7 +30,7 @@ export function useFetch<T = any>(
     queryKey: [endpoint],
     queryFn: async () => {
       const response = await fetch(getApiUrl(endpoint), {
-        headers: getAuthHeaders()
+        headers: getAuthHeaders(),
       });
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -63,12 +69,12 @@ export function useApiMutation<TData = any, TVariables = any>(
         },
         body: JSON.stringify(data),
       });
-      
+
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.message || `HTTP error! status: ${response.status}`);
       }
-      
+
       return response.json();
     },
     onSuccess: () => {

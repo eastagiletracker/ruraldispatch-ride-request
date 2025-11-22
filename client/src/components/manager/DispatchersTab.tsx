@@ -1,15 +1,22 @@
+import { AlertCircle, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Trash2 } from "lucide-react";
 import { toast } from 'sonner';
-import StatusToggleButton from "@/components/StatusToggleButton";
-import DeleteConfirmationModal from "@/components/DeleteConfirmationModal";
-import { formatShortId } from "@/utils/formatters";
-import { useSystemUsers, getApiUrl } from '@/lib/api';
+import DeleteConfirmationModal from '@/components/DeleteConfirmationModal';
+import StatusToggleButton from '@/components/StatusToggleButton';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { getApiUrl, useSystemUsers } from '@/lib/api';
+import { formatShortId } from '@/utils/formatters';
 import { TableSkeleton } from './TableSkeleton';
 
 interface DispatchersTabProps {
@@ -20,7 +27,7 @@ function getAuthHeaders() {
   const userRole = sessionStorage.getItem('user_role');
   return {
     'Content-Type': 'application/json',
-    'x-user-role': userRole || ''
+    'x-user-role': userRole || '',
   };
 }
 
@@ -31,7 +38,8 @@ export function DispatchersTab({ searchTerm }: DispatchersTabProps) {
 
   const { data: dispatchersData, isLoading, refetch } = useSystemUsers();
 
-  const allSystemUsers = (dispatchersData as any)?.users || (Array.isArray(dispatchersData) ? dispatchersData : []);
+  const allSystemUsers =
+    (dispatchersData as any)?.users || (Array.isArray(dispatchersData) ? dispatchersData : []);
   const dispatchers = allSystemUsers.filter((u: any) => u.role === 'dispatcher');
 
   const handleDeleteDispatcher = async (uuid: number, name: string) => {
@@ -43,7 +51,7 @@ export function DispatchersTab({ searchTerm }: DispatchersTabProps) {
     try {
       const response = await fetch(getApiUrl(`/api/auth/system-users/${deleteModal.itemId}`), {
         method: 'DELETE',
-        headers: getAuthHeaders()
+        headers: getAuthHeaders(),
       });
       const data = await response.json();
       if (data.success) {
@@ -63,7 +71,7 @@ export function DispatchersTab({ searchTerm }: DispatchersTabProps) {
 
   const handleToggleDispatcherStatus = async (uuid: number, currentStatus: boolean) => {
     const actionKey = `dispatcher-toggle-${uuid}`;
-    setLoadingActions(prev => ({ ...prev, [actionKey]: true }));
+    setLoadingActions((prev) => ({ ...prev, [actionKey]: true }));
 
     try {
       const response = await fetch(getApiUrl(`/api/auth/system-users/${uuid}/toggle-status`), {
@@ -82,14 +90,15 @@ export function DispatchersTab({ searchTerm }: DispatchersTabProps) {
       console.error('Error updating dispatcher status:', error);
       toast.error('Failed to update status');
     } finally {
-      setLoadingActions(prev => ({ ...prev, [actionKey]: false }));
+      setLoadingActions((prev) => ({ ...prev, [actionKey]: false }));
     }
   };
 
-  const filteredDispatchers = dispatchers.filter(dispatcher =>
-    dispatcher.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    dispatcher.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    dispatcher.email?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredDispatchers = dispatchers.filter(
+    (dispatcher) =>
+      dispatcher.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      dispatcher.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      dispatcher.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -99,7 +108,9 @@ export function DispatchersTab({ searchTerm }: DispatchersTabProps) {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>Dispatchers</CardTitle>
-              <CardDescription>Manage dispatcher accounts who can assign rides and manage operations</CardDescription>
+              <CardDescription>
+                Manage dispatcher accounts who can assign rides and manage operations
+              </CardDescription>
             </div>
           </div>
         </CardHeader>
@@ -107,7 +118,8 @@ export function DispatchersTab({ searchTerm }: DispatchersTabProps) {
           <Alert className="mb-4">
             <AlertCircle className="w-4 h-4" />
             <AlertDescription>
-              Dispatchers can view all rides, assign drivers/vehicles, but cannot access System Manager or delete data.
+              Dispatchers can view all rides, assign drivers/vehicles, but cannot access System
+              Manager or delete data.
             </AlertDescription>
           </Alert>
           {isLoading ? (
@@ -136,7 +148,7 @@ export function DispatchersTab({ searchTerm }: DispatchersTabProps) {
                     <TableCell>{dispatcher.email || 'N/A'}</TableCell>
                     <TableCell>{dispatcher.phone || 'N/A'}</TableCell>
                     <TableCell>
-                      <Badge variant={dispatcher.isActive ? "default" : "secondary"}>
+                      <Badge variant={dispatcher.isActive ? 'default' : 'secondary'}>
                         {dispatcher.isActive ? 'Active' : 'Inactive'}
                       </Badge>
                     </TableCell>
@@ -144,13 +156,19 @@ export function DispatchersTab({ searchTerm }: DispatchersTabProps) {
                       <div className="flex items-center justify-end gap-2">
                         <StatusToggleButton
                           isActive={dispatcher.isActive}
-                          isLoading={loadingActions[`dispatcher-toggle-${dispatcher.uuid}`] || false}
-                          onClick={() => handleToggleDispatcherStatus(dispatcher.uuid, dispatcher.isActive)}
+                          isLoading={
+                            loadingActions[`dispatcher-toggle-${dispatcher.uuid}`] || false
+                          }
+                          onClick={() =>
+                            handleToggleDispatcherStatus(dispatcher.uuid, dispatcher.isActive)
+                          }
                         />
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleDeleteDispatcher(dispatcher.uuid, dispatcher.fullName)}
+                          onClick={() =>
+                            handleDeleteDispatcher(dispatcher.uuid, dispatcher.fullName)
+                          }
                         >
                           <Trash2 className="w-4 h-4 text-destructive" />
                         </Button>

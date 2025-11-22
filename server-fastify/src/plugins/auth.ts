@@ -1,6 +1,6 @@
-import { FastifyPluginAsync } from 'fastify';
+import type { FastifyPluginAsync } from 'fastify';
 import fp from 'fastify-plugin';
-import type { SystemRole, Permission } from '../middleware/permissions.js';
+import type { Permission, SystemRole } from '../middleware/permissions.js';
 import { hasPermission } from '../middleware/permissions.js';
 
 /**

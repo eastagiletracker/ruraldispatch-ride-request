@@ -1,11 +1,18 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Trash2 } from "lucide-react";
+import { Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { formatShortId } from "@/utils/formatters";
-import { useServiceProviders, getApiUrl } from '@/lib/api';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { getApiUrl, useServiceProviders } from '@/lib/api';
+import { formatShortId } from '@/utils/formatters';
 import { TableSkeleton } from './TableSkeleton';
 
 interface ProvidersTabProps {
@@ -16,22 +23,23 @@ function getAuthHeaders() {
   const userRole = sessionStorage.getItem('user_role');
   return {
     'Content-Type': 'application/json',
-    'x-user-role': userRole || ''
+    'x-user-role': userRole || '',
   };
 }
 
 export function ProvidersTab({ searchTerm }: ProvidersTabProps) {
   const { data: providersData, isLoading, refetch } = useServiceProviders();
 
-  const serviceProviders = (providersData as any)?.serviceProviders || (Array.isArray(providersData) ? providersData : []);
+  const serviceProviders =
+    (providersData as any)?.serviceProviders || (Array.isArray(providersData) ? providersData : []);
 
   const handleDeleteProvider = async (uuid: number) => {
     if (!confirm('Are you sure you want to delete this service provider?')) return;
-    
+
     try {
       const response = await fetch(getApiUrl(`/api/service-providers/${uuid}`), {
         method: 'DELETE',
-        headers: getAuthHeaders()
+        headers: getAuthHeaders(),
       });
       const data = await response.json();
       if (data.success) {
@@ -46,10 +54,11 @@ export function ProvidersTab({ searchTerm }: ProvidersTabProps) {
     }
   };
 
-  const filteredProviders = serviceProviders.filter(provider =>
-    provider.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    provider.organization?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    provider.mobilePhone?.includes(searchTerm)
+  const filteredProviders = serviceProviders.filter(
+    (provider) =>
+      provider.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      provider.organization?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      provider.mobilePhone?.includes(searchTerm)
   );
 
   return (
@@ -58,7 +67,9 @@ export function ProvidersTab({ searchTerm }: ProvidersTabProps) {
         <div className="flex items-center justify-between">
           <div>
             <CardTitle>Service Providers (Staff/Drivers)</CardTitle>
-            <CardDescription>View and manage drivers, case workers, and staff members who can be assigned to rides</CardDescription>
+            <CardDescription>
+              View and manage drivers, case workers, and staff members who can be assigned to rides
+            </CardDescription>
           </div>
         </div>
       </CardHeader>

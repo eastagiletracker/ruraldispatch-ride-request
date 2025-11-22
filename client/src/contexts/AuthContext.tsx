@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import type React from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import { getApiUrl } from '@/lib/api';
 
 interface User {
@@ -82,7 +83,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       setUser(userData);
       queryClient.setQueryData(['auth', 'user'], userData);
-      
+
       return { success: true };
     } catch (error: any) {
       return {
@@ -123,7 +124,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       setUser(newUser);
       queryClient.setQueryData(['auth', 'user'], newUser);
-      
+
       return { success: true };
     } catch (error: any) {
       return {
@@ -137,14 +138,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const logout = () => {
     setUser(null);
-    
+
     // Clear sessionStorage auth data
     sessionStorage.removeItem('user_authenticated');
     sessionStorage.removeItem('username');
     sessionStorage.removeItem('user_role');
     sessionStorage.removeItem('user_fullname');
     sessionStorage.removeItem('user_uuid');
-    
+
     queryClient.setQueryData(['auth', 'user'], null);
     queryClient.clear();
   };
@@ -153,7 +154,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       setLoading(true);
       const role = sessionStorage.getItem('user_role');
-      
+
       const response = await fetch(getApiUrl('/api/auth/me'), {
         method: 'PUT',
         headers: {
@@ -172,14 +173,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       }
 
       const data = await response.json();
-      
+
       // Update sessionStorage with new data
       if (data.email) sessionStorage.setItem('username', data.email);
       if (data.fullName) sessionStorage.setItem('user_fullname', data.fullName);
-      
+
       setUser(data);
       queryClient.setQueryData(['auth', 'user'], data);
-      
+
       return { success: true };
     } catch (error: any) {
       return {
@@ -198,12 +199,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     register,
     logout,
     updateProfile,
-    isAuthenticated: !!user
+    isAuthenticated: !!user,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
-}; 
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};

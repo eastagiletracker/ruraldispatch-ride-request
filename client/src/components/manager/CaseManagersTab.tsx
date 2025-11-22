@@ -1,15 +1,22 @@
+import { AlertCircle, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Trash2 } from "lucide-react";
 import { toast } from 'sonner';
-import StatusToggleButton from "@/components/StatusToggleButton";
-import DeleteConfirmationModal from "@/components/DeleteConfirmationModal";
-import { formatShortId } from "@/utils/formatters";
-import { useSystemUsers, getApiUrl } from '@/lib/api';
+import DeleteConfirmationModal from '@/components/DeleteConfirmationModal';
+import StatusToggleButton from '@/components/StatusToggleButton';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { getApiUrl, useSystemUsers } from '@/lib/api';
+import { formatShortId } from '@/utils/formatters';
 import { TableSkeleton } from './TableSkeleton';
 
 interface CaseManagersTabProps {
@@ -20,7 +27,7 @@ function getAuthHeaders() {
   const userRole = sessionStorage.getItem('user_role');
   return {
     'Content-Type': 'application/json',
-    'x-user-role': userRole || ''
+    'x-user-role': userRole || '',
   };
 }
 
@@ -31,7 +38,8 @@ export function CaseManagersTab({ searchTerm }: CaseManagersTabProps) {
 
   const { data: caseManagersData, isLoading, refetch } = useSystemUsers();
 
-  const allSystemUsers = (caseManagersData as any)?.users || (Array.isArray(caseManagersData) ? caseManagersData : []);
+  const allSystemUsers =
+    (caseManagersData as any)?.users || (Array.isArray(caseManagersData) ? caseManagersData : []);
   const caseManagers = allSystemUsers.filter((u: any) => u.role === 'case_manager');
 
   const handleDeleteCaseManager = async (uuid: number, name: string) => {
@@ -43,7 +51,7 @@ export function CaseManagersTab({ searchTerm }: CaseManagersTabProps) {
     try {
       const response = await fetch(getApiUrl(`/api/auth/system-users/${deleteModal.itemId}`), {
         method: 'DELETE',
-        headers: getAuthHeaders()
+        headers: getAuthHeaders(),
       });
       const data = await response.json();
       if (data.success) {
@@ -63,7 +71,7 @@ export function CaseManagersTab({ searchTerm }: CaseManagersTabProps) {
 
   const handleToggleCaseManagerStatus = async (uuid: number, currentStatus: boolean) => {
     const actionKey = `casemanager-toggle-${uuid}`;
-    setLoadingActions(prev => ({ ...prev, [actionKey]: true }));
+    setLoadingActions((prev) => ({ ...prev, [actionKey]: true }));
 
     try {
       const response = await fetch(getApiUrl(`/api/auth/system-users/${uuid}/toggle-status`), {
@@ -82,14 +90,15 @@ export function CaseManagersTab({ searchTerm }: CaseManagersTabProps) {
       console.error('Error updating case manager status:', error);
       toast.error('Failed to update status');
     } finally {
-      setLoadingActions(prev => ({ ...prev, [actionKey]: false }));
+      setLoadingActions((prev) => ({ ...prev, [actionKey]: false }));
     }
   };
 
-  const filteredCaseManagers = caseManagers.filter(manager =>
-    manager.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    manager.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    manager.email?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredCaseManagers = caseManagers.filter(
+    (manager) =>
+      manager.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      manager.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      manager.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -136,7 +145,7 @@ export function CaseManagersTab({ searchTerm }: CaseManagersTabProps) {
                     <TableCell>{manager.email || 'N/A'}</TableCell>
                     <TableCell>{manager.phone || 'N/A'}</TableCell>
                     <TableCell>
-                      <Badge variant={manager.isActive ? "default" : "secondary"}>
+                      <Badge variant={manager.isActive ? 'default' : 'secondary'}>
                         {manager.isActive ? 'Active' : 'Inactive'}
                       </Badge>
                     </TableCell>
@@ -145,7 +154,9 @@ export function CaseManagersTab({ searchTerm }: CaseManagersTabProps) {
                         <StatusToggleButton
                           isActive={manager.isActive}
                           isLoading={loadingActions[`casemanager-toggle-${manager.uuid}`] || false}
-                          onClick={() => handleToggleCaseManagerStatus(manager.uuid, manager.isActive)}
+                          onClick={() =>
+                            handleToggleCaseManagerStatus(manager.uuid, manager.isActive)
+                          }
                         />
                         <Button
                           variant="ghost"

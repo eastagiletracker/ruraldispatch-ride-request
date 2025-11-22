@@ -148,10 +148,7 @@ const getStatusTransitions = (isRoundTrip = false): Partial<TransitionMap> => ({
 });
 
 // Get next valid statuses (for status transitions)
-export const getNextValidStatuses = (
-  currentStatus: number,
-  isRoundTrip = false,
-): RideStatus[] => {
+export const getNextValidStatuses = (currentStatus: number, isRoundTrip = false): RideStatus[] => {
   const transitions = getStatusTransitions(isRoundTrip);
   return (transitions[currentStatus as RideStatus] || []) as RideStatus[];
 };
@@ -160,7 +157,7 @@ export const getNextValidStatuses = (
 export const isValidStatusTransition = (
   fromStatus: number,
   toStatus: number,
-  isRoundTrip = false,
+  isRoundTrip = false
 ): boolean => {
   const validNextStatuses = getNextValidStatuses(fromStatus, isRoundTrip);
   return validNextStatuses.includes(toStatus as RideStatus);

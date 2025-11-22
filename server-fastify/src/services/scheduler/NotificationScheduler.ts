@@ -1,9 +1,9 @@
-import notificationService from '../notificationService.js';
-import timeCalculator from './TimeCalculator.js';
-import { isClosingStatus } from '../../constants/rideStatuses.js';
 import { RIDE_REQUEST_STATUSES } from '../../constants/rideRequestStatuses.js';
+import { isClosingStatus } from '../../constants/rideStatuses.js';
+import type { Ride, ServiceProvider, User } from '../../types/database.types.js';
+import notificationService from '../notificationService.js';
 import type { TaskManager } from './TaskManager.js';
-import type { Ride, User, ServiceProvider } from '../../types/database.types.js';
+import timeCalculator from './TimeCalculator.js';
 
 /**
  * Notification Scheduler
@@ -47,7 +47,7 @@ class NotificationScheduler {
 
     const { timeString, delayMinutes } = timeCalculator.formatTimeInfo(
       timeInfo.targetTime,
-      timeInfo.delay,
+      timeInfo.delay
     );
 
     console.log(`� Scheduling 1-hour prior reminder for ride #${ride.uuid}`);
@@ -79,7 +79,7 @@ class NotificationScheduler {
     if (timeInfo.isPast) {
       // Send immediately if pickup time has passed
       console.log(
-        `�  Pickup time has passed for ride #${ride.uuid}, sending arrival check immediately`,
+        `�  Pickup time has passed for ride #${ride.uuid}, sending arrival check immediately`
       );
       notificationService.sendDriverArrivalCheck(ride, driver);
       return;
@@ -87,7 +87,7 @@ class NotificationScheduler {
 
     const { timeString, delayMinutes } = timeCalculator.formatTimeInfo(
       timeInfo.targetTime,
-      timeInfo.delay,
+      timeInfo.delay
     );
 
     console.log(`� Scheduling driver arrival check for ride #${ride.uuid}`);
@@ -117,16 +117,14 @@ class NotificationScheduler {
 
     if (timeInfo.isPast) {
       // Send immediately if dropoff time has passed
-      console.log(
-        `�  Dropoff time has passed for ride #${ride.uuid}, sending check immediately`,
-      );
+      console.log(`�  Dropoff time has passed for ride #${ride.uuid}, sending check immediately`);
       notificationService.sendDropoffCheck(ride, driver);
       return;
     }
 
     const { timeString, delayMinutes } = timeCalculator.formatTimeInfo(
       timeInfo.targetTime,
-      timeInfo.delay,
+      timeInfo.delay
     );
 
     console.log(`� Scheduling dropoff check for ride #${ride.uuid}`);
@@ -157,7 +155,7 @@ class NotificationScheduler {
     if (timeInfo.isPast) {
       // Send immediately if return time has passed
       console.log(
-        `�  Return pickup time has passed for ride #${ride.uuid}, sending check immediately`,
+        `�  Return pickup time has passed for ride #${ride.uuid}, sending check immediately`
       );
       notificationService.sendRoundtripReturnCheck(ride, driver);
       return;
@@ -165,7 +163,7 @@ class NotificationScheduler {
 
     const { timeString, delayMinutes } = timeCalculator.formatTimeInfo(
       timeInfo.targetTime,
-      timeInfo.delay,
+      timeInfo.delay
     );
 
     console.log(`� Scheduling roundtrip return check for ride #${ride.uuid}`);
@@ -194,7 +192,7 @@ class NotificationScheduler {
     ride: Ride,
     newStatus: number,
     delayMinutes: number,
-    apiUpdateFunction: ApiUpdateFunction,
+    apiUpdateFunction: ApiUpdateFunction
   ): void {
     const timeInfo = timeCalculator.calculateDelayFromNow(delayMinutes);
 
@@ -237,7 +235,7 @@ class NotificationScheduler {
     recipient: RecipientRole,
     template: string,
     delayMinutes: number,
-    data: TemplateData,
+    data: TemplateData
   ): void {
     const timeInfo = timeCalculator.calculateDelayFromNow(delayMinutes);
 

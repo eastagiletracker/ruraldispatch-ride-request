@@ -68,7 +68,7 @@ export const distanceMatrixResponseSchema = z.object({
   rows: z.array(
     z.object({
       elements: z.array(distanceMatrixElementSchema),
-    }),
+    })
   ),
   origin_addresses: z.array(z.string()),
   destination_addresses: z.array(z.string()),

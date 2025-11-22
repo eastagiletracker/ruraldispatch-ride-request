@@ -31,7 +31,7 @@ export function formatLocalDateTime(
     hour: '2-digit',
     minute: '2-digit',
     hour12: true,
-    ...options
+    ...options,
   };
 
   return date.toLocaleString('en-US', defaultOptions);
@@ -100,7 +100,7 @@ export function formatLocalDate(utcDateString: string | null | undefined): strin
   return date.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
-    day: 'numeric'
+    day: 'numeric',
   });
 }
 
@@ -118,7 +118,7 @@ export function formatLocalTime(utcDateString: string | null | undefined): strin
   return date.toLocaleTimeString('en-US', {
     hour: '2-digit',
     minute: '2-digit',
-    hour12: true
+    hour12: true,
   });
 }
 

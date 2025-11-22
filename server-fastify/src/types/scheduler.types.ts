@@ -3,7 +3,7 @@
  * Types for the ride scheduling and notification system
  */
 
-import type { Ride, User, ServiceProvider } from './database.types.js';
+import type { Ride, ServiceProvider, User } from './database.types.js';
 
 // Task types
 export type TaskType =

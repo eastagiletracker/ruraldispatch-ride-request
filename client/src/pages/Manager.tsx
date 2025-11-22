@@ -1,13 +1,13 @@
+import { Briefcase, Clipboard, Search, Truck, Users } from 'lucide-react';
 import { useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Users, Search, Briefcase, Truck, Clipboard } from "lucide-react";
-import { RidersTab } from "@/components/manager/RidersTab";
-import { ProvidersTab } from "@/components/manager/ProvidersTab";
-import { VehiclesTab } from "@/components/manager/VehiclesTab";
-import { DispatchersTab } from "@/components/manager/DispatchersTab";
-import { CaseManagersTab } from "@/components/manager/CaseManagersTab";
+import { CaseManagersTab } from '@/components/manager/CaseManagersTab';
+import { DispatchersTab } from '@/components/manager/DispatchersTab';
+import { ProvidersTab } from '@/components/manager/ProvidersTab';
+import { RidersTab } from '@/components/manager/RidersTab';
+import { VehiclesTab } from '@/components/manager/VehiclesTab';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function Manager() {
   const [activeTab, setActiveTab] = useState('riders');
@@ -18,7 +18,7 @@ export default function Manager() {
     setActiveTab(value);
     setSearchTerm(''); // Clear search when changing tabs
     // Mark this tab as loaded so data fetching is triggered
-    setLoadedTabs(prev => new Set(prev).add(value));
+    setLoadedTabs((prev) => new Set(prev).add(value));
   };
 
   return (
@@ -26,7 +26,8 @@ export default function Manager() {
       <div className="mb-8">
         <h1 className="mb-2 text-3xl font-bold">System Manager</h1>
         <p className="text-muted-foreground">
-          Manage riders, drivers/staff (assignable to rides), vehicles, dispatchers, and case managers
+          Manage riders, drivers/staff (assignable to rides), vehicles, dispatchers, and case
+          managers
         </p>
       </div>
 

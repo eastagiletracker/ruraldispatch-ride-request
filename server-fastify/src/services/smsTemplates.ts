@@ -1,5 +1,5 @@
 import { RIDE_STATUSES, type RideStatus } from '../constants/rideStatuses.js';
-import type { Ride, User, ServiceProvider, Vehicle } from '../types/database.types.js';
+import type { Ride, ServiceProvider, User, Vehicle } from '../types/database.types.js';
 
 /**
  * SMS Templates Service
@@ -7,7 +7,18 @@ import type { Ride, User, ServiceProvider, Vehicle } from '../types/database.typ
  */
 
 type RecipientType = 'rider' | 'driver' | 'case_manager' | 'dispatcher';
-type TemplateStatus = RideStatus | 'DRIVER_ASSIGNMENT' | 'ONE_HOUR_PRIOR' | 'DRIVER_ARRIVAL_CHECK' | 'DRIVER_EN_ROUTE' | 'DRIVER_ARRIVED' | 'DRIVER_WAITING' | 'PICKUP_RECHECK' | 'DROPOFF_CHECK' | 'ROUNDTRIP_RETURN_CHECK' | 'ROUNDTRIP_WAITING';
+type TemplateStatus =
+  | RideStatus
+  | 'DRIVER_ASSIGNMENT'
+  | 'ONE_HOUR_PRIOR'
+  | 'DRIVER_ARRIVAL_CHECK'
+  | 'DRIVER_EN_ROUTE'
+  | 'DRIVER_ARRIVED'
+  | 'DRIVER_WAITING'
+  | 'PICKUP_RECHECK'
+  | 'DROPOFF_CHECK'
+  | 'ROUNDTRIP_RETURN_CHECK'
+  | 'ROUNDTRIP_WAITING';
 
 interface TemplateData {
   ride?: Ride;
@@ -71,7 +82,11 @@ ${roundtripIndicator}`;
 /**
  * Get ride confirmed SMS (Status 100)
  */
-function getRideConfirmedMessage(ride: Ride, driver: ServiceProvider | null, vehicle: Vehicle | null): string {
+function getRideConfirmedMessage(
+  ride: Ride,
+  driver: ServiceProvider | null,
+  vehicle: Vehicle | null
+): string {
   const pickup = formatAddress(ride.pickupAddress);
   const dropoff = formatAddress(ride.dropOffAddress);
   const pickupTime = formatDateTime(ride.pickupRequestedTime);
@@ -164,7 +179,7 @@ export function getRideStatusUpdateMessage(ride: Ride, statusDescription: string
 export function getSMSTemplate(
   status: TemplateStatus,
   recipient: RecipientType,
-  data: TemplateData = {},
+  data: TemplateData = {}
 ): string | null {
   const { ride, rider, driver, vehicle, pickupLocation } = data;
 

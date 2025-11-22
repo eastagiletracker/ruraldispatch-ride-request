@@ -100,7 +100,7 @@ class TimeCalculator {
     const waitingTimeMinutes = ride.estimatedWaitingTime || 60; // Default 60 min wait
 
     const targetTime = new Date(
-      pickupTime.getTime() + (travelTimeMinutes + waitingTimeMinutes) * 60 * 1000,
+      pickupTime.getTime() + (travelTimeMinutes + waitingTimeMinutes) * 60 * 1000
     );
 
     const now = new Date();

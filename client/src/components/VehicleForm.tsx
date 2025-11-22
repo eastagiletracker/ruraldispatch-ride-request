@@ -1,13 +1,20 @@
+import { AlertCircle, CheckCircle2, Truck } from 'lucide-react';
 import { useState } from 'react';
-import { useForm } from "react-hook-form";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, CheckCircle2, Truck } from "lucide-react";
-import { toast } from "sonner";
+import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { getApiUrl } from '@/lib/api';
 
 interface VehicleFormData {
@@ -49,7 +56,7 @@ export default function VehicleForm({ onSuccess, onCancel }: VehicleFormProps) {
     reset,
     watch,
     setValue,
-    formState: { errors }
+    formState: { errors },
   } = useForm<VehicleFormData>({
     defaultValues: {
       displayName: '',
@@ -64,14 +71,14 @@ export default function VehicleForm({ onSuccess, onCancel }: VehicleFormProps) {
       wheelchairAccessible: false,
       serviceAnimalFriendly: false,
       oxygenTankAccessible: false,
-    }
+    },
   });
 
   const watchAccessibility = watch([
     'walkerAccessible',
     'wheelchairAccessible',
     'serviceAnimalFriendly',
-    'oxygenTankAccessible'
+    'oxygenTankAccessible',
   ]);
 
   const onSubmit = async (data: VehicleFormData) => {
@@ -148,7 +155,7 @@ export default function VehicleForm({ onSuccess, onCancel }: VehicleFormProps) {
           {/* Basic Information */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold">Basic Information</h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="displayName">
@@ -166,20 +173,12 @@ export default function VehicleForm({ onSuccess, onCancel }: VehicleFormProps) {
 
               <div className="space-y-2">
                 <Label htmlFor="fleetId">Fleet ID</Label>
-                <Input
-                  id="fleetId"
-                  placeholder="e.g., VEH-001"
-                  {...register('fleetId')}
-                />
+                <Input id="fleetId" placeholder="e.g., VEH-001" {...register('fleetId')} />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="model">Model</Label>
-                <Input
-                  id="model"
-                  placeholder="e.g., Toyota Camry"
-                  {...register('model')}
-                />
+                <Input id="model" placeholder="e.g., Toyota Camry" {...register('model')} />
               </div>
 
               <div className="space-y-2">
@@ -188,24 +187,21 @@ export default function VehicleForm({ onSuccess, onCancel }: VehicleFormProps) {
                   id="year"
                   type="number"
                   placeholder="e.g., 2020"
-                  {...register('year', { 
+                  {...register('year', {
                     valueAsNumber: true,
                     min: { value: 1900, message: 'Year must be 1900 or later' },
-                    max: { value: new Date().getFullYear() + 1, message: 'Year cannot be in the future' }
+                    max: {
+                      value: new Date().getFullYear() + 1,
+                      message: 'Year cannot be in the future',
+                    },
                   })}
                 />
-                {errors.year && (
-                  <p className="text-sm text-red-500">{errors.year.message}</p>
-                )}
+                {errors.year && <p className="text-sm text-red-500">{errors.year.message}</p>}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="color">Color</Label>
-                <Input
-                  id="color"
-                  placeholder="e.g., Blue"
-                  {...register('color')}
-                />
+                <Input id="color" placeholder="e.g., Blue" {...register('color')} />
               </div>
 
               <div className="space-y-2">
@@ -222,7 +218,7 @@ export default function VehicleForm({ onSuccess, onCancel }: VehicleFormProps) {
           {/* Capacity & Service */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold">Capacity & Service Area</h3>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="capacity">Passenger Capacity</Label>
@@ -230,10 +226,10 @@ export default function VehicleForm({ onSuccess, onCancel }: VehicleFormProps) {
                   id="capacity"
                   type="number"
                   placeholder="e.g., 4"
-                  {...register('capacity', { 
+                  {...register('capacity', {
                     valueAsNumber: true,
                     min: { value: 1, message: 'Capacity must be at least 1' },
-                    max: { value: 50, message: 'Capacity cannot exceed 50' }
+                    max: { value: 50, message: 'Capacity cannot exceed 50' },
                   })}
                 />
                 {errors.capacity && (
@@ -255,13 +251,15 @@ export default function VehicleForm({ onSuccess, onCancel }: VehicleFormProps) {
           {/* Accessibility Features */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold">Accessibility Features</h3>
-            
+
             <div className="space-y-3">
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="wheelchairAccessible"
                   checked={watchAccessibility[1]}
-                  onCheckedChange={(checked) => setValue('wheelchairAccessible', checked as boolean)}
+                  onCheckedChange={(checked) =>
+                    setValue('wheelchairAccessible', checked as boolean)
+                  }
                 />
                 <Label htmlFor="wheelchairAccessible" className="cursor-pointer">
                   Wheelchair Accessible
@@ -283,7 +281,9 @@ export default function VehicleForm({ onSuccess, onCancel }: VehicleFormProps) {
                 <Checkbox
                   id="serviceAnimalFriendly"
                   checked={watchAccessibility[2]}
-                  onCheckedChange={(checked) => setValue('serviceAnimalFriendly', checked as boolean)}
+                  onCheckedChange={(checked) =>
+                    setValue('serviceAnimalFriendly', checked as boolean)
+                  }
                 />
                 <Label htmlFor="serviceAnimalFriendly" className="cursor-pointer">
                   Service Animal Friendly
@@ -294,7 +294,9 @@ export default function VehicleForm({ onSuccess, onCancel }: VehicleFormProps) {
                 <Checkbox
                   id="oxygenTankAccessible"
                   checked={watchAccessibility[3]}
-                  onCheckedChange={(checked) => setValue('oxygenTankAccessible', checked as boolean)}
+                  onCheckedChange={(checked) =>
+                    setValue('oxygenTankAccessible', checked as boolean)
+                  }
                 />
                 <Label htmlFor="oxygenTankAccessible" className="cursor-pointer">
                   Oxygen Tank Accessible

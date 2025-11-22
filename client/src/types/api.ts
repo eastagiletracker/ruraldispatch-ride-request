@@ -1,8 +1,8 @@
-import type { User } from './user';
-import type { ServiceProvider } from './serviceProvider';
-import type { Vehicle } from './vehicle';
-import type { RideRequest } from './rideRequest';
 import type { Notification } from './notification';
+import type { RideRequest } from './rideRequest';
+import type { ServiceProvider } from './serviceProvider';
+import type { User } from './user';
+import type { Vehicle } from './vehicle';
 
 // API Response types
 export interface ApiResponse<T = unknown> {

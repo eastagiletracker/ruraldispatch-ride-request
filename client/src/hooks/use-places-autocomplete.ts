@@ -3,16 +3,13 @@
  * Optimized to reduce API costs by using sessionTokens and debounced requests
  */
 
-import { useState, useEffect, useRef, useCallback } from 'react';
-import {
-  getAutocompletePredictions,
-  PlacesSessionToken,
-} from '@/lib/places-api';
 import type {
   PlacePrediction,
   UsePlacesAutocompleteOptions,
   UsePlacesAutocompleteReturn,
 } from '@shared/schemas';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { getAutocompletePredictions, PlacesSessionToken } from '@/lib/places-api';
 
 export function usePlacesAutocomplete(
   options: UsePlacesAutocompleteOptions = {}

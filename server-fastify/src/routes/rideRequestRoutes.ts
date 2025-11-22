@@ -1,10 +1,10 @@
-import type { FastifyPluginAsync } from 'fastify';
 import { randomUUID } from 'node:crypto';
+import type { FastifyPluginAsync } from 'fastify';
+import { RIDE_REQUEST_STATUSES } from '../constants/rideRequestStatuses.js';
+import { isClosingStatus, RIDE_STATUSES } from '../constants/rideStatuses.js';
 import notificationService from '../services/notificationService.js';
 import scheduler from '../services/scheduler/RideScheduler.js';
-import { RIDE_STATUSES, isClosingStatus } from '../constants/rideStatuses.js';
-import { RIDE_REQUEST_STATUSES } from '../constants/rideRequestStatuses.js';
-import type { User, ServiceProvider, Vehicle } from '../types/database.types.js';
+import type { ServiceProvider, User, Vehicle } from '../types/database.types.js';
 
 /**
  * Ride Request Routes Plugin
@@ -90,18 +90,19 @@ const rideRequestRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       // Validate: If setting rideRequestStatus to 400 or higher, require both driver and vehicle
-      if (
-        body.rideRequestStatus !== undefined &&
-        body.rideRequestStatus >= 400
-      ) {
+      if (body.rideRequestStatus !== undefined && body.rideRequestStatus >= 400) {
         // Check both the update body and existing ride data
         const bodyDriverUuid = body.driverUuid;
         const bodyVehicleUuid = body.vehicleUuid;
         const oldDriverUuid = oldRide.driverUuid;
         const oldVehicleUuid = oldRide.vehicleUuid;
 
-        const hasDriver = (bodyDriverUuid !== undefined && bodyDriverUuid !== null) || (oldDriverUuid !== undefined && oldDriverUuid !== null);
-        const hasVehicle = (bodyVehicleUuid !== undefined && bodyVehicleUuid !== null) || (oldVehicleUuid !== undefined && oldVehicleUuid !== null);
+        const hasDriver =
+          (bodyDriverUuid !== undefined && bodyDriverUuid !== null) ||
+          (oldDriverUuid !== undefined && oldDriverUuid !== null);
+        const hasVehicle =
+          (bodyVehicleUuid !== undefined && bodyVehicleUuid !== null) ||
+          (oldVehicleUuid !== undefined && oldVehicleUuid !== null);
 
         if (!hasDriver || !hasVehicle) {
           return reply.status(400).send({
@@ -122,7 +123,7 @@ const rideRequestRoutes: FastifyPluginAsync = async (fastify) => {
       // Check if updating ride status to a closing status
       if (body.rideStatus !== undefined && isClosingStatus(body.rideStatus)) {
         fastify.log.info(
-          `🔒 Auto-closing ride request #${rideUuid} due to status ${body.rideStatus}`,
+          `🔒 Auto-closing ride request #${rideUuid} due to status ${body.rideStatus}`
         );
         body.rideRequestStatus = RIDE_REQUEST_STATUSES.ALL_RIDE_REQUEST_CLOSED.code;
 
@@ -168,10 +169,7 @@ const rideRequestRoutes: FastifyPluginAsync = async (fastify) => {
           if (userData.vehicle) {
             fastify.log.info({ vehicle: userData.vehicle.displayName }, '✅ Found vehicle');
           } else {
-            fastify.log.warn(
-              { vehicleUuid: vehicleUuidToCheck },
-              '⚠️ Vehicle not found',
-            );
+            fastify.log.warn({ vehicleUuid: vehicleUuidToCheck }, '⚠️ Vehicle not found');
           }
         } catch (error) {
           fastify.log.error(error, '❌ Error fetching vehicle');
@@ -187,20 +185,28 @@ const rideRequestRoutes: FastifyPluginAsync = async (fastify) => {
           newRideStatus: updatedRide.rideStatus,
           oldRequestStatus: oldRide?.rideRequestStatus,
           newRequestStatus: updatedRide.rideRequestStatus,
-          riderName: userData.rider ? 'fullName' in userData.rider ? userData.rider.fullName : undefined : undefined,
-          riderPhone: userData.rider ? 'phone' in userData.rider ? userData.rider.phone : undefined : undefined,
+          riderName: userData.rider
+            ? 'fullName' in userData.rider
+              ? userData.rider.fullName
+              : undefined
+            : undefined,
+          riderPhone: userData.rider
+            ? 'phone' in userData.rider
+              ? userData.rider.phone
+              : undefined
+            : undefined,
           driverName: userData.driver?.fullName,
           driverContact: userData.driver?.mobilePhone || userData.driver?.phone || 'No phone',
           vehicle: userData.vehicle?.displayName,
         },
-        'Status change details',
+        'Status change details'
       );
 
       const notifications = await notificationService.handleRideStatusChange(
         updatedRide,
         oldRide?.rideRequestStatus,
         updatedRide.rideRequestStatus,
-        userData,
+        userData
       );
 
       fastify.log.info({ count: notifications.length }, 'Notifications sent');

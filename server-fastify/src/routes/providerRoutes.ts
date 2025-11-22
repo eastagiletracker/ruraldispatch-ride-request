@@ -88,7 +88,7 @@ export const serviceProviderRoutes: FastifyPluginAsync = async (fastify) => {
           error: error instanceof Error ? error.message : 'Unknown error',
         });
       }
-    },
+    }
   );
 
   /**
@@ -115,7 +115,7 @@ export const serviceProviderRoutes: FastifyPluginAsync = async (fastify) => {
           error: error instanceof Error ? error.message : 'Unknown error',
         });
       }
-    },
+    }
   );
 };
 

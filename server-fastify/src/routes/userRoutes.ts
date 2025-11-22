@@ -40,7 +40,7 @@ const userRoutes: FastifyPluginAsync = async (fastify) => {
           error: error instanceof Error ? error.message : 'Unknown error',
         });
       }
-    },
+    }
   );
 
   /**
@@ -60,7 +60,7 @@ const userRoutes: FastifyPluginAsync = async (fastify) => {
     async (request) => {
       const fields = request.params.fields.split(',');
       return await api.getSpecifiedFieldsOfUser(request.params.id, fields);
-    },
+    }
   );
 
   /**
@@ -98,7 +98,7 @@ const userRoutes: FastifyPluginAsync = async (fastify) => {
         try {
           await notificationService.sendSMS(
             phoneNumber,
-            "SWARM LLC: Welcome! You're signed up for ride notifications (1-5 msgs/ride). Msg&data rates may apply. Reply STOP to opt-out, HELP for support. Terms: https://ruraldispatch.swarmnyc.com/sms-terms",
+            "SWARM LLC: Welcome! You're signed up for ride notifications (1-5 msgs/ride). Msg&data rates may apply. Reply STOP to opt-out, HELP for support. Terms: https://ruraldispatch.swarmnyc.com/sms-terms"
           );
         } catch (e) {
           fastify.log.error(e, 'Failed to send confirmation SMS');
@@ -160,7 +160,7 @@ const userRoutes: FastifyPluginAsync = async (fastify) => {
           error: error instanceof Error ? error.message : 'Unknown error',
         });
       }
-    },
+    }
   );
 };
 

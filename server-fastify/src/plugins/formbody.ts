@@ -1,5 +1,5 @@
-import { FastifyPluginAsync } from 'fastify';
 import fastifyFormbody from '@fastify/formbody';
+import type { FastifyPluginAsync } from 'fastify';
 
 /**
  * Form Body Parser Plugin

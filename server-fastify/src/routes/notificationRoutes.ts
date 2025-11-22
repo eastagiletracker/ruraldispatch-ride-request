@@ -1,9 +1,9 @@
-import type { FastifyPluginAsync } from 'fastify';
 import { randomUUID } from 'node:crypto';
+import type { FastifyPluginAsync } from 'fastify';
+import { RIDE_REQUEST_STATUSES } from '../constants/rideRequestStatuses.js';
+import { isClosingStatus, RIDE_STATUSES } from '../constants/rideStatuses.js';
 import notificationService from '../services/notificationService.js';
 import scheduler from '../services/scheduler/RideScheduler.js';
-import { RIDE_STATUSES, isClosingStatus } from '../constants/rideStatuses.js';
-import { RIDE_REQUEST_STATUSES } from '../constants/rideRequestStatuses.js';
 import type { ServiceProvider } from '../types/database.types.js';
 
 /**
@@ -134,7 +134,7 @@ const notificationRoutes: FastifyPluginAsync = async (fastify) => {
         const errorMessage = error instanceof Error ? error.message : String(error);
         return reply.status(500).send({ success: false, error: errorMessage });
       }
-    },
+    }
   );
 
   /**
@@ -226,17 +226,17 @@ const notificationRoutes: FastifyPluginAsync = async (fastify) => {
 
       if (activeRides.length > 1) {
         fastify.log.warn(
-          `⚠️  Found ${activeRides.length} active rides, using most recent: #${activeRide?.uuid}`,
+          `⚠️  Found ${activeRides.length} active rides, using most recent: #${activeRide?.uuid}`
         );
       }
 
       if (activeRide) {
         fastify.log.info(`✅ Found active ride: #${activeRide.uuid}`);
         fastify.log.info(
-          `   Rider: ${activeRide.rider?.[0]?.fullName} (${activeRide.rider?.[0]?.phone})`,
+          `   Rider: ${activeRide.rider?.[0]?.fullName} (${activeRide.rider?.[0]?.phone})`
         );
         fastify.log.info(
-          `   Driver: ${activeRide.driver?.[0]?.fullName} (${activeRide.driver?.[0]?.mobilePhone || activeRide.driver?.[0]?.phone})`,
+          `   Driver: ${activeRide.driver?.[0]?.fullName} (${activeRide.driver?.[0]?.mobilePhone || activeRide.driver?.[0]?.phone})`
         );
         fastify.log.info(`   Current Status: ${activeRide.rideStatus}`);
       } else {
@@ -253,7 +253,7 @@ const notificationRoutes: FastifyPluginAsync = async (fastify) => {
           senderPhone,
           Body,
           activeRide,
-          senderRole,
+          senderRole
         );
 
         fastify.log.info(action, '🔄 Processing result');
@@ -279,19 +279,14 @@ const notificationRoutes: FastifyPluginAsync = async (fastify) => {
             isClosingStatus(updates.rideStatus as number)
           ) {
             updates.requestStatus = RIDE_REQUEST_STATUSES.ALL_RIDE_REQUEST_CLOSED.code;
-            fastify.log.info(
-              '📝 Auto-closing ride request because ride entered a closing status',
-            );
+            fastify.log.info('📝 Auto-closing ride request because ride entered a closing status');
           }
 
           if (Object.keys(updates).length > 0) {
             await api.updateRideRequest(activeRide.uuid, updates);
             fastify.log.info(`✅ Ride #${activeRide.uuid} updated`);
 
-            if (
-              updates.rideStatus !== undefined &&
-              isClosingStatus(updates.rideStatus as number)
-            ) {
+            if (updates.rideStatus !== undefined && isClosingStatus(updates.rideStatus as number)) {
               scheduler.cancelRideTasks(activeRide.uuid);
             }
 
@@ -325,7 +320,7 @@ const notificationRoutes: FastifyPluginAsync = async (fastify) => {
             const notifResults = await notificationService.sendBulkNotifications(
               activeRide,
               action.notifications,
-              data,
+              data
             );
             fastify.log.info({ results: notifResults }, '✅ Notifications sent');
           }
@@ -334,10 +329,16 @@ const notificationRoutes: FastifyPluginAsync = async (fastify) => {
           if (action.scheduleNotification) {
             const { recipient, template, delayMinutes } = action.scheduleNotification;
             fastify.log.info(
-              `⏰ Scheduling ${template} notification to ${recipient} in ${delayMinutes} minutes`,
+              `⏰ Scheduling ${template} notification to ${recipient} in ${delayMinutes} minutes`
             );
 
-            scheduler.scheduleNotification(activeRide, recipient as RecipientRole, template, delayMinutes, data);
+            scheduler.scheduleNotification(
+              activeRide,
+              recipient as RecipientRole,
+              template,
+              delayMinutes,
+              data
+            );
           }
 
           // Schedule status change
@@ -349,7 +350,7 @@ const notificationRoutes: FastifyPluginAsync = async (fastify) => {
               activeRide,
               status,
               delayMinutes,
-              async (uuid, newUpdates) => await api.updateRideRequest(uuid, newUpdates),
+              async (uuid, newUpdates) => await api.updateRideRequest(uuid, newUpdates)
             );
           }
 
@@ -372,7 +373,7 @@ const notificationRoutes: FastifyPluginAsync = async (fastify) => {
                 scheduler.schedulePickupTasks(
                   activeRide,
                   driverData as ServiceProvider,
-                  async (uuid, rideUpdates) => await api.updateRideRequest(uuid, rideUpdates),
+                  async (uuid, rideUpdates) => await api.updateRideRequest(uuid, rideUpdates)
                 );
               }
             }

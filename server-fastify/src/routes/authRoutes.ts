@@ -1,11 +1,11 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { requirePermission } from '../plugins/auth.js';
 import {
-  loginSchema,
   createSystemUserSchema,
+  loginSchema,
+  toggleStatusSchema,
   updateSystemUserSchema,
   uuidParamSchema,
-  toggleStatusSchema,
 } from '../schemas/auth.schemas.js';
 
 /**
@@ -48,25 +48,26 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
 
         const result = await api.authenticateSystemUser(username, password);
 
-      if (result.success) {
-        return {
-          success: true,
-          user: result.user,
-        };
-      } else {
-        return reply.status(401).send({
+        if (result.success) {
+          return {
+            success: true,
+            user: result.user,
+          };
+        } else {
+          return reply.status(401).send({
+            success: false,
+            message: result.message,
+          });
+        }
+      } catch (error) {
+        fastify.log.error(error, 'Login error');
+        return reply.status(500).send({
           success: false,
-          message: result.message,
+          message: 'Server error during login',
         });
       }
-    } catch (error) {
-      fastify.log.error(error, 'Login error');
-      return reply.status(500).send({
-        success: false,
-        message: 'Server error during login',
-      });
     }
-  });
+  );
 
   /**
    * GET /api/auth/users
@@ -134,7 +135,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
           message: error instanceof Error ? error.message : 'Failed to create user',
         });
       }
-    },
+    }
   );
 
   /**
@@ -164,7 +165,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
           error: error instanceof Error ? error.message : 'Unknown error',
         });
       }
-    },
+    }
   );
 
   /**
@@ -263,7 +264,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
           error: error instanceof Error ? error.message : 'Unknown error',
         });
       }
-    },
+    }
   );
 
   /**
@@ -298,7 +299,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
           error: error instanceof Error ? error.message : 'Unknown error',
         });
       }
-    },
+    }
   );
 
   /**
@@ -325,7 +326,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
           error: error instanceof Error ? error.message : 'Unknown error',
         });
       }
-    },
+    }
   );
 };
 

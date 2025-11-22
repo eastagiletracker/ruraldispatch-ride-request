@@ -1,17 +1,21 @@
-import Fastify, { FastifyInstance, FastifyError } from 'fastify';
-import { serializerCompiler, validatorCompiler, ZodTypeProvider } from 'fastify-type-provider-zod';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
+import Fastify, { type FastifyError, type FastifyInstance } from 'fastify';
+import {
+  serializerCompiler,
+  validatorCompiler,
+  type ZodTypeProvider,
+} from 'fastify-type-provider-zod';
 import { env } from './config/env.js';
-import prismaPlugin from './plugins/prisma.js';
 import authPlugin from './plugins/auth.js';
-import notificationRoutes from './routes/notificationRoutes.js';
-import rideRequestRoutes from './routes/rideRequestRoutes.js';
+import prismaPlugin from './plugins/prisma.js';
 import authRoutes from './routes/authRoutes.js';
-import userRoutes from './routes/userRoutes.js';
-import { providerRoutes, serviceProviderRoutes } from './routes/providerRoutes.js';
-import vehicleRoutes from './routes/vehicleRoutes.js';
 import mapsRoutes from './routes/mapsRoutes.js';
+import notificationRoutes from './routes/notificationRoutes.js';
+import { providerRoutes, serviceProviderRoutes } from './routes/providerRoutes.js';
+import rideRequestRoutes from './routes/rideRequestRoutes.js';
+import userRoutes from './routes/userRoutes.js';
+import vehicleRoutes from './routes/vehicleRoutes.js';
 
 /**
  * Build Fastify application instance
@@ -57,7 +61,7 @@ export async function buildApp(): Promise<FastifyInstance> {
         err.statusCode = 400;
         done(err, undefined);
       }
-    },
+    }
   );
 
   // Global error handler

@@ -3,61 +3,53 @@
 
 // Re-export types from shared schemas (Zod-inferred types)
 export type {
-  // User
-  User,
-  UserFormData,
-  RaceOption,
-  MaritalStatusOption,
-  VeteranStatusOption,
-  DisabilityStatusOption,
-  ServiceUserRole,
-  
-  // Service Provider
-  ServiceProvider,
-  ServiceProviderFormData,
-  ServiceProviderRole,
-  Specialization,
-  Organization,
-  
-  // Vehicle
-  Vehicle,
-  VehicleFormData,
   AccessibilityNeed,
-  
+  DisabilityStatusOption,
+  MaritalStatusOption,
+  Organization,
+  RaceOption,
   // Ride Request
   RideRequest,
   RideRequestFormData,
   RideRequestType,
-  
+  // Service Provider
+  ServiceProvider,
+  ServiceProviderFormData,
+  ServiceProviderRole,
+  ServiceUserRole,
   // Auth
-  SignInFormData
+  SignInFormData,
+  Specialization,
+  // User
+  User,
+  UserFormData,
+  // Vehicle
+  Vehicle,
+  VehicleFormData,
+  VeteranStatusOption,
 } from '@shared/schemas';
-
-// Keep non-schema types from original files
-export type {
-  Notification,
-  NotificationType,
-  MessageDirection,
-  RecipientRole,
-  TwilioStatus,
-  NotificationStats,
-  CloseSessionResponse
-} from './notification';
-
 export type {
   ApiResponse,
-  Document
+  Document,
 } from './api';
-
 // Form types
 export type {
-  FormErrors,
-  FormComponentProps,
-  RideRequestFormProps,
-  UserSearchProps,
   DriverSearchProps,
-  VehicleSearchProps,
+  FormComponentProps,
+  FormErrors,
+  RideRequestFormProps,
   SearchableElement,
-  SearchProps
+  SearchProps,
+  UserSearchProps,
+  VehicleSearchProps,
 } from './form';
-
+// Keep non-schema types from original files
+export type {
+  CloseSessionResponse,
+  MessageDirection,
+  Notification,
+  NotificationStats,
+  NotificationType,
+  RecipientRole,
+  TwilioStatus,
+} from './notification';
