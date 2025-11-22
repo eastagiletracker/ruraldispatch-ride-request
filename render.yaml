@@ -43,7 +43,7 @@ projects:
             rootDir: server-fastify
             plan: free
             region: ohio
-            buildCommand: bun install && bun x prisma generate --schema=./prisma/schema.prisma && bun run build
+            buildCommand: bun install && bun x prisma generate --schema=./prisma/schema.prisma && bun run build && test -f dist/index.js && echo "✅ Build successful - dist/index.js exists"
             startCommand: bun x prisma migrate deploy --schema=./prisma/schema.prisma && bun run start
             healthCheckPath: /health
             domains:
