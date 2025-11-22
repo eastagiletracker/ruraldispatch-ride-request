@@ -44,7 +44,8 @@ projects:
             plan: free
             region: ohio
             buildCommand: bun install && bun x prisma generate --schema=./prisma/schema.prisma && bun run build
-            startCommand: bun run start
+            startCommand: bun x prisma migrate deploy --schema=./prisma/schema.prisma && bun run start
+            healthCheckPath: /health
             domains:
               - stg-api-ruraldispatch.swarmnyc.com
             envVars:
@@ -127,7 +128,8 @@ projects:
             plan: free
             region: ohio
             buildCommand: bun install && bun x prisma generate --schema=./prisma/schema.prisma && bun run build
-            startCommand: bun run start:prod
+            startCommand: bun x prisma migrate deploy --schema=./prisma/schema.prisma && bun run start:prod
+            healthCheckPath: /health
             domains:
               - api-ruraldispatch.swarmnyc.com
             envVars:
