@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { User, Phone, Calendar, Clock, Hash, Shield, Activity, Briefcase, Building2, Heart, Home, DollarSign, Flag, MessageSquarePlus } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { getApiUrl } from '@/lib/api';
 
 interface UserDetailModalProps {
   isOpen: boolean;
@@ -65,7 +66,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
     }
 
     try {
-      const resp = await fetch('/api/users/sms-consent', {
+      const resp = await fetch(getApiUrl('/api/users/sms-consent'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

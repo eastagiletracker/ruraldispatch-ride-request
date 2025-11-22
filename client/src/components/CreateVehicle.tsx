@@ -82,8 +82,8 @@ export default function CreateVehicle() {
 
             <CardContent>
                 {submitSuccess && (
-                    <Alert className="mb-6 border-green-500 bg-green-50 text-green-900 dark:border-green-700 dark:bg-green-950 dark:text-green-100">
-                        <AlertCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+                    <Alert className="mb-6 text-green-900 border-green-500 bg-green-50 dark:border-green-700 dark:bg-green-950 dark:text-green-100">
+                        <AlertCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
                         <AlertDescription>
                             Vehicle created successfully!
                         </AlertDescription>
@@ -92,7 +92,7 @@ export default function CreateVehicle() {
 
                 {submitError && (
                     <Alert variant="destructive" className="mb-6">
-                        <AlertCircle className="h-4 w-4" />
+                        <AlertCircle className="w-4 h-4" />
                         <AlertDescription>
                             {submitError}
                         </AlertDescription>

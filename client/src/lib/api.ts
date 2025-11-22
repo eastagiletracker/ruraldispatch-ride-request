@@ -1,46 +1,42 @@
 /**
- * API Configuration
- *
- * In development: Uses Vite proxy (relative URLs work)
- * In production: Uses VITE_API_URL environment variable
+ * Legacy API file - re-exports from the new modular structure
+ * 
+ * This file is kept for backward compatibility with existing imports.
+ * All API functionality has been moved to the modular structure in ./api/
  */
 
-// Get the API base URL from environment or default to empty string for relative URLs
-const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+// Configuration
+export { getApiUrl, isUsingProxy, getApiInfo } from './api/config';
 
-/**
- * Get the full API URL for a given endpoint
- * @param endpoint - API endpoint path (e.g., '/api/auth/login')
- * @returns Full URL for the API endpoint
- */
-export function getApiUrl(endpoint: string): string {
-  // If no base URL is configured (development), return endpoint as-is for proxy
-  if (!API_BASE_URL) {
-    return endpoint;
-  }
+// Base hooks
+export { useFetch, useApiMutation } from './api/base';
 
-  // Remove trailing slash from base URL if present
-  const baseUrl = API_BASE_URL.replace(/\/$/, '');
+// Users
+export { 
+  useUsers, 
+  useCreateUser, 
+  useUpdateUser, 
+  useDeleteUser 
+} from './api/users';
 
-  // Ensure endpoint starts with /
-  const path = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+// Service Providers
+export {
+  useServiceProviders,
+  useCreateServiceProvider,
+  useUpdateServiceProvider,
+  useDeleteServiceProvider,
+} from './api/service-providers';
 
-  return `${baseUrl}${path}`;
-}
+// Vehicles
+export {
+  useVehicles,
+  useCreateVehicle,
+  useUpdateVehicle,
+  useDeleteVehicle,
+} from './api/vehicles';
 
-/**
- * Check if we're using the proxy (development) or direct API calls (production)
- */
-export function isUsingProxy(): boolean {
-  return !API_BASE_URL;
-}
+// System Users
+export { useSystemUsers } from './api/system-users';
 
-/**
- * Get the API configuration info (useful for debugging)
- */
-export function getApiInfo() {
-  return {
-    baseUrl: API_BASE_URL || 'Using Vite proxy (development)',
-    mode: isUsingProxy() ? 'development' : 'production',
-  };
-}
+// Ride Requests
+export { useRideRequests } from './api/rides';

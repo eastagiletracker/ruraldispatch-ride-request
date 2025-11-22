@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import axios from 'axios';
+import { getApiUrl } from '@/lib/api';
 
 const SMSOptOut = () => {
   const [searchParams] = useSearchParams();
@@ -20,12 +20,20 @@ const SMSOptOut = () => {
     setLoading(true);
     try {
       // Record opt-out in database
-      await axios.post('/api/users/sms-consent', {
-        phoneNumber,
-        consentGiven: false,
-        timestamp: new Date().toISOString(),
-        ipAddress: window.location.hostname
+      const response = await fetch(getApiUrl('/api/users/sms-consent'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phoneNumber,
+          consentGiven: false,
+          timestamp: new Date().toISOString(),
+          ipAddress: window.location.hostname
+        }),
       });
+
+      if (!response.ok) {
+        throw new Error('Failed to record opt-out');
+      }
 
       setSuccess(true);
     } catch (error) {

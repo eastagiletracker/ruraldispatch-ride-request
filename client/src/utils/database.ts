@@ -1,8 +1,9 @@
 import type { User, ServiceProvider, Vehicle, Notification, NotificationStats, CloseSessionResponse } from '@/types';
+import { getApiUrl } from '@/lib/api';
 
 export const fetchTopUserMatches = async (searchTerm: string): Promise<User[]> => {
     try {
-        const matches = await fetch(`/api/users/fuzzy/${searchTerm}`);
+        const matches = await fetch(getApiUrl(`/api/users/fuzzy/${searchTerm}`));
         if (!matches.ok) {
             console.error('Failed to fetch user matches:', matches.statusText);
             return [];
@@ -16,7 +17,7 @@ export const fetchTopUserMatches = async (searchTerm: string): Promise<User[]> =
 
 export const fetchTopProviderMatches = async (searchTerm: string): Promise<ServiceProvider[]> => {
     try {
-        const matches = await fetch(`/api/providers/fuzzy/${searchTerm}`);
+        const matches = await fetch(getApiUrl(`/api/providers/fuzzy/${searchTerm}`));
         if (!matches.ok) {
             console.error('Failed to fetch provider matches:', matches.statusText);
             return [];
@@ -30,7 +31,7 @@ export const fetchTopProviderMatches = async (searchTerm: string): Promise<Servi
 
 export const fetchTopVehicleMatches = async (searchTerm: string): Promise<Vehicle[]> => {
     try {
-        const matches = await fetch(`/api/vehicles/fuzzy/${searchTerm}`);
+        const matches = await fetch(getApiUrl(`/api/vehicles/fuzzy/${searchTerm}`));
         if (!matches.ok) {
             console.error('Failed to fetch vehicle matches:', matches.statusText);
             return [];
@@ -43,12 +44,12 @@ export const fetchTopVehicleMatches = async (searchTerm: string): Promise<Vehicl
 }
 
 export const fetchCollection = async <T = unknown>(collectionName: string): Promise<T[]> => {
-    const response = await fetch(`/api/${collectionName}`);
+    const response = await fetch(getApiUrl(`/api/${collectionName}`));
     return await response.json();
 }
 
 export const fetchDocument = async <T = unknown>(collectionName: string, documentId: string): Promise<T> => {
-    const response = await fetch(`/api/${collectionName}/${documentId}`);
+    const response = await fetch(getApiUrl(`/api/${collectionName}/${documentId}`));
     
     if (!response.ok) {
         throw new Error(`Failed to fetch document: ${response.statusText}`);
@@ -68,12 +69,12 @@ export const fetchDocument = async <T = unknown>(collectionName: string, documen
 }
 
 export const fetchFieldsOfDocument = async <T = unknown>(collectionName: string, documentId: string, fieldNames: string[]): Promise<T> => {
-    const response = await fetch(`/api/${collectionName}/${documentId}/fields/${fieldNames.join(',')}`);
+    const response = await fetch(getApiUrl(`/api/${collectionName}/${documentId}/fields/${fieldNames.join(',')}`));
     return await response.json();
 }
 
 export const createDocument = async <T = unknown>(collectionName: string, document: T): Promise<Response> => {
-    return await fetch(`/api/${collectionName}`, {
+    return await fetch(getApiUrl(`/api/${collectionName}`), {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -83,7 +84,7 @@ export const createDocument = async <T = unknown>(collectionName: string, docume
 }
 
 export const updateDocument = async <T = unknown>(collectionName: string, documentId: string, replacementDoc: T): Promise<boolean> => {
-    const response = await fetch(`/api/${collectionName}/${documentId}`, {
+    const response = await fetch(getApiUrl(`/api/${collectionName}/${documentId}`), {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
@@ -104,25 +105,25 @@ export const updateDocument = async <T = unknown>(collectionName: string, docume
 
 // Notification API functions
 export const fetchNotificationsByRide = async (rideUuid: string): Promise<Notification[]> => {
-    const response = await fetch(`/api/notifications/ride/${rideUuid}`);
+    const response = await fetch(getApiUrl(`/api/notifications/ride/${rideUuid}`));
     const data = await response.json();
     return data.notifications || [];
 }
 
 export const fetchActiveNotifications = async (rideUuid: string): Promise<Notification[]> => {
-    const response = await fetch(`/api/notifications/active/${rideUuid}`);
+    const response = await fetch(getApiUrl(`/api/notifications/active/${rideUuid}`));
     const data = await response.json();
     return data.notifications || [];
 }
 
 export const fetchNotificationStats = async (rideUuid: string): Promise<NotificationStats> => {
-    const response = await fetch(`/api/notifications/stats/${rideUuid}`);
+    const response = await fetch(getApiUrl(`/api/notifications/stats/${rideUuid}`));
     const data = await response.json();
     return data.stats || { totalNotifications: 0, deliveredCount: 0, failedCount: 0, pendingCount: 0 };
 }
 
 export const closeRideSession = async (rideUuid: string): Promise<CloseSessionResponse> => {
-    const response = await fetch(`/api/notifications/close-session/${rideUuid}`, {
+    const response = await fetch(getApiUrl(`/api/notifications/close-session/${rideUuid}`), {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

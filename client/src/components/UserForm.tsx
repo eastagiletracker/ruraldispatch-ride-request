@@ -16,6 +16,7 @@ import { PhoneInput } from "@/components/ui/phone-input";
 import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 import { userFormSchema, type UserFormData, ServiceUserRoles } from "@shared/schemas";
 import type { FormComponentProps, ServiceUserRole } from "@/types";
+import { getApiUrl } from '@/lib/api';
 
 const SERVICE_USER_ROLES: ServiceUserRole[] = [...ServiceUserRoles];
 
@@ -81,7 +82,7 @@ export default function UserForm({ setShowBaseForm, setShowUserForm }: FormCompo
                 // If SMS consent was given, record it
                 if (smsConsent && data.phone) {
                     try {
-                        await fetch('/api/users/sms-consent', {
+                        await fetch(getApiUrl('/api/users/sms-consent'), {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({

@@ -3,6 +3,8 @@
  * Calculates travel time and distance between two locations
  */
 
+import { getApiUrl } from './api';
+
 const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
 export interface DistanceMatrixResult {
@@ -40,7 +42,7 @@ export async function calculateTravelTime(
   }
 
   try {
-    const response = await fetch('/api/maps/calculate-travel-time', {
+    const response = await fetch(getApiUrl('/api/maps/calculate-travel-time'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

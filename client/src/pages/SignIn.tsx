@@ -10,8 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { User, AlertCircle } from "lucide-react";
 import { signInSchema, type SignInFormData } from "@/schemas/validation";
 import { isPortalAuthValid } from '@/utils/permissions';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+import { getApiUrl } from '@/lib/api';
 
 export default function SignIn() {
     const navigate = useNavigate();
@@ -44,7 +43,7 @@ export default function SignIn() {
         setServerError('');
         
         try {
-            const response = await fetch(`${API_BASE_URL}/auth/login`, {
+            const response = await fetch(getApiUrl('/api/auth/login'), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

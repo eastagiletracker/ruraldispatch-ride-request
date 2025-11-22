@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Clock, Calendar, Bell, RefreshCw, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatRideId } from "@/utils/formatters";
+import { getApiUrl } from '@/lib/api';
 
 interface ScheduledRide {
     rideUuid: string;
@@ -30,54 +32,32 @@ interface SchedulerStatusResponse {
  * Useful for admin/dispatcher to monitor upcoming ride events
  */
 export default function SchedulerStatus() {
-    const [status, setStatus] = useState<SchedulerData | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const [lastUpdated, setLastUpdated] = useState<string>('');
     const [isCollapsed, setIsCollapsed] = useState(false);
 
-    const fetchSchedulerStatus = async () => {
-        try {
-            setLoading(true);
-            setError(null);
-            const response = await fetch('/api/notifications/scheduler-status');
-
+    // Use TanStack Query with automatic polling
+    const { data, isLoading, error, refetch } = useQuery<SchedulerStatusResponse>({
+        queryKey: ['scheduler-status'],
+        queryFn: async () => {
+            const response = await fetch(getApiUrl('/api/notifications/scheduler-status'));
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
+            return response.json();
+        },
+        refetchInterval: 30000, // Auto-refresh every 30 seconds
+        staleTime: 25000, // Consider data stale after 25 seconds
+    });
 
-            const data: SchedulerStatusResponse = await response.json();
-
-            if (data.success) {
-                setStatus(data.scheduler);
-                setLastUpdated(new Date(data.timestamp).toLocaleTimeString());
-            } else {
-                throw new Error('Failed to fetch scheduler status');
-            }
-        } catch (err) {
-            console.error('Error fetching scheduler status:', err);
-            setError(err instanceof Error ? err.message : 'Unknown error');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchSchedulerStatus();
-
-        // Auto-refresh every 30 seconds
-        const interval = setInterval(fetchSchedulerStatus, 30000);
-
-        return () => clearInterval(interval);
-    }, []);
+    const status = data?.scheduler || null;
+    const lastUpdated = data?.timestamp ? new Date(data.timestamp).toLocaleTimeString() : '';
 
     const getTaskIcon = (taskName: string) => {
-        if (taskName.includes('1_hour_prior')) return <Bell className="h-4 w-4 text-blue-600" />;
-        if (taskName.includes('arrival_check')) return <Clock className="h-4 w-4 text-purple-600" />;
-        if (taskName.includes('dropoff_check')) return <Calendar className="h-4 w-4 text-green-600" />;
-        if (taskName.includes('roundtrip')) return <RefreshCw className="h-4 w-4 text-orange-600" />;
-        if (taskName.includes('status_change')) return <Clock className="h-4 w-4 text-indigo-600" />;
-        return <Bell className="h-4 w-4 text-gray-600" />;
+        if (taskName.includes('1_hour_prior')) return <Bell className="w-4 h-4 text-blue-600" />;
+        if (taskName.includes('arrival_check')) return <Clock className="w-4 h-4 text-purple-600" />;
+        if (taskName.includes('dropoff_check')) return <Calendar className="w-4 h-4 text-green-600" />;
+        if (taskName.includes('roundtrip')) return <RefreshCw className="w-4 h-4 text-orange-600" />;
+        if (taskName.includes('status_change')) return <Clock className="w-4 h-4 text-indigo-600" />;
+        return <Bell className="w-4 h-4 text-gray-600" />;
     };
 
     const formatTaskName = (taskName: string): string => {
@@ -87,15 +67,15 @@ export default function SchedulerStatus() {
             .replace(/\b\w/g, (char) => char.toUpperCase());
     };
 
-    if (loading && !status) {
+    if (isLoading && !status) {
         return (
             <Card className="border-2">
                 <CardHeader>
-                    <Skeleton className="h-6 w-48" />
-                    <Skeleton className="h-4 w-64 mt-2" />
+                    <Skeleton className="w-48 h-6" />
+                    <Skeleton className="w-64 h-4 mt-2" />
                 </CardHeader>
                 <CardContent>
-                    <Skeleton className="h-20 w-full" />
+                    <Skeleton className="w-full h-20" />
                 </CardContent>
             </Card>
         );
@@ -105,16 +85,16 @@ export default function SchedulerStatus() {
         return (
             <Card className="border-2 border-red-200">
                 <CardHeader>
-                    <CardTitle className="text-red-700 flex items-center gap-2">
-                        <Bell className="h-5 w-5" />
+                    <CardTitle className="flex items-center gap-2 text-red-700">
+                        <Bell className="w-5 h-5" />
                         Scheduler Status
                     </CardTitle>
                     <CardDescription className="text-red-600">
-                        Error loading scheduler: {error}
+                        Error loading scheduler: {error?.message || 'Unknown error'}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <Button onClick={fetchSchedulerStatus} variant="outline" size="sm">
+                    <Button onClick={() => refetch()} variant="outline" size="sm">
                         Retry
                     </Button>
                 </CardContent>
@@ -130,10 +110,10 @@ export default function SchedulerStatus() {
         <Card className="border-2">
             <CardHeader className="cursor-pointer" onClick={() => setIsCollapsed(!isCollapsed)}>
                 <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3 flex-1">
+                    <div className="flex items-center flex-1 gap-3">
                         <div>
                             <CardTitle className="flex items-center gap-2">
-                                <Bell className="h-5 w-5 text-blue-600" />
+                                <Bell className="w-5 h-5 text-blue-600" />
                                 Scheduled Tasks
                                 {!isCollapsed && status && (
                                     <Badge variant="secondary" className="ml-2">
@@ -150,13 +130,13 @@ export default function SchedulerStatus() {
                         <Button
                             onClick={(e) => {
                                 e.stopPropagation();
-                                fetchSchedulerStatus();
+                                refetch();
                             }}
                             variant="outline"
                             size="sm"
-                            disabled={loading}
+                            disabled={isLoading}
                         >
-                            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
                         </Button>
                         <Button
                             variant="ghost"
@@ -164,9 +144,9 @@ export default function SchedulerStatus() {
                             className="px-2"
                         >
                             {isCollapsed ? (
-                                <ChevronDown className="h-5 w-5" />
+                                <ChevronDown className="w-5 h-5" />
                             ) : (
-                                <ChevronUp className="h-5 w-5" />
+                                <ChevronUp className="w-5 h-5" />
                             )}
                         </Button>
                     </div>
@@ -175,7 +155,7 @@ export default function SchedulerStatus() {
             {!isCollapsed && (
                 <CardContent className="space-y-4">
                 {/* Summary stats */}
-                <div className="flex gap-4 p-4 bg-gray-50 rounded-lg">
+                <div className="flex gap-4 p-4 rounded-lg bg-gray-50">
                     <div className="flex-1">
                         <div className="text-2xl font-bold text-gray-900">{status.totalRides}</div>
                         <div className="text-sm text-gray-600">Active Rides</div>
@@ -192,8 +172,8 @@ export default function SchedulerStatus() {
 
                 {/* No scheduled tasks */}
                 {status.totalRides === 0 && (
-                    <div className="text-center py-8 text-gray-500">
-                        <Clock className="h-12 w-12 mx-auto mb-2 text-gray-400" />
+                    <div className="py-8 text-center text-gray-500">
+                        <Clock className="w-12 h-12 mx-auto mb-2 text-gray-400" />
                         <p className="font-medium">No scheduled tasks</p>
                         <p className="text-sm">Tasks appear when rides are confirmed</p>
                     </div>
@@ -205,7 +185,7 @@ export default function SchedulerStatus() {
                         {status.rides.map((ride) => (
                             <div
                                 key={ride.rideUuid}
-                                className="p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                                className="p-4 transition-colors border rounded-lg hover:bg-gray-50"
                             >
                                 <div className="flex items-center justify-between mb-3">
                                     <div className="flex items-center gap-2">
@@ -222,7 +202,7 @@ export default function SchedulerStatus() {
                                     {ride.tasks.map((task, index) => (
                                         <div
                                             key={index}
-                                            className="flex items-center gap-2 text-sm text-gray-700 pl-2"
+                                            className="flex items-center gap-2 pl-2 text-sm text-gray-700"
                                         >
                                             {getTaskIcon(task)}
                                             <span>{formatTaskName(task)}</span>
@@ -235,7 +215,7 @@ export default function SchedulerStatus() {
                 )}
 
                 {/* Info footer */}
-                <div className="pt-4 border-t text-xs text-gray-500">
+                <div className="pt-4 text-xs text-gray-500 border-t">
                     <p>
                         <strong>Note:</strong> Tasks are scheduled based on ride pickup time and status.
                         They execute automatically to send SMS notifications to riders and drivers.
