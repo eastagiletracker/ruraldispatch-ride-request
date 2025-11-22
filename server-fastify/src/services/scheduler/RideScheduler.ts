@@ -50,12 +50,7 @@ class RideScheduler {
   /**
    * Schedule all initial notifications when ride is confirmed
    */
-  scheduleRideConfirmationTasks(
-    ride: Ride,
-    driver: ServiceProvider,
-    rider: User,
-    apiUpdateFunction: ApiUpdateFunction
-  ): void {
+  scheduleRideConfirmationTasks(ride: Ride, driver: ServiceProvider): void {
     console.log(`=📅 Scheduling all tasks for confirmed ride #${ride.uuid}`);
 
     // Schedule driver arrival check at pickup time (driver should arrive at estimated time)
@@ -108,13 +103,8 @@ class RideScheduler {
   /**
    * Alias for scheduleRideConfirmationTasks (for backwards compatibility)
    */
-  scheduleAllTasks(
-    ride: Ride,
-    driver: ServiceProvider,
-    rider: User,
-    apiUpdateFunction: ApiUpdateFunction
-  ): void {
-    return this.scheduleRideConfirmationTasks(ride, driver, rider, apiUpdateFunction);
+  scheduleAllTasks(ride: Ride, driver: ServiceProvider): void {
+    return this.scheduleRideConfirmationTasks(ride, driver);
   }
 
   // ========================================

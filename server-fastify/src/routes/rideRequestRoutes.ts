@@ -219,15 +219,8 @@ const rideRequestRoutes: FastifyPluginAsync = async (fastify) => {
       ) {
         // Ride just confirmed - schedule all initial tasks
         fastify.log.info(`📅 Ride confirmed - scheduling tasks for ride #${rideUuid}`);
-        if (userData.driver && userData.rider) {
-          scheduler.scheduleRideConfirmationTasks(
-            updatedRide,
-            userData.driver,
-            userData.rider,
-            async (uuid, updates) => {
-              return await api.updateRideRequest(uuid, updates);
-            }
-          );
+        if (userData.driver) {
+          scheduler.scheduleRideConfirmationTasks(updatedRide, userData.driver);
         }
       }
 

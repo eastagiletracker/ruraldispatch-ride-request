@@ -160,7 +160,7 @@ export function getSMSTemplate(
   recipient: RecipientType,
   data: TemplateData = {}
 ): string | null {
-  const { ride, rider, driver, vehicle, pickupLocation } = data;
+  const { ride, driver, vehicle, pickupLocation } = data;
 
   // Map of status -> recipient -> message template
   const templates: Record<TemplateStatus, Partial<Record<RecipientType, () => string>>> = {

@@ -363,9 +363,7 @@ const notificationRoutes: FastifyPluginAsync = async (fastify) => {
               if (riderData && driverData) {
                 scheduler.scheduleRideConfirmationTasks(
                   activeRide,
-                  driverData as ServiceProvider,
-                  riderData,
-                  async (uuid, newUpdates) => await api.updateRideRequest(uuid, newUpdates)
+                  driverData as ServiceProvider
                 );
               }
             }
