@@ -111,7 +111,7 @@ export default function RideRequestForm({
   // Reset travel time calculation state when addresses change
   useEffect(() => {
     setTravelTimeCalculated(false);
-  }, []);
+  }, [pickupLocation, dropoffLocation]);
 
   // Auto-calculate travel time when both addresses are selected
   useEffect(() => {
