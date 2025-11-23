@@ -180,6 +180,16 @@ export function parseAddressComponents(
       components.address2 = component.longText;
     } else if (types.includes('locality')) {
       components.city = component.longText;
+    } else if (
+      !components.city &&
+      (types.includes('sublocality') ||
+        types.includes('sublocality_level_1') ||
+        types.includes('administrative_area_level_2') ||
+        types.includes('administrative_area_level_3') ||
+        types.includes('postal_town'))
+    ) {
+      // Some US cities (e.g., NYC boroughs) return sublocality instead of locality
+      components.city = component.longText;
     } else if (types.includes('administrative_area_level_1')) {
       components.state = component.shortText;
     } else if (types.includes('postal_code')) {

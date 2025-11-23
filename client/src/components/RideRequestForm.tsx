@@ -104,39 +104,42 @@ export default function RideRequestForm({
   // Watch roundtrip checkbox to enable/disable wait time field
   const isRoundTrip = watch('roundtrip');
 
-  // Watch pickup and dropoff locations for automatic travel time calculation
+  // Helper function to extract address string
+  const getAddressString = (location: string | { formattedAddress: string } | null): string => {
+    if (!location) return '';
+    return typeof location === 'string' ? location : location.formattedAddress;
+  };
+
+  // Auto-calculate travel time when both addresses are selected (single effect)
   const pickupLocation = watch('pickupLocation');
   const dropoffLocation = watch('dropoffLocation');
-
-  // Reset travel time calculation state when addresses change
+  
   useEffect(() => {
-    setTravelTimeCalculated(false);
-  }, [pickupLocation, dropoffLocation]);
-
-  // Auto-calculate travel time when both addresses are selected
-  useEffect(() => {
-    // Get address strings from either string or AddressType
-    const getAddressString = (location: string | { formattedAddress: string } | null): string => {
-      if (!location) return '';
-      return typeof location === 'string' ? location : location.formattedAddress;
-    };
-
     const pickup = getAddressString(pickupLocation);
     const dropoff = getAddressString(dropoffLocation);
 
-    // Only calculate if both addresses are available and not already calculating
-    if (!pickup || !dropoff || calculatingTravelTime || travelTimeCalculated) {
+    // If either is empty, clear travel time and reset flag
+    if (!pickup || !dropoff) {
+      setValue('estimatedTravelTime', '');
+      setTravelTimeCalculated(false);
       return;
     }
 
-    // Debounce the calculation to avoid too many requests
+    // Both addresses present - reset flag to allow calculation
+    setTravelTimeCalculated(false);
+
+    // Skip if already calculating
+    if (calculatingTravelTime) {
+      return;
+    }
+
+    // Debounce the calculation
     const timeoutId = setTimeout(async () => {
       setCalculatingTravelTime(true);
 
       try {
         const result = await calculateTravelTimeWithTraffic(pickup, dropoff);
 
-        // Set the estimated travel time in the form
         setValue('estimatedTravelTime', result.durationMinutes.toString(), {
           shouldValidate: true,
         });
@@ -148,8 +151,6 @@ export default function RideRequestForm({
         });
       } catch (error) {
         console.error('Error calculating travel time:', error);
-        // Silently fail - user can enter manually
-        // Only show toast if it's not a REQUEST_DENIED (API not enabled)
         const errorMessage = error instanceof Error ? error.message : '';
         if (!errorMessage.includes('REQUEST_DENIED')) {
           toast.error('Could not calculate travel time', {
@@ -159,10 +160,11 @@ export default function RideRequestForm({
       } finally {
         setCalculatingTravelTime(false);
       }
-    }, 500); // 500ms debounce
+    }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [pickupLocation, dropoffLocation, calculatingTravelTime, travelTimeCalculated, setValue]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pickupLocation, dropoffLocation]);
 
   const onSubmit = async (data: RideRequestFormData) => {
     setSubmitError('');

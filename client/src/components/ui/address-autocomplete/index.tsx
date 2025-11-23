@@ -103,7 +103,8 @@ const AddressAutocompleteComponent: React.FC<AddressAutocompleteProps> = ({
   label,
   className,
 }) => {
-  const [selectedAddress, setSelectedAddress] = useState<AddressType | null>(value || null);
+  // Use value prop directly - fully controlled component
+  const selectedAddress = value;
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
   const [detailsError, setDetailsError] = useState<string | null>(null);
@@ -112,7 +113,6 @@ const AddressAutocompleteComponent: React.FC<AddressAutocompleteProps> = ({
 
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const isInternalUpdate = useRef(false);
   const inputId = useId();
 
   const {
@@ -130,21 +130,6 @@ const AddressAutocompleteComponent: React.FC<AddressAutocompleteProps> = ({
     minLength: 3,
     debounce: 500,
   });
-
-  // Sync external value changes (only when it's not an internal update)
-  useEffect(() => {
-    // Skip if this is an internal update (we just called onChange)
-    if (isInternalUpdate.current) {
-      isInternalUpdate.current = false;
-      return;
-    }
-
-    // Only update if value actually changed
-    const valuesAreDifferent = JSON.stringify(value) !== JSON.stringify(selectedAddress);
-    if (valuesAreDifferent) {
-      setSelectedAddress(value || null);
-    }
-  }, [value, selectedAddress]); // Don't include selectedAddress in deps to avoid loops
 
   // Handle clicks outside to close suggestions
   useEffect(() => {
@@ -167,7 +152,6 @@ const AddressAutocompleteComponent: React.FC<AddressAutocompleteProps> = ({
 
     // If user clears the input, clear the selected address
     if (!newValue) {
-      setSelectedAddress(null);
       onChange(null);
       setHasUserTyped(false);
     }
@@ -200,10 +184,7 @@ const AddressAutocompleteComponent: React.FC<AddressAutocompleteProps> = ({
       // Check if address is incomplete (missing street address or postal code)
       const isIncomplete = !address.address1 || !address.postalCode;
 
-      setSelectedAddress(address);
-
-      // Mark as internal update before calling onChange
-      isInternalUpdate.current = true;
+      // Call onChange to update parent state
       onChange(address);
       setInputValue('');
       setHasUserTyped(false);
@@ -211,11 +192,9 @@ const AddressAutocompleteComponent: React.FC<AddressAutocompleteProps> = ({
 
       // Refresh session token after successful selection
       refreshSessionToken();
-      console.log('✅ [AddressAutocomplete] Address selection complete!');
 
       // Auto-open dialog if address is incomplete (city/state only)
       if (isIncomplete) {
-        console.log('🔵 [AddressAutocomplete] Auto-opening dialog for incomplete address');
         setTimeout(() => {
           setDialogOpen(true);
         }, 100); // Small delay to ensure state updates
@@ -229,10 +208,7 @@ const AddressAutocompleteComponent: React.FC<AddressAutocompleteProps> = ({
   };
 
   const handleClear = () => {
-    setSelectedAddress(null);
-
-    // Mark as internal update before calling onChange
-    isInternalUpdate.current = true;
+    // Clear the selected address
     onChange(null);
 
     setInputValue('');
@@ -246,12 +222,8 @@ const AddressAutocompleteComponent: React.FC<AddressAutocompleteProps> = ({
   };
 
   const handleSaveFromDialog = (address: AddressType) => {
-    setSelectedAddress(address);
-
-    // Mark as internal update before calling onChange
-    isInternalUpdate.current = true;
+    // Save the updated address
     onChange(address);
-
     setDialogOpen(false);
   };
 
@@ -276,7 +248,7 @@ const AddressAutocompleteComponent: React.FC<AddressAutocompleteProps> = ({
           className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
         >
           {label}
-          {required && <span className="text-destructive ml-1">*</span>}
+          {required && <span className="ml-1 text-destructive">*</span>}
         </label>
       )}
 
@@ -293,11 +265,11 @@ const AddressAutocompleteComponent: React.FC<AddressAutocompleteProps> = ({
               error && 'border-destructive'
             )}
           >
-            <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm truncate">{selectedAddress.formattedAddress}</p>
+            <MapPin className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm">{selectedAddress.formattedAddress}</p>
               {(!selectedAddress.address1 || !selectedAddress.postalCode) && (
-                <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
+                <p className="mt-1 text-xs text-yellow-700 dark:text-yellow-300">
                   ⚠️ Incomplete address - please add street address
                 </p>
               )}
@@ -362,8 +334,8 @@ const AddressAutocompleteComponent: React.FC<AddressAutocompleteProps> = ({
 
           {/* Autocomplete Suggestions */}
           {showSuggestions && inputValue && predictions.length > 0 && (
-            <div className="absolute z-50 w-full mt-1">
-              <Command className="border shadow-md rounded-md bg-popover">
+            <div className="absolute z-50 mt-1 w-full">
+              <Command className="rounded-md border bg-popover shadow-md">
                 <CommandList>
                   <CommandGroup>
                     {predictions.map((prediction, index) => {
@@ -399,8 +371,8 @@ const AddressAutocompleteComponent: React.FC<AddressAutocompleteProps> = ({
 
           {/* No Results Message */}
           {showSuggestions && inputValue && predictions.length === 0 && !isLoading && (
-            <div className="absolute z-50 w-full mt-1">
-              <Command className="border shadow-md rounded-md bg-popover">
+            <div className="absolute z-50 mt-1 w-full">
+              <Command className="rounded-md border bg-popover shadow-md">
                 <CommandEmpty>No addresses found. Try a different search.</CommandEmpty>
               </Command>
             </div>
