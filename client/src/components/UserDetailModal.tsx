@@ -274,8 +274,9 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                 </div>
               )}
 
-              {/* SMS Consent Status & Verbal Opt-In */}
-              <div className="flex items-start gap-3 pt-2">
+              {/* SMS Consent Status & Verbal Opt-In - Riders Only */}
+              {type === 'rider' && (
+                <div className="flex items-start gap-3 pt-2">
                 <MessageSquarePlus className="mt-0.5 h-5 w-5 text-muted-foreground" />
                 <div className="flex-1">
                   <p className="text-sm font-medium text-muted-foreground">SMS Consent</p>
@@ -355,6 +356,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                   )}
                 </div>
               </div>
+              )}
             </div>
           </div>
 
@@ -380,18 +382,22 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                   )}
 
                   {/* Organization */}
-                  {currentUser.organization && (
+                  {(currentUser.organization?.name || currentUser.organization) && (
                     <div className="flex items-start gap-3">
                       <Building2 className="mt-0.5 h-5 w-5 text-muted-foreground" />
                       <div className="flex-1">
                         <p className="text-sm font-medium text-muted-foreground">Organization</p>
-                        <p className="text-base font-semibold">{currentUser.organization}</p>
+                        <p className="text-base font-semibold">
+                          {typeof currentUser.organization === 'object' 
+                            ? currentUser.organization?.name 
+                            : currentUser.organization}
+                        </p>
                       </div>
                     </div>
                   )}
 
                   {/* Service Provider Role */}
-                  {currentUser.serviceProviderRole && (
+                  {(currentUser.role || currentUser.serviceProviderRole) && (
                     <div className="flex items-start gap-3">
                       <Shield className="mt-0.5 h-5 w-5 text-muted-foreground" />
                       <div className="flex-1">
@@ -399,7 +405,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                           Service Provider Role
                         </p>
                         <Badge variant="default" className="mt-1">
-                          {currentUser.serviceProviderRole}
+                          {currentUser.role || currentUser.serviceProviderRole}
                         </Badge>
                       </div>
                     </div>
