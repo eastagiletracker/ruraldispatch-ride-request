@@ -27,11 +27,25 @@ const rideRequestRoutes: FastifyPluginAsync = async (fastify) => {
   const api = fastify.database;
 
   /**
+   * Helper to transform ride data for client compatibility
+   * Converts rider/driver from single objects to arrays
+   */
+  const transformRideForClient = (ride: any) => {
+    return {
+      ...ride,
+      rider: ride.rider ? [ride.rider] : [],
+      driver: ride.driver ? [ride.driver] : [],
+      vehicle: ride.vehicle || null,
+    };
+  };
+
+  /**
    * GET /api/riderequests
    * Get all ride requests
    */
   fastify.get('/', async () => {
-    return await api.getRideRequests();
+    const rides = await api.getRideRequests();
+    return rides.map(transformRideForClient);
   });
 
   /**
@@ -44,7 +58,7 @@ const rideRequestRoutes: FastifyPluginAsync = async (fastify) => {
       if (!rideRequest) {
         return reply.status(404).send({ error: 'Ride request not found' });
       }
-      return rideRequest;
+      return transformRideForClient(rideRequest);
     } catch (error) {
       fastify.log.error(error, 'Error fetching ride request');
       return reply.status(500).send({

@@ -279,17 +279,22 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
                 <MessageSquarePlus className="mt-0.5 h-5 w-5 text-muted-foreground" />
                 <div className="flex-1">
                   <p className="text-sm font-medium text-muted-foreground">SMS Consent</p>
-                  {typeof currentUser.smsConsent === 'object' && currentUser.smsConsent?.given ? (
+                  {(currentUser.smsConsentGiven || 
+                    (typeof currentUser.smsConsent === 'object' && currentUser.smsConsent?.given) ||
+                    currentUser.smsConsent === true) ? (
                     <div className="flex flex-col gap-1">
                       <Badge className="w-fit bg-green-600 hover:bg-green-700">Opted-In</Badge>
-                      {typeof currentUser.smsConsent === 'object' &&
-                        currentUser.smsConsent?.timestamp && (
+                      {(currentUser.smsConsentTimestamp || 
+                        (typeof currentUser.smsConsent === 'object' && currentUser.smsConsent?.timestamp)) && (
                           <p className="text-xs text-muted-foreground">
-                            Since: {new Date(currentUser.smsConsent.timestamp).toLocaleString()}
+                            Since: {new Date(
+                              currentUser.smsConsentTimestamp || 
+                              (typeof currentUser.smsConsent === 'object' ? currentUser.smsConsent.timestamp : '')
+                            ).toLocaleString()}
                           </p>
                         )}
-                      {typeof currentUser.smsConsent === 'object' &&
-                        currentUser.smsConsent?.ipAddress === 'verbal' && (
+                      {(currentUser.smsConsentIpAddress === 'verbal' ||
+                        (typeof currentUser.smsConsent === 'object' && currentUser.smsConsent?.ipAddress === 'verbal')) && (
                           <p className="text-xs text-muted-foreground">Method: Verbal</p>
                         )}
                     </div>
@@ -415,166 +420,7 @@ export const UserDetailModal: React.FC<UserDetailModalProps> = ({
             </>
           )}
 
-          {/* Rider Specific Information */}
-          {type === 'rider' && (
-            <>
-              <Separator />
-              <div>
-                <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                  <Heart className="h-4 w-4" />
-                  Personal Information
-                </h3>
-                <div className="space-y-4 pl-6">
-                  {/* Race */}
-                  {currentUser.race && (
-                    <div className="flex items-start gap-3">
-                      <User className="mt-0.5 h-5 w-5 text-muted-foreground" />
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-muted-foreground">Race</p>
-                        <p className="text-base font-semibold">
-                          {capitalizeFirst(currentUser.race)}
-                        </p>
-                      </div>
-                    </div>
-                  )}
 
-                  {/* Marital Status */}
-                  {currentUser.maritalStatus && (
-                    <div className="flex items-start gap-3">
-                      <Heart className="mt-0.5 h-5 w-5 text-muted-foreground" />
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-muted-foreground">Marital Status</p>
-                        <p className="text-base font-semibold">
-                          {capitalizeFirst(currentUser.maritalStatus)}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Veteran Status */}
-                  {currentUser.veteranStatus && (
-                    <div className="flex items-start gap-3">
-                      <Flag className="mt-0.5 h-5 w-5 text-muted-foreground" />
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-muted-foreground">Veteran Status</p>
-                        <Badge
-                          variant={
-                            currentUser.veteranStatus === 'veteran' ? 'default' : 'secondary'
-                          }
-                        >
-                          {capitalizeFirst(currentUser.veteranStatus)}
-                        </Badge>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Disability Status */}
-                  {currentUser.disabilityStatus && (
-                    <div className="flex items-start gap-3">
-                      <Activity className="mt-0.5 h-5 w-5 text-muted-foreground" />
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-muted-foreground">
-                          Disability Status
-                        </p>
-                        <Badge
-                          variant={currentUser.disabilityStatus === 'yes' ? 'default' : 'secondary'}
-                        >
-                          {capitalizeFirst(currentUser.disabilityStatus)}
-                        </Badge>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Service User Roles */}
-                  {currentUser.serviceUserRole && currentUser.serviceUserRole.length > 0 && (
-                    <div className="flex items-start gap-3">
-                      <Shield className="mt-0.5 h-5 w-5 text-muted-foreground" />
-                      <div className="flex-1">
-                        <p className="mb-2 text-sm font-medium text-muted-foreground">
-                          Service User Roles
-                        </p>
-                        <div className="flex flex-wrap gap-2">
-                          {currentUser.serviceUserRole.map((role: string) => (
-                            <Badge key={role} variant="outline">
-                              {capitalizeFirst(role)}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <Separator />
-
-              {/* Residence Information */}
-              <div>
-                <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                  <Home className="h-4 w-4" />
-                  Residence History
-                </h3>
-                <div className="space-y-4 pl-6">
-                  {/* Current Residence */}
-                  {currentUser.residence?.current && (
-                    <div className="flex items-start gap-3">
-                      <Home className="mt-0.5 h-5 w-5 text-muted-foreground" />
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-muted-foreground">
-                          Current Residence
-                        </p>
-                        <p className="text-base font-semibold">{currentUser.residence.current}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Last Residence */}
-                  {currentUser.residence?.last && (
-                    <div className="flex items-start gap-3">
-                      <Home className="mt-0.5 h-5 w-5 text-muted-foreground" />
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-muted-foreground">Last Residence</p>
-                        <p className="text-base font-semibold">{currentUser.residence.last}</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <Separator />
-
-              {/* Income Information */}
-              <div>
-                <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                  <DollarSign className="h-4 w-4" />
-                  Income History
-                </h3>
-                <div className="space-y-4 pl-6">
-                  {/* Current Income */}
-                  {currentUser.income?.current && (
-                    <div className="flex items-start gap-3">
-                      <DollarSign className="mt-0.5 h-5 w-5 text-muted-foreground" />
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-muted-foreground">Current Income</p>
-                        <p className="text-base font-semibold">{currentUser.income.current}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Last Income */}
-                  {currentUser.income?.last && (
-                    <div className="flex items-start gap-3">
-                      <DollarSign className="mt-0.5 h-5 w-5 text-muted-foreground" />
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-muted-foreground">Last Income</p>
-                        <p className="text-base font-semibold">{currentUser.income.last}</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </>
-          )}
 
           {/* Account Information Section - Only show if timestamps exist */}
           {(currentUser.createdAt || currentUser.updatedAt) && (
