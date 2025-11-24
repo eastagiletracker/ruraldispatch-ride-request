@@ -27,12 +27,13 @@ interface TemplateData {
 }
 
 /**
- * Format date/time for SMS messages
+ * Format date/time for SMS messages (America/New_York timezone)
  */
 function formatDateTime(dateTime: Date | string | null | undefined): string {
   if (!dateTime) return 'TBD';
   const date = new Date(dateTime);
   return date.toLocaleString('en-US', {
+    timeZone: 'America/New_York',
     month: 'numeric',
     day: 'numeric',
     hour: 'numeric',

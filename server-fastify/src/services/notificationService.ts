@@ -74,11 +74,20 @@ export class NotificationService {
     vehicle: Vehicle | null
   ): Promise<SMSResult> {
     const vehicleInfo = vehicle ? `Vehicle: ${vehicle.displayName}` : 'Vehicle: TBD';
+    const pickupTime = new Date(ride.pickupRequestedTime).toLocaleString('en-US', {
+      timeZone: 'America/New_York',
+      month: 'numeric',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
     const message = `Your ride has been accepted!
 Driver: ${driver.fullName}
 ${vehicleInfo}
 Pickup: ${ride.pickupAddress}
-Time: ${new Date(ride.pickupRequestedTime).toLocaleString()}
+Time: ${pickupTime}
 Questions? Reply to this message.`;
 
     return await this.sendSMS(rider.phone, message);
