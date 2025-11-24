@@ -106,6 +106,15 @@ export default function Search<T extends SearchableElement>({
     }
   };
 
+  // Trigger search when searchTerm changes
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      performSearch(searchTerm);
+    }, 300); // Debounce for 300ms
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm, performSearch]);
+
   return (
     <div className="relative w-full" ref={dropdownRef}>
       <label htmlFor="search-input" className="mb-2 block text-sm font-medium text-gray-700">
