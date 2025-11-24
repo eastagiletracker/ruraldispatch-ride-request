@@ -34,7 +34,7 @@ interface RideRequestData {
   driverUuid?: string;
   vehicleUuid?: string;
   driver?: Array<{ uuid: string; fullName: string }>;
-  vehicle?: Array<{ uuid: string; model?: string; displayName?: string }>;
+  vehicle?: { uuid: string; model?: string; displayName?: string }; // Object, not array
   // Legacy fallback fields for backward compatibility
   riderName?: string;
   serviceUserName?: string;
@@ -88,11 +88,12 @@ export default function AssignDriver({ selectedRideRequestId, cancelFn }: Assign
       }
 
       // Pre-populate existing vehicle assignment
-      if (rideRequest.vehicle && rideRequest.vehicle.length > 0) {
+      // Note: vehicle is an object, not an array (unlike driver which is an array)
+      if (rideRequest.vehicle && typeof rideRequest.vehicle === 'object') {
         setSelectedVehicle({
-          uuid: rideRequest.vehicle[0].uuid,
-          model: rideRequest.vehicle[0].model,
-          displayName: rideRequest.vehicle[0].displayName,
+          uuid: rideRequest.vehicle.uuid,
+          model: rideRequest.vehicle.model,
+          displayName: rideRequest.vehicle.displayName,
         });
       }
 
@@ -437,7 +438,7 @@ export default function AssignDriver({ selectedRideRequestId, cancelFn }: Assign
                 Choose an available driver for this ride
               </p>
             </div>
-            <DriverSearch onDriverSelect={setSelectedDriver} />
+            <DriverSearch onDriverSelect={setSelectedDriver} selectedDriver={selectedDriver} />
             {selectedDriver && (
               <div className="flex items-center gap-2">
                 <Badge variant="default" className="bg-green-600">
@@ -459,7 +460,10 @@ export default function AssignDriver({ selectedRideRequestId, cancelFn }: Assign
                 Choose an available vehicle for this ride
               </p>
             </div>
-            <VehicleSearch onVehicleSelect={setSelectedVehicle} />
+            <VehicleSearch
+              onVehicleSelect={setSelectedVehicle}
+              selectedVehicle={selectedVehicle}
+            />
             {selectedVehicle && (
               <div className="flex items-center gap-2">
                 <Badge variant="default" className="bg-green-600">

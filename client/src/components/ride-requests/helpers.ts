@@ -1,3 +1,8 @@
+// Helper to get rider phone with fallback to riderPhone or serviceUserPhone
+export const getRiderPhone = (ride: RideRequest) => {
+  const rider = getRider(ride);
+  return rider?.phone || ride?.riderPhone || ride?.serviceUserPhone || 'N/A';
+};
 import type { RideRequest } from './types';
 
 // Helpers to guard optional rider/driver

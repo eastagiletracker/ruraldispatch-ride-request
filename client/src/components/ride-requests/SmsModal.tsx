@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import SMSConversationModal from '../SMSConversationModal';
-import { getDriver, getRider } from './helpers';
+import { getDriver, getRider, getRiderName, getRiderPhone } from './helpers';
 import type { RideRequest } from './types';
 
 interface SmsModalProps {
@@ -35,12 +35,12 @@ export function SmsModal({ isOpen, onClose, ride }: SmsModalProps) {
             <div className="mt-2 flex items-center gap-4 text-sm">
               <span className="flex items-center gap-1.5 font-medium">
                 <User className="h-4 w-4" />
-                {rider?.fullName || 'Unknown'}
+                {getRiderName(ride)}
               </span>
               <Separator orientation="vertical" className="h-4" />
               <span className="flex items-center gap-1.5">
                 <Phone className="h-4 w-4" />
-                {rider?.phone || 'N/A'}
+                {getRiderPhone(ride)}
               </span>
             </div>
           </DialogDescription>
@@ -48,9 +48,9 @@ export function SmsModal({ isOpen, onClose, ride }: SmsModalProps) {
         <div className="flex-1 overflow-hidden">
           <SMSConversationModal
             rideUuid={ride.uuid}
-            riderPhone={rider?.phone || ''}
+            riderPhone={getRiderPhone(ride)}
             driverPhone={driver?.mobilePhone || ''}
-            riderName={rider?.fullName || ''}
+            riderName={getRiderName(ride)}
           />
         </div>
       </DialogContent>
