@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import axios from 'axios';
+import { getApiUrl } from '@/lib/api';
 
 const SMSOptOut = () => {
   const [searchParams] = useSearchParams();
@@ -20,12 +20,20 @@ const SMSOptOut = () => {
     setLoading(true);
     try {
       // Record opt-out in database
-      await axios.post('/api/users/sms-consent', {
-        phoneNumber,
-        consentGiven: false,
-        timestamp: new Date().toISOString(),
-        ipAddress: window.location.hostname
+      const response = await fetch(getApiUrl('/api/users/sms-consent'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phoneNumber,
+          consentGiven: false,
+          timestamp: new Date().toISOString(),
+          ipAddress: window.location.hostname,
+        }),
       });
+
+      if (!response.ok) {
+        throw new Error('Failed to record opt-out');
+      }
 
       setSuccess(true);
     } catch (error) {
@@ -47,9 +55,7 @@ const SMSOptOut = () => {
           {/* Success Header */}
           <div className="bg-gradient-to-r from-gray-600 to-gray-700 px-8 py-12 text-center">
             <div className="text-6xl mb-4">✓</div>
-            <h1 className="text-3xl font-bold text-white mb-2">
-              You've Been Unsubscribed
-            </h1>
+            <h1 className="text-3xl font-bold text-white mb-2">You've Been Unsubscribed</h1>
             <p className="text-gray-200 text-lg">
               You will no longer receive SMS notifications from SWARM LLC
             </p>
@@ -69,20 +75,18 @@ const SMSOptOut = () => {
               </p>
               <ul className="ml-6 space-y-2 list-disc">
                 <li>You will NOT receive ride confirmation messages</li>
-              <li>You will NOT receive driver update notifications</li>
-              <li>You will NOT receive ETA or status updates via SMS</li>
-              <li>You can still use SWARM LLC services normally</li>
-              <li>You'll need to check the app/website for ride updates</li>
-            </ul>
+                <li>You will NOT receive driver update notifications</li>
+                <li>You will NOT receive ETA or status updates via SMS</li>
+                <li>You can still use SWARM LLC services normally</li>
+                <li>You'll need to check the app/website for ride updates</li>
+              </ul>
             </div>
 
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-              <p className="text-blue-800 text-center font-semibold mb-3">
-                Want to opt back in?
-              </p>
+              <p className="text-blue-800 text-center font-semibold mb-3">Want to opt back in?</p>
               <p className="text-sm text-gray-700 text-center mb-4">
-                You can re-enable SMS notifications at any time by replying <strong>START</strong> to 
-                any previous message, or by clicking the button below.
+                You can re-enable SMS notifications at any time by replying <strong>START</strong>{' '}
+                to any previous message, or by clicking the button below.
               </p>
               <button
                 onClick={handleOptBackIn}
@@ -104,9 +108,7 @@ const SMSOptOut = () => {
 
           {/* Footer */}
           <div className="bg-gray-50 px-8 py-4 border-t border-gray-200">
-            <p className="text-xs text-gray-500 text-center">
-              Unsubscribed on: {timestamp}
-            </p>
+            <p className="text-xs text-gray-500 text-center">Unsubscribed on: {timestamp}</p>
           </div>
         </div>
       </div>
@@ -119,34 +121,27 @@ const SMSOptOut = () => {
         {/* Header */}
         <div className="bg-gradient-to-r from-red-600 to-orange-600 px-8 py-12 text-center">
           <div className="text-6xl mb-4">🛑</div>
-          <h1 className="text-3xl font-bold text-white mb-2">
-            Unsubscribe from SMS Notifications
-          </h1>
-          <p className="text-red-100 text-lg">
-            We're sorry to see you go
-          </p>
+          <h1 className="text-3xl font-bold text-white mb-2">Unsubscribe from SMS Notifications</h1>
+          <p className="text-red-100 text-lg">We're sorry to see you go</p>
         </div>
 
         {/* Content */}
         <div className="px-8 py-8 space-y-6">
           <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
             <p className="text-yellow-800">
-              <strong>⚠️ Important:</strong> If you unsubscribe, you will no longer receive SMS 
+              <strong>⚠️ Important:</strong> If you unsubscribe, you will no longer receive SMS
               notifications about your rides, including driver updates and arrival notifications.
             </p>
           </div>
-
           <div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-3">
-              What You'll Miss
-            </h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-3">What You'll Miss</h2>
             <ul className="space-y-2">
               {[
                 'Real-time ride confirmations',
                 'Driver assignment notifications',
                 'ETA and arrival updates',
                 'Ride status changes',
-                'Important service announcements'
+                'Important service announcements',
               ].map((item, idx) => (
                 <li key={idx} className="flex items-start">
                   <span className="text-red-500 mr-2">✗</span>
@@ -155,13 +150,13 @@ const SMSOptOut = () => {
               ))}
             </ul>
           </div>
-
-            <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mt-4">
-              <p className="text-blue-800">
-                <strong>Note:</strong> You can still use SWARM LLC services. You'll just need to check 
-                the app or website for ride updates instead of receiving SMS notifications.
-              </p>
-            </div>          {phoneNumber && (
+          <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mt-4">
+            <p className="text-blue-800">
+              <strong>Note:</strong> You can still use SWARM LLC services. You'll just need to check
+              the app or website for ride updates instead of receiving SMS notifications.
+            </p>
+          </div>{' '}
+          {phoneNumber && (
             <div className="bg-gray-50 rounded-lg p-4">
               <p className="text-sm text-gray-700 text-center">
                 Phone number: <strong>{phoneNumber}</strong>
@@ -203,13 +198,21 @@ const SMSOptOut = () => {
         {/* Footer */}
         <div className="bg-gray-50 px-8 py-4 border-t border-gray-200">
           <p className="text-sm text-center space-x-4">
-            <a href="/terms" className="text-blue-600 hover:underline">Terms of Service</a>
+            <a href="/terms" className="text-blue-600 hover:underline">
+              Terms of Service
+            </a>
             <span className="text-gray-400">|</span>
-            <a href="/privacy" className="text-blue-600 hover:underline">Privacy Policy</a>
+            <a href="/privacy" className="text-blue-600 hover:underline">
+              Privacy Policy
+            </a>
             <span className="text-gray-400">|</span>
-            <a href="/sms" className="text-blue-600 hover:underline">SMS Info</a>
+            <a href="/sms" className="text-blue-600 hover:underline">
+              SMS Info
+            </a>
             <span className="text-gray-400">|</span>
-            <a href="/sms-terms" className="text-blue-600 hover:underline">SMS Terms</a>
+            <a href="/sms-terms" className="text-blue-600 hover:underline">
+              SMS Terms
+            </a>
           </p>
         </div>
       </div>

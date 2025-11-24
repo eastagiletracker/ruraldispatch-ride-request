@@ -4,22 +4,26 @@
  * Adapted from: https://github.com/NiazMorshed2007/shadcn-address-autocomplete
  */
 
-import { useState, useRef, useEffect } from "react";
-import { MapPin, Pencil, X, Loader2, AlertCircle } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { AlertCircle, Loader2, MapPin, Pencil, X } from 'lucide-react';
+import { memo, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { Button } from '@/components/ui/button';
 import {
   Command,
   CommandEmpty,
   CommandGroup,
   CommandItem,
   CommandList,
-} from "@/components/ui/command";
-import { usePlacesAutocomplete } from "@/hooks/use-places-autocomplete";
-import { getPlaceDetails, parseAddressComponents } from "@/lib/places-api";
-import { AddressType, PartialAddressType, isValidAddress } from "@/schemas/address-schema";
-import { AddressDialog } from "./address-dialog";
-import { cn } from "@/lib/utils";
+} from '@/components/ui/command';
+import { Input } from '@/components/ui/input';
+import { usePlacesAutocomplete } from '@/hooks/use-places-autocomplete';
+import { getPlaceDetails, parseAddressComponents } from '@/lib/places-api';
+import { cn } from '@/lib/utils';
+import {
+  type AddressType,
+  isValidAddress,
+  type PartialAddressType,
+} from '@/schemas/address-schema';
+import { AddressDialog } from './address-dialog';
 
 export interface AddressAutocompleteProps {
   /**
@@ -86,22 +90,21 @@ export interface AddressAutocompleteProps {
   className?: string;
 }
 
-export function AddressAutocomplete({
+const AddressAutocompleteComponent: React.FC<AddressAutocompleteProps> = ({
   value,
   onChange,
-  placeholder = "Search for an address...",
+  placeholder = 'Search for an address...',
   required = false,
   error = false,
   errorMessage,
   disabled = false,
-  includedRegionCodes = ["US"],
+  includedRegionCodes = ['US'],
   locationBias,
   label,
   className,
-}: AddressAutocompleteProps) {
-  console.log('🔷 [AddressAutocomplete] Component rendered with value:', value);
-
-  const [selectedAddress, setSelectedAddress] = useState<AddressType | null>(value || null);
+}) => {
+  // Use value prop directly - fully controlled component
+  const selectedAddress = value;
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
   const [detailsError, setDetailsError] = useState<string | null>(null);
@@ -110,6 +113,7 @@ export function AddressAutocomplete({
 
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const inputId = useId();
 
   const {
     value: inputValue,
@@ -127,18 +131,6 @@ export function AddressAutocomplete({
     debounce: 500,
   });
 
-  // Sync external value changes
-  useEffect(() => {
-    console.log('🟡 [AddressAutocomplete] External value changed:', value);
-    setSelectedAddress(value || null);
-  }, [value]);
-
-  // Debug: Log when selectedAddress changes
-  useEffect(() => {
-    console.log('🟢 [AddressAutocomplete] selectedAddress state updated:', selectedAddress);
-    console.log('🟢 [AddressAutocomplete] isValidAddress:', selectedAddress ? isValidAddress(selectedAddress) : 'null');
-  }, [selectedAddress]);
-
   // Handle clicks outside to close suggestions
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -147,8 +139,8 @@ export function AddressAutocomplete({
       }
     }
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -160,87 +152,66 @@ export function AddressAutocomplete({
 
     // If user clears the input, clear the selected address
     if (!newValue) {
-      setSelectedAddress(null);
       onChange(null);
       setHasUserTyped(false);
     }
   };
 
   const handleSelectPrediction = async (placeId: string) => {
-    console.log('🔵 [AddressAutocomplete] handleSelectPrediction called with placeId:', placeId);
     setIsLoadingDetails(true);
     setDetailsError(null);
     setShowSuggestions(false);
 
     try {
       // Fetch place details using the same session token
-      console.log('🔵 [AddressAutocomplete] Fetching place details...');
       const details = await getPlaceDetails(placeId, getSessionToken());
-      console.log('🔵 [AddressAutocomplete] Place details received:', details);
 
       // Parse address components
       const components = parseAddressComponents(details.addressComponents);
-      console.log('🔵 [AddressAutocomplete] Parsed components:', components);
 
       const address: AddressType = {
         address1: components.address1 || undefined,
         address2: components.address2,
-        city: components.city || "",
-        region: components.state || "",
+        city: components.city || '',
+        region: components.state || '',
         postalCode: components.postalCode || undefined,
-        country: components.country || "",
+        country: components.country || '',
         formattedAddress: details.formattedAddress,
         lat: details.location.latitude,
         lng: details.location.longitude,
       };
 
-      console.log('🔵 [AddressAutocomplete] Created address object:', address);
-
       // Check if address is incomplete (missing street address or postal code)
       const isIncomplete = !address.address1 || !address.postalCode;
 
-      if (isIncomplete) {
-        console.log('⚠️ [AddressAutocomplete] Incomplete address detected - opening dialog for completion');
-        console.log('⚠️ [AddressAutocomplete] Missing:', {
-          address1: !address.address1,
-          postalCode: !address.postalCode
-        });
-      }
-
-      console.log('🔵 [AddressAutocomplete] Calling setSelectedAddress...');
-      setSelectedAddress(address);
-      console.log('🔵 [AddressAutocomplete] Calling onChange callback with address...');
+      // Call onChange to update parent state
       onChange(address);
-      console.log('🔵 [AddressAutocomplete] Clearing input value...');
-      setInputValue("");
+      setInputValue('');
       setHasUserTyped(false);
       clearPredictions();
 
       // Refresh session token after successful selection
       refreshSessionToken();
-      console.log('✅ [AddressAutocomplete] Address selection complete!');
 
       // Auto-open dialog if address is incomplete (city/state only)
       if (isIncomplete) {
-        console.log('🔵 [AddressAutocomplete] Auto-opening dialog for incomplete address');
         setTimeout(() => {
           setDialogOpen(true);
         }, 100); // Small delay to ensure state updates
       }
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : "Failed to get address details";
+      const errorMsg = err instanceof Error ? err.message : 'Failed to get address details';
       setDetailsError(errorMsg);
-      console.error('❌ [AddressAutocomplete] Error fetching place details:', err);
     } finally {
       setIsLoadingDetails(false);
     }
   };
 
   const handleClear = () => {
-    console.log('🔴 [AddressAutocomplete] Clear button clicked');
-    setSelectedAddress(null);
+    // Clear the selected address
     onChange(null);
-    setInputValue("");
+
+    setInputValue('');
     setHasUserTyped(false);
     clearPredictions();
     setDetailsError(null);
@@ -248,85 +219,90 @@ export function AddressAutocomplete({
 
     // Refresh session token on dismissal
     refreshSessionToken();
-    console.log('✅ [AddressAutocomplete] Address cleared');
   };
 
   const handleSaveFromDialog = (address: AddressType) => {
-    console.log('🟣 [AddressAutocomplete] Dialog save called with:', address);
-    setSelectedAddress(address);
+    // Save the updated address
     onChange(address);
     setDialogOpen(false);
-    console.log('✅ [AddressAutocomplete] Dialog saved');
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Escape") {
+    if (e.key === 'Escape') {
       setShowSuggestions(false);
     }
   };
 
   const showValidationError = hasUserTyped && inputValue && predictions.length === 0 && !isLoading;
 
+  // Memoize validation check to prevent unnecessary re-renders
+  const addressIsValid = useMemo(() => {
+    return selectedAddress ? isValidAddress(selectedAddress) : false;
+  }, [selectedAddress]);
+
   return (
-    <div className={cn("space-y-2", className)} ref={containerRef}>
+    <div className={cn('space-y-2', className)} ref={containerRef}>
       {label && (
-        <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+        <label
+          htmlFor={inputId}
+          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+        >
           {label}
-          {required && <span className="text-destructive ml-1">*</span>}
+          {required && <span className="ml-1 text-destructive">*</span>}
         </label>
       )}
 
       {/* Selected Address Display */}
-      {selectedAddress && isValidAddress(selectedAddress) ? (
+      {selectedAddress && addressIsValid ? (
         <div>
           <div
             className={cn(
-              "flex items-center gap-2 p-1.5 border rounded-md",
+              'flex items-center gap-2 p-1.5 border rounded-md',
               // Highlight incomplete addresses
               !selectedAddress.address1 || !selectedAddress.postalCode
-                ? "bg-yellow-50 border-yellow-300 dark:bg-yellow-950 dark:border-yellow-700"
-                : "bg-muted/50",
-              error && "border-destructive"
+                ? 'bg-yellow-50 border-yellow-300 dark:bg-yellow-950 dark:border-yellow-700'
+                : 'bg-muted/50',
+              error && 'border-destructive'
             )}
           >
-            <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm truncate">{selectedAddress.formattedAddress}</p>
+            <MapPin className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm">{selectedAddress.formattedAddress}</p>
               {(!selectedAddress.address1 || !selectedAddress.postalCode) && (
-                <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
+                <p className="mt-1 text-xs text-yellow-700 dark:text-yellow-300">
                   ⚠️ Incomplete address - please add street address
                 </p>
               )}
             </div>
             <div className="flex gap-1">
-            <AddressDialog
-              address={selectedAddress}
-              onSave={handleSaveFromDialog}
-              open={dialogOpen}
-              onOpenChange={setDialogOpen}
-            >
+              <AddressDialog
+                address={selectedAddress}
+                onSave={handleSaveFromDialog}
+                open={dialogOpen}
+                onOpenChange={setDialogOpen}
+              >
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  disabled={disabled}
+                  title="Edit address details"
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+              </AddressDialog>
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="h-8 w-8 p-0"
+                className="h-8 w-8 p-0 text-destructive hover:text-destructive"
                 disabled={disabled}
-                title="Edit address details"
+                onClick={handleClear}
+                title="Clear address"
               >
-                <Pencil className="h-4 w-4" />
+                <X className="h-4 w-4" />
               </Button>
-            </AddressDialog>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-              disabled={disabled}
-              onClick={handleClear}
-              title="Clear address"
-            >
-              <X className="h-4 w-4" />
-            </Button>
             </div>
           </div>
         </div>
@@ -335,6 +311,7 @@ export function AddressAutocomplete({
           {/* Search Input */}
           <div className="relative">
             <Input
+              id={inputId}
               ref={inputRef}
               type="text"
               value={inputValue}
@@ -344,8 +321,8 @@ export function AddressAutocomplete({
               placeholder={placeholder}
               disabled={disabled || isLoadingDetails}
               className={cn(
-                error && "border-destructive",
-                (isLoading || isLoadingDetails) && "pr-10"
+                error && 'border-destructive',
+                (isLoading || isLoadingDetails) && 'pr-10'
               )}
             />
             {(isLoading || isLoadingDetails) && (
@@ -357,8 +334,8 @@ export function AddressAutocomplete({
 
           {/* Autocomplete Suggestions */}
           {showSuggestions && inputValue && predictions.length > 0 && (
-            <div className="absolute z-50 w-full mt-1">
-              <Command className="border shadow-md rounded-md bg-popover">
+            <div className="absolute z-50 mt-1 w-full">
+              <Command className="rounded-md border bg-popover shadow-md">
                 <CommandList>
                   <CommandGroup>
                     {predictions.map((prediction, index) => {
@@ -394,8 +371,8 @@ export function AddressAutocomplete({
 
           {/* No Results Message */}
           {showSuggestions && inputValue && predictions.length === 0 && !isLoading && (
-            <div className="absolute z-50 w-full mt-1">
-              <Command className="border shadow-md rounded-md bg-popover">
+            <div className="absolute z-50 mt-1 w-full">
+              <Command className="rounded-md border bg-popover shadow-md">
                 <CommandEmpty>No addresses found. Try a different search.</CommandEmpty>
               </Command>
             </div>
@@ -419,6 +396,21 @@ export function AddressAutocomplete({
       )}
     </div>
   );
-}
+};
+
+// Memoize component to prevent unnecessary re-renders
+export const AddressAutocomplete = memo(AddressAutocompleteComponent, (prevProps, nextProps) => {
+  // Custom comparison: only re-render if these props actually changed
+  return (
+    JSON.stringify(prevProps.value) === JSON.stringify(nextProps.value) &&
+    prevProps.onChange === nextProps.onChange &&
+    prevProps.error === nextProps.error &&
+    prevProps.errorMessage === nextProps.errorMessage &&
+    prevProps.disabled === nextProps.disabled &&
+    prevProps.placeholder === nextProps.placeholder
+  );
+});
+
+AddressAutocomplete.displayName = 'AddressAutocomplete';
 
 export type { AddressType, PartialAddressType };

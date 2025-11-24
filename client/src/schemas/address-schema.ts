@@ -3,7 +3,7 @@
  * Adapted from: https://github.com/NiazMorshed2007/shadcn-address-autocomplete
  */
 
-import { z } from "zod";
+import { z } from 'zod';
 
 /**
  * Complete address schema with all required fields
@@ -13,13 +13,13 @@ import { z } from "zod";
 export const AddressSchema = z.object({
   address1: z.string().optional(),
   address2: z.string().optional(),
-  formattedAddress: z.string().min(1, "Please select a complete address"),
-  city: z.string().min(1, "City is required"),
-  region: z.string().min(1, "State/Region is required"),
+  formattedAddress: z.string().min(1, 'Please select a complete address'),
+  city: z.string().min(1, 'City is required'),
+  region: z.string().min(1, 'State/Region is required'),
   postalCode: z.string().optional(),
-  country: z.string().min(1, "Country is required"),
-  lat: z.number().min(-90, "Invalid latitude").max(90, "Invalid latitude"),
-  lng: z.number().min(-180, "Invalid longitude").max(180, "Invalid longitude"),
+  country: z.string().min(1, 'Country is required'),
+  lat: z.number().min(-90, 'Invalid latitude').max(90, 'Invalid latitude'),
+  lng: z.number().min(-180, 'Invalid longitude').max(180, 'Invalid longitude'),
 });
 
 export type AddressType = z.infer<typeof AddressSchema>;
@@ -45,8 +45,8 @@ export const PartialAddressSchema = z.object({
   region: z.string().optional(),
   postalCode: z.string().optional(),
   country: z.string().optional(),
-  lat: z.number().min(-90, "Invalid latitude").max(90, "Invalid latitude").optional(),
-  lng: z.number().min(-180, "Invalid longitude").max(180, "Invalid longitude").optional(),
+  lat: z.number().min(-90, 'Invalid latitude').max(90, 'Invalid latitude').optional(),
+  lng: z.number().min(-180, 'Invalid longitude').max(180, 'Invalid longitude').optional(),
 });
 
 export type PartialAddressType = z.infer<typeof PartialAddressSchema>;
@@ -59,7 +59,7 @@ export function createDynamicAddressSchema(address: PartialAddressType) {
   const schemaFields: Record<string, z.ZodTypeAny> = {};
 
   if (address.address1 !== undefined) {
-    schemaFields.address1 = z.string().min(1, "Address line 1 is required");
+    schemaFields.address1 = z.string().min(1, 'Address line 1 is required');
   }
 
   if (address.address2 !== undefined) {
@@ -67,31 +67,31 @@ export function createDynamicAddressSchema(address: PartialAddressType) {
   }
 
   if (address.formattedAddress !== undefined) {
-    schemaFields.formattedAddress = z.string().min(1, "Formatted address is required");
+    schemaFields.formattedAddress = z.string().min(1, 'Formatted address is required');
   }
 
   if (address.city !== undefined) {
-    schemaFields.city = z.string().min(1, "City is required");
+    schemaFields.city = z.string().min(1, 'City is required');
   }
 
   if (address.region !== undefined) {
-    schemaFields.region = z.string().min(1, "State/Region is required");
+    schemaFields.region = z.string().min(1, 'State/Region is required');
   }
 
   if (address.postalCode !== undefined) {
-    schemaFields.postalCode = z.string().min(1, "Postal code is required");
+    schemaFields.postalCode = z.string().min(1, 'Postal code is required');
   }
 
   if (address.country !== undefined) {
-    schemaFields.country = z.string().min(1, "Country is required");
+    schemaFields.country = z.string().min(1, 'Country is required');
   }
 
   if (address.lat !== undefined) {
-    schemaFields.lat = z.number().min(-90, "Invalid latitude").max(90, "Invalid latitude");
+    schemaFields.lat = z.number().min(-90, 'Invalid latitude').max(90, 'Invalid latitude');
   }
 
   if (address.lng !== undefined) {
-    schemaFields.lng = z.number().min(-180, "Invalid longitude").max(180, "Invalid longitude");
+    schemaFields.lng = z.number().min(-180, 'Invalid longitude').max(180, 'Invalid longitude');
   }
 
   return z.object(schemaFields);

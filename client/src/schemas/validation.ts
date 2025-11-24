@@ -4,57 +4,53 @@
  * Shared schemas are defined in /shared/schemas for reuse in backend
  */
 
-import { z } from 'zod/v4';
+import type { z } from 'zod/v4';
 
 // Re-export all shared schemas and types
 export {
-  // Auth
-  signInSchema,
-  type SignInFormData,
-
-  // User
-  userSchema,
-  userFormSchema,
-  type User,
-  type UserFormData,
-  RaceOptions,
-  MaritalStatusOptions,
-  VeteranStatusOptions,
-  DisabilityStatusOptions,
-  ServiceUserRoles,
-  type RaceOption,
-  type MaritalStatusOption,
-  type VeteranStatusOption,
-  type DisabilityStatusOption,
-  type ServiceUserRole,
-
-  // Service Provider
-  serviceProviderSchema,
-  serviceProviderFormSchema,
-  type ServiceProvider,
-  type ServiceProviderFormData,
-  Organizations,
-  ServiceProviderRoles,
-  Specializations,
-  type Organization,
-  type ServiceProviderRole,
-  type Specialization,
-
-  // Vehicle
-  vehicleSchema,
-  vehicleFormSchema,
-  type Vehicle,
-  type VehicleFormData,
-  AccessibilityNeeds,
   type AccessibilityNeed,
-
-  // Ride Request
-  rideRequestSchema,
-  rideRequestFormSchema,
+  AccessibilityNeeds,
+  type DisabilityStatusOption,
+  DisabilityStatusOptions,
+  type MaritalStatusOption,
+  MaritalStatusOptions,
+  type Organization,
+  Organizations,
+  type RaceOption,
+  RaceOptions,
   type RideRequest,
   type RideRequestFormData,
+  type RideRequestType,
   RideRequestTypes,
-  type RideRequestType
+  rideRequestFormSchema,
+  // Ride Request
+  rideRequestSchema,
+  type ServiceProvider,
+  type ServiceProviderFormData,
+  type ServiceProviderRole,
+  ServiceProviderRoles,
+  type ServiceUserRole,
+  ServiceUserRoles,
+  type SignInFormData,
+  type Specialization,
+  Specializations,
+  serviceProviderFormSchema,
+  // Service Provider
+  serviceProviderSchema,
+  // Auth
+  signInSchema,
+  type User,
+  type UserFormData,
+  userFormSchema,
+  // User
+  userSchema,
+  type Vehicle,
+  type VehicleFormData,
+  type VeteranStatusOption,
+  VeteranStatusOptions,
+  vehicleFormSchema,
+  // Vehicle
+  vehicleSchema,
 } from '@shared/schemas';
 
 /**

@@ -1,5 +1,5 @@
 // Import types from shared schemas
-import type { User, ServiceProvider, Vehicle, RideRequestFormData } from '@shared/schemas';
+import type { ServiceProvider, User, Vehicle } from '@shared/schemas';
 
 // Form error types
 export type FormErrors<T> = {

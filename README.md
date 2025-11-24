@@ -1,6 +1,6 @@
 # Rural Dispatch - Ride Request MVP
 
-> A full-stack ride-sharing management application with React/TypeScript frontend, Node.js/Express backend, and MongoDB database.
+> A full-stack ride-sharing management application with React/TypeScript frontend, Node.js/Express backend, and PostgreSQL database with Prisma ORM.
 
 ## Features
 
@@ -16,25 +16,27 @@
 ## Quick Start
 
 ### Prerequisites
-- **Node.js** v18.0.0 or higher
-- **npm** v9.0.0 or higher
-- **MongoDB** (local or Atlas)
+- **Bun** v1.0.0 or higher
+- **PostgreSQL** v14.0 or higher (local or hosted)
 
 ### Installation
 
 ```bash
 # Install all dependencies
-npm run install-all
+bun install
 
 # Set up environment variables
 cp .env.example .env
-# Edit .env with your MongoDB URI and other credentials
+# Edit .env with your PostgreSQL DATABASE_URL and other credentials
+
+# Run database migrations
+bunx prisma migrate dev
 
 # Seed demo data
-npm run seed:system-users
+bun run seed
 
 # Start development server
-npm run dev
+bun run dev
 ```
 
 ### Access the Application
@@ -84,8 +86,8 @@ For detailed setup, development, and deployment instructions:
 - React Router v6
 
 ### Backend
-- Node.js + Express
-- MongoDB (native driver)
+- Node.js + Express (ESM modules)
+- PostgreSQL + Prisma ORM v7
 - bcryptjs (authentication)
 - SMS: Twilio (primary) + Vonage (fallback)
 
@@ -200,20 +202,19 @@ ride-request-mvp-johan/
 
 ```bash
 # Development
-npm run dev              # Run client + server concurrently
-npm run client           # Run client only (port 3001)
-npm run server           # Run server only (port 5000)
+bun run dev              # Run client + server concurrently
+bun run client           # Run client only (port 3001)
+bun run server           # Run server only (port 5000)
 
 # Database
-npm run seed             # Seed all demo data
-npm run seed:system-users   # Create demo user accounts
-npm run seed:users       # Seed service users
-npm run seed:providers   # Seed drivers
-npm run seed:vehicles    # Seed vehicles
+bunx prisma migrate dev  # Create and apply database migrations
+bunx prisma generate     # Generate Prisma Client
+bunx prisma studio       # Open Prisma Studio (database GUI)
+bun run seed             # Seed all demo data
 
 # Production
-npm run build            # Build client for production
-npm start                # Start production server
+bun run build            # Build client for production
+bun start                # Start production server
 ```
 
 ---
@@ -228,18 +229,21 @@ PORT=5001
 # Update client/vite.config.ts proxy target to match
 ```
 
-### MongoDB Connection Failed
+### PostgreSQL Connection Failed
 ```bash
 # Verify connection string in .env
-MONGODB_URI=mongodb://localhost:27017/ride-request-app
-# OR for Atlas:
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/ride-request-app
+DATABASE_URL=postgresql://username:password@localhost:5432/ride_request_app
+# OR for hosted PostgreSQL:
+DATABASE_URL=postgresql://username:password@host:5432/database_name
 ```
 
 ### TypeScript Errors
 ```bash
 # Reinstall dependencies
-npm run install-all
+bun install
+
+# Regenerate Prisma Client
+bunx prisma generate
 
 # Restart TypeScript server in VS Code
 # Cmd+Shift+P → "TypeScript: Restart TS Server"

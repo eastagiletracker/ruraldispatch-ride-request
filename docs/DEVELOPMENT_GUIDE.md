@@ -18,27 +18,34 @@
 
 ### Required Software
 ```bash
-# Node.js (v18.0.0 or higher)
-node --version  # Should be >= 18.0.0
-
-# npm (v9.0.0 or higher)
-npm --version
+# Bun (v1.0.0 or higher)
+bun --version  # Should be >= 1.0.0
 
 # Git
 git --version
 
-# MongoDB (local) OR MongoDB Atlas account
-mongod --version  # Optional if using Atlas
+# PostgreSQL (v14.0 or higher)
+psql --version  # Should be >= 14.0
+```
+
+### Install Bun
+```bash
+# macOS, Linux, WSL
+curl -fsSL https://bun.sh/install | bash
+
+# Windows (PowerShell)
+powershell -c "irm bun.sh/install.ps1 | iex"
 ```
 
 ### Recommended Tools
 - **VS Code** with extensions:
   - ESLint
   - Prettier
+  - Prisma (official extension)
   - TypeScript and JavaScript Language Features
   - Tailwind CSS IntelliSense
 - **Postman** or **Insomnia** for API testing
-- **MongoDB Compass** for database inspection
+- **Prisma Studio** (included with Prisma) or **pgAdmin** for database inspection
 - **ngrok** for webhook testing
 
 ---
@@ -55,21 +62,18 @@ cd ride-request-mvp-johan
 ### 2. Install Dependencies
 
 ```bash
-# Install all dependencies (root, client, shared)
-npm run install-all
-
-# Or install individually
-npm install          # Root dependencies
-cd client && npm install
-cd ../shared && npm install
+# Install all dependencies (uses workspaces)
+bun install
 ```
 
 ### 3. Verify Installation
 
 ```bash
-# Check if all packages installed correctly
-npm list --depth=0
-cd client && npm list --depth=0
+# Check Bun version
+bun --version
+
+# Check PostgreSQL connection
+psql --version
 ```
 
 ---
@@ -86,10 +90,10 @@ cp .env.example .env
 Edit `/ride-request-mvp-johan/.env`:
 
 ```bash
-# MongoDB Configuration
-MONGODB_URI=mongodb://localhost:27017/ride-request-app
-# OR for MongoDB Atlas:
-# MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/ride-request-app
+# PostgreSQL Configuration
+DATABASE_URL=postgresql://username:password@localhost:5432/ride_request_app
+# OR for hosted PostgreSQL (Railway, Render, Supabase, etc.):
+# DATABASE_URL=postgresql://username:password@host:5432/database_name
 
 # Server Configuration
 NODE_ENV=development
@@ -153,90 +157,94 @@ VITE_GOOGLE_MAPS_API_KEY=
 
 ## Database Setup
 
-### Option 1: Local MongoDB
+### Option 1: Local PostgreSQL
 
-#### Install MongoDB
+#### Install PostgreSQL
 ```bash
 # macOS (Homebrew)
-brew tap mongodb/brew
-brew install mongodb-community
-brew services start mongodb-community
+brew install postgresql@16
+brew services start postgresql@16
 
 # Ubuntu/Debian
-sudo apt-get install mongodb
-sudo systemctl start mongodb
-sudo systemctl enable mongodb
+sudo apt-get update
+sudo apt-get install postgresql postgresql-contrib
+sudo systemctl start postgresql
+sudo systemctl enable postgresql
 
 # Windows
-# Download from https://www.mongodb.com/try/download/community
+# Download from https://www.postgresql.org/download/windows/
 ```
 
-#### Verify MongoDB is Running
+#### Create Database
 ```bash
-# Check status
-brew services list | grep mongodb  # macOS
-sudo systemctl status mongodb      # Linux
+# Connect to PostgreSQL
+psql postgres
 
-# Connect to MongoDB shell
-mongosh
-# Or older versions:
-mongo
+# In psql shell:
+CREATE DATABASE ride_request_app;
+CREATE USER dev_user WITH PASSWORD 'your_password';
+GRANT ALL PRIVILEGES ON DATABASE ride_request_app TO dev_user;
 
-# In MongoDB shell:
-show dbs
-use ride-request-app
+# Exit psql
+\q
 ```
 
-### Option 2: MongoDB Atlas (Cloud)
+#### Update .env with connection string
+```bash
+DATABASE_URL=postgresql://dev_user:your_password@localhost:5432/ride_request_app
+```
 
-1. **Create Account**: [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
-2. **Create Cluster**:
-   - Choose Free tier (M0)
-   - Select region closest to you
-   - Name: `ride-request-cluster`
-3. **Create Database User**:
-   - Username: `dev-user`
-   - Password: Generate strong password
-   - Save credentials securely
-4. **Configure Network Access**:
-   - Add IP: `0.0.0.0/0` (allow from anywhere - development only)
-   - Or add your current IP
-5. **Get Connection String**:
-   - Click "Connect" → "Connect your application"
-   - Copy connection string
-   - Replace `<password>` with your user password
-   - Update `.env` with connection string
+### Option 2: Hosted PostgreSQL (Railway, Render, Supabase)
 
-### Seed Database
+#### Railway (Recommended)
+1. Sign up at [railway.app](https://railway.app)
+2. Create new project → Add PostgreSQL
+3. Copy `DATABASE_URL` from Variables tab
+4. Update `.env` with connection string
+
+#### Render
+1. Sign up at [render.com](https://render.com)
+2. Create new PostgreSQL database
+3. Copy Internal Database URL
+4. Update `.env` with connection string
+
+#### Supabase
+1. Sign up at [supabase.com](https://supabase.com)
+2. Create new project
+3. Go to Settings → Database → Connection String
+4. Copy and update `.env`
+
+### Run Migrations and Seed Database
 
 ```bash
-# Seed system users (admin, dispatcher, driver, case_manager)
-npm run seed:system-users
+# Generate Prisma Client
+bunx prisma generate
 
-# Seed all demo data
-npm run seed
+# Run database migrations
+bunx prisma migrate dev
 
-# Or seed individually
-npm run seed:users      # Service users (riders)
-npm run seed:providers  # Service providers (drivers)
-npm run seed:vehicles   # Vehicles
-npm run seed:rides      # Ride requests
+# Seed all demo data (system users, riders, drivers, vehicles, rides)
+bun run seed
+
+# Open Prisma Studio (database GUI)
+bunx prisma studio
 ```
 
 ### Verify Data
 
 ```bash
-# Using MongoDB shell
-mongosh "mongodb://localhost:27017/ride-request-app"
+# Using psql
+psql $DATABASE_URL
 
-# List collections
-show collections
+# In psql:
+\dt                    # List all tables
+SELECT * FROM "system_users";
+SELECT * FROM "users" LIMIT 5;
+SELECT * FROM "service_providers";
 
-# Check system users
-db['system-users'].find().pretty()
-
-# Check service users
-db.users.find().limit(5).pretty()
+# Using Prisma Studio (recommended)
+bunx prisma studio
+# Opens at http://localhost:5555
 ```
 
 ---
@@ -247,7 +255,7 @@ db.users.find().limit(5).pretty()
 
 ```bash
 # From root directory - runs both client and server
-npm run dev
+bun run dev
 
 # This starts:
 # - Server on http://localhost:5000
@@ -258,10 +266,10 @@ npm run dev
 
 ```bash
 # Terminal 1: Server only
-npm run server
+bun run server
 
 # Terminal 2: Client only
-npm run client
+bun run client
 ```
 
 ### Access the Application
@@ -290,13 +298,18 @@ ride-request-mvp-johan/
 │   │   ├── types/       # TypeScript types
 │   │   └── schemas/     # Zod schemas
 │   └── vite.config.ts
-├── server/              # Express backend
-│   ├── database/        # DB operations
-│   ├── models/          # Mongoose schemas
+├── server/              # Express backend (ESM)
+│   ├── database/        # Prisma operations
+│   ├── models/          # Data models
 │   ├── routes/          # API routes
 │   ├── services/        # Business logic
 │   ├── middleware/      # Express middleware
 │   └── constants/       # Status constants
+├── prisma/              # Prisma schema and migrations
+│   ├── schema.prisma    # Database schema
+│   ├── migrations/      # Migration files
+│   ├── seeds/           # Modular seed files
+│   └── seed.ts          # Main seed orchestrator
 ├── shared/              # Shared validation schemas
 │   └── schemas/
 └── docs/                # Documentation
@@ -331,13 +344,16 @@ Both client and server support hot reloading:
 
 ```bash
 # Format code (if Prettier is configured)
-npm run format
+bun run format
 
 # Lint code (if ESLint is configured)
-npm run lint
+bun run lint
 
 # TypeScript type checking
-cd client && npx tsc --noEmit
+cd client && bunx tsc --noEmit
+
+# Generate Prisma Client after schema changes
+bunx prisma generate
 ```
 
 ---
@@ -430,20 +446,24 @@ curl -X POST http://localhost:5000/api/riderequests \
 ### Database Testing
 
 ```bash
-# Connect to MongoDB
-mongosh "mongodb://localhost:27017/ride-request-app"
+# Open Prisma Studio (GUI - recommended)
+bunx prisma studio
+# Opens at http://localhost:5555
 
-# Useful queries
-db['system-users'].find({}, { username: 1, role: 1 })
-db.users.countDocuments()
-db['ride-requests'].find().sort({ createdAt: -1 }).limit(5)
-db.notifications.find({ rideUuid: "your-ride-uuid" })
+# Or use PostgreSQL shell
+psql $DATABASE_URL
 
-# Clear specific collection (careful!)
-db['ride-requests'].deleteMany({})
+# Useful queries (in psql)
+SELECT * FROM system_users;
+SELECT COUNT(*) FROM users;
+SELECT * FROM rides ORDER BY "createdAt" DESC LIMIT 5;
+SELECT * FROM notifications WHERE "rideUuid" = 'your-ride-uuid';
 
-# Reset database (re-run seeds)
-db.dropDatabase()
+# Clear specific table (careful!)
+TRUNCATE TABLE rides RESTART IDENTITY CASCADE;
+
+# Reset database (re-run migrations and seeds)
+bunx prisma migrate reset
 ```
 
 ---
@@ -461,17 +481,21 @@ PORT=5001
 # Also update client/vite.config.ts proxy target
 ```
 
-#### MongoDB Connection Failed
+#### PostgreSQL Connection Failed
 ```bash
-# Error: MongoServerError: Authentication failed
+# Error: P1001: Can't reach database server
 # Solutions:
-1. Check MONGODB_URI in .env
+1. Check DATABASE_URL in .env
 2. Verify username/password
-3. Check network access in Atlas
-4. Ensure MongoDB is running locally
+3. Ensure PostgreSQL is running locally
+4. Check firewall settings for hosted databases
 
 # Test connection
-mongosh "your-mongodb-uri"
+psql $DATABASE_URL
+
+# Check if PostgreSQL is running
+brew services list | grep postgresql  # macOS
+sudo systemctl status postgresql      # Linux
 ```
 
 #### Google Maps Not Loading
@@ -503,16 +527,18 @@ curl http://localhost:5000/api/notifications/provider-status | jq
 
 #### TypeScript Errors
 ```bash
-# Error: Property 'env' does not exist on type 'ImportMeta'
-# Solution: Already fixed in vite-env.d.ts
+# Error: Cannot find module '@prisma/client'
+# Solution: Generate Prisma Client
+bunx prisma generate
 
 # Run type checking
-cd client && npx tsc --noEmit
+cd client && bunx tsc --noEmit
 
 # If errors persist:
 1. Restart VS Code TypeScript server
-2. Delete node_modules and reinstall
+2. Delete node_modules and reinstall with `bun install`
 3. Check tsconfig.json paths
+4. Regenerate Prisma Client
 ```
 
 #### Hot Reload Not Working
@@ -542,19 +568,22 @@ app.use((req, res, next) => {
 #### Check Environment Variables
 ```bash
 # Server
-node -e "console.log(process.env.MONGODB_URI)"
+node -e "console.log(process.env.DATABASE_URL)"
 
 # Client (Vite)
 # In client/src/main.tsx
 console.log('API Key:', import.meta.env.VITE_GOOGLE_MAPS_API_KEY);
+
+# Verify Prisma can read DATABASE_URL
+bunx prisma db pull --preview-feature
 ```
 
 ### Getting Help
 
 1. **Check Logs**:
-   - Server: Terminal where `npm run dev` is running
+   - Server: Terminal where `bun run dev` is running
    - Client: Browser DevTools Console
-   - Database: MongoDB logs
+   - Database: PostgreSQL logs or Prisma Studio
 
 2. **Documentation**:
    - `/docs` folder for detailed guides
@@ -563,9 +592,10 @@ console.log('API Key:', import.meta.env.VITE_GOOGLE_MAPS_API_KEY);
 
 3. **Common Commands**:
    ```bash
-   npm run dev           # Start everything
-   npm run seed          # Reset demo data
-   npm run install-all   # Reinstall dependencies
+   bun run dev                 # Start everything
+   bunx prisma studio          # Open database GUI
+   bunx prisma migrate reset   # Reset database and reseed
+   bun install                 # Reinstall dependencies
    ```
 
 ---

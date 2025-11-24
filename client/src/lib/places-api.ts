@@ -8,11 +8,11 @@
  */
 
 import type {
-  PlacePrediction,
-  AutocompleteResponse,
-  PlaceDetails,
   AddressComponents,
   AutocompleteOptions,
+  AutocompleteResponse,
+  PlaceDetails,
+  PlacePrediction,
 } from '@shared/schemas';
 
 /**
@@ -31,8 +31,8 @@ export class PlacesSessionToken {
   private generateToken(): string {
     // Generate a random UUID-like token
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-      const r = Math.random() * 16 | 0;
-      const v = c === 'x' ? r : (r & 0x3 | 0x8);
+      const r = (Math.random() * 16) | 0;
+      const v = c === 'x' ? r : (r & 0x3) | 0x8;
       return v.toString(16);
     });
   }
@@ -116,7 +116,7 @@ export async function getAutocompletePredictions(
  */
 export async function getPlaceDetails(
   placeId: string,
-  sessionToken: string
+  _sessionToken: string
 ): Promise<PlaceDetails> {
   console.log('🌐 [places-api] getPlaceDetails called with placeId:', placeId);
 
@@ -179,6 +179,16 @@ export function parseAddressComponents(
     } else if (types.includes('subpremise')) {
       components.address2 = component.longText;
     } else if (types.includes('locality')) {
+      components.city = component.longText;
+    } else if (
+      !components.city &&
+      (types.includes('sublocality') ||
+        types.includes('sublocality_level_1') ||
+        types.includes('administrative_area_level_2') ||
+        types.includes('administrative_area_level_3') ||
+        types.includes('postal_town'))
+    ) {
+      // Some US cities (e.g., NYC boroughs) return sublocality instead of locality
       components.city = component.longText;
     } else if (types.includes('administrative_area_level_1')) {
       components.state = component.shortText;

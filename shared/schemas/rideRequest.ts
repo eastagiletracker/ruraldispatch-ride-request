@@ -3,8 +3,8 @@
  * Using Zod v4 for runtime validation and type inference
  */
 
-import { z } from 'zod/v4';
 import { isValidPhoneNumber } from 'react-phone-number-input';
+import { z } from 'zod/v4';
 
 /**
  * Address Type for Google Places Autocomplete
@@ -27,12 +27,7 @@ export type AddressTypeForForm = z.infer<typeof AddressTypeSchema>;
 /**
  * Ride Request Type Options
  */
-export const RideRequestTypes = [
-  "Standard",
-  "Emergency",
-  "Medical",
-  "Shopping"
-] as const;
+export const RideRequestTypes = ['Standard', 'Emergency', 'Medical', 'Shopping'] as const;
 
 /**
  * Complete Ride Request Schema (database model)
@@ -42,17 +37,11 @@ export const rideRequestSchema = z.object({
   displayId: z.string().optional(), // Human-readable ID (e.g., RIDE-X7K9)
   serviceUserUuid: z.string(),
   serviceUserRole: z.string(),
-  pickupAddress: z.string()
-    .min(1, 'Pickup address is required')
-    .trim(),
-  dropOffAddress: z.string()
-    .min(1, 'Drop-off address is required')
-    .trim(),
+  pickupAddress: z.string().min(1, 'Pickup address is required').trim(),
+  dropOffAddress: z.string().min(1, 'Drop-off address is required').trim(),
   roundTrip: z.boolean(),
-  pickupRequestedTime: z.string()
-    .min(1, 'Pickup time is required'),
-  dropOffRequestedTime: z.string()
-    .min(1, 'Drop-off time is required'),
+  pickupRequestedTime: z.string().min(1, 'Pickup time is required'),
+  dropOffRequestedTime: z.string().min(1, 'Drop-off time is required'),
   rideStartedActualTime: z.union([z.date(), z.string()]),
   pickupActualTime: z.union([z.date(), z.string()]),
   dropOffActualTime: z.union([z.date(), z.string()]),
@@ -63,103 +52,98 @@ export const rideRequestSchema = z.object({
   rideRequestStatus: z.number(),
   notes: z.string(),
   createdAt: z.union([z.date(), z.string()]).optional(),
-  updatedAt: z.union([z.date(), z.string()]).optional()
+  updatedAt: z.union([z.date(), z.string()]).optional(),
 });
 
 /**
  * Comprehensive Ride Request Form Schema
  * Merged from internal and public forms - used for all ride request creation
  */
-export const rideRequestFormSchema = z.object({
-  // Case Manager Info
-  caseManagerFullName: z.string()
-    .min(1, "Case Manager's full name is required")
-    .trim(),
-  caseManagerAgency: z.string()
-    .min(1, "Case Manager's agency is required")
-    .trim(),
-  caseManagerPhone: z.string()
-    .min(1, "Case Manager's phone number is required")
-    .refine(isValidPhoneNumber, { message: "Invalid phone number" }),
+export const rideRequestFormSchema = z
+  .object({
+    // Case Manager Info
+    caseManagerFullName: z.string().min(1, "Case Manager's full name is required").trim(),
+    caseManagerAgency: z.string().min(1, "Case Manager's agency is required").trim(),
+    caseManagerPhone: z
+      .string()
+      .min(1, "Case Manager's phone number is required")
+      .refine(isValidPhoneNumber, { message: 'Invalid phone number' }),
 
-  // Rider Info
-  riderFullName: z.string()
-    .min(1, "Rider's full name is required")
-    .trim(),
-  riderMobilePhone: z.string()
-    .min(1, "Rider's mobile phone number is required")
-    .refine(isValidPhoneNumber, { message: "Invalid phone number" }),
+    // Rider Info
+    riderFullName: z.string().min(1, "Rider's full name is required").trim(),
+    riderMobilePhone: z
+      .string()
+      .min(1, "Rider's mobile phone number is required")
+      .refine(isValidPhoneNumber, { message: 'Invalid phone number' }),
 
-  // Ride Details - Accepts either string or AddressType (from autocomplete)
-  pickupLocation: z.union([
-    z.string().min(1, 'Pickup location is required').trim(),
-    AddressTypeSchema
-  ]).refine(
-    (val) => {
-      if (typeof val === 'string') return val.trim().length > 0;
-      return val.formattedAddress && val.formattedAddress.length > 0;
+    // Ride Details - Accepts either string or AddressType (from autocomplete)
+    pickupLocation: z
+      .union([z.string().min(1, 'Pickup location is required').trim(), AddressTypeSchema])
+      .refine(
+        (val) => {
+          if (typeof val === 'string') return val.trim().length > 0;
+          return val.formattedAddress && val.formattedAddress.length > 0;
+        },
+        { message: 'Pickup location is required' }
+      ),
+    dropoffLocation: z
+      .union([z.string().min(1, 'Drop-off location is required').trim(), AddressTypeSchema])
+      .refine(
+        (val) => {
+          if (typeof val === 'string') return val.trim().length > 0;
+          return val.formattedAddress && val.formattedAddress.length > 0;
+        },
+        { message: 'Drop-off location is required' }
+      ),
+    roundtrip: z.boolean().optional(),
+    pickupRequestedDate: z
+      .string()
+      .min(1, 'Pickup date is required')
+      .refine(
+        (date) => {
+          if (!date) return false;
+          // Compare date strings directly to avoid timezone issues
+          const selectedDateStr = date; // Format: YYYY-MM-DD
+          const today = new Date();
+          const todayStr = today.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+          return selectedDateStr >= todayStr;
+        },
+        { message: 'Pickup date cannot be in the past' }
+      ),
+    pickupRequestedTime: z.string().min(1, 'Pickup time is required'),
+    estimatedWaitTime: z.string().optional(),
+    estimatedTravelTime: z.string().optional(),
+
+    // Accessibility Features (Checkboxes)
+    walkerAccessible: z.boolean().optional(),
+    wheelchairAccessible: z.boolean().optional(),
+    serviceAnimalFriendly: z.boolean().optional(),
+    oxygenTankAccessible: z.boolean().optional(),
+
+    // Purpose and Notes
+    purposeOfTrip: z.string().min(1, 'Purpose of trip is required').trim(),
+    notesComments: z.string().optional(),
+  })
+  .refine(
+    (data) => {
+      // Validate pickup date/time is at least 5 minutes from now
+      if (!data.pickupRequestedDate || !data.pickupRequestedTime) return true; // Let individual field validations handle empty fields
+
+      const pickupDateTime = new Date(`${data.pickupRequestedDate}T${data.pickupRequestedTime}`);
+      const now = new Date();
+      const minAllowedTime = new Date(now.getTime() + 5 * 60 * 1000); // 5 minutes from now
+
+      return pickupDateTime >= minAllowedTime;
     },
-    { message: 'Pickup location is required' }
-  ),
-  dropoffLocation: z.union([
-    z.string().min(1, 'Drop-off location is required').trim(),
-    AddressTypeSchema
-  ]).refine(
-    (val) => {
-      if (typeof val === 'string') return val.trim().length > 0;
-      return val.formattedAddress && val.formattedAddress.length > 0;
-    },
-    { message: 'Drop-off location is required' }
-  ),
-  roundtrip: z.boolean().optional(),
-  pickupRequestedDate: z.string()
-    .min(1, 'Pickup date is required')
-    .refine(
-      (date) => {
-        if (!date) return false;
-        // Compare date strings directly to avoid timezone issues
-        const selectedDateStr = date; // Format: YYYY-MM-DD
-        const today = new Date();
-        const todayStr = today.toISOString().split('T')[0]; // Format: YYYY-MM-DD
-        return selectedDateStr >= todayStr;
-      },
-      { message: 'Pickup date cannot be in the past' }
-    ),
-  pickupRequestedTime: z.string()
-    .min(1, 'Pickup time is required'),
-  estimatedWaitTime: z.string().optional(),
-
-  // Accessibility Features (Checkboxes)
-  walkerAccessible: z.boolean().optional(),
-  wheelchairAccessible: z.boolean().optional(),
-  serviceAnimalFriendly: z.boolean().optional(),
-  oxygenTankAccessible: z.boolean().optional(),
-
-  // Purpose and Notes
-  purposeOfTrip: z.string()
-    .min(1, 'Purpose of trip is required')
-    .trim(),
-  notesComments: z.string().optional()
-}).refine(
-  (data) => {
-    // Validate pickup date/time is at least 15 minutes from now
-    if (!data.pickupRequestedDate || !data.pickupRequestedTime) return true; // Let individual field validations handle empty fields
-
-    const pickupDateTime = new Date(`${data.pickupRequestedDate}T${data.pickupRequestedTime}`);
-    const now = new Date();
-    const minAllowedTime = new Date(now.getTime() + 15 * 60 * 1000); // 15 minutes from now
-
-    return pickupDateTime >= minAllowedTime;
-  },
-  {
-    message: 'Pickup time must be at least 15 minutes from now',
-    path: ['pickupRequestedTime'] // Show error on the time field
-  }
-);
+    {
+      message: 'Pickup time must be at least 5 minutes from now',
+      path: ['pickupRequestedTime'], // Show error on the time field
+    }
+  );
 
 /**
  * Inferred TypeScript Types
  */
 export type RideRequest = z.infer<typeof rideRequestSchema>;
 export type RideRequestFormData = z.infer<typeof rideRequestFormSchema>;
-export type RideRequestType = typeof RideRequestTypes[number];
+export type RideRequestType = (typeof RideRequestTypes)[number];

@@ -1,5 +1,7 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import axios from 'axios';
+import { useQueryClient } from '@tanstack/react-query';
+import type React from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
+import { getApiUrl } from '@/lib/api';
 
 interface User {
   uuid: string;
@@ -34,87 +36,159 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
+  const queryClient = useQueryClient();
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
+  const [loading, setLoading] = useState(false);
 
-  // Set up axios defaults
+  // Load user from sessionStorage on mount
   useEffect(() => {
-    if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      fetchUser();
-    } else {
-      setLoading(false);
+    const isAuthenticated = sessionStorage.getItem('user_authenticated') === 'true';
+    if (isAuthenticated) {
+      const storedUser = {
+        uuid: sessionStorage.getItem('user_uuid') || '',
+        email: sessionStorage.getItem('username') || '',
+        fullName: sessionStorage.getItem('user_fullname') || '',
+        role: sessionStorage.getItem('user_role') || '',
+      };
+      setUser(storedUser as User);
     }
-  }, [token]);
+  }, []);
 
-  const fetchUser = async () => {
+  const login = async (email: string, password: string) => {
     try {
-      const response = await axios.get('/api/auth/me');
-      setUser(response.data);
-    } catch (error) {
-      console.error('Error fetching user:', error);
-      logout();
+      setLoading(true);
+      const response = await fetch(getApiUrl('/api/auth/login'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        return {
+          success: false,
+          message: error.message || 'Login failed',
+        };
+      }
+
+      const data = await response.json();
+      const userData = data.user;
+
+      // Store user data in sessionStorage
+      sessionStorage.setItem('user_authenticated', 'true');
+      sessionStorage.setItem('username', userData.email || userData.username);
+      sessionStorage.setItem('user_role', userData.role);
+      sessionStorage.setItem('user_fullname', userData.fullName || '');
+      sessionStorage.setItem('user_uuid', userData.uuid);
+
+      setUser(userData);
+      queryClient.setQueryData(['auth', 'user'], userData);
+
+      return { success: true };
+    } catch (error: any) {
+      return {
+        success: false,
+        message: error.message || 'Login failed',
+      };
     } finally {
       setLoading(false);
     }
   };
 
-  const login = async (email, password) => {
+  const register = async (userData: any) => {
     try {
-      const response = await axios.post('/api/auth/login', { email, password });
-      const { token: newToken, user: userData } = response.data;
-      
-      setToken(newToken);
-      setUser(userData);
-      localStorage.setItem('token', newToken);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
-      
-      return { success: true };
-    } catch (error) {
-      return { 
-        success: false, 
-        message: error.response?.data?.message || 'Login failed' 
-      };
-    }
-  };
+      setLoading(true);
+      const response = await fetch(getApiUrl('/api/auth/register'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData),
+      });
 
-  const register = async (userData) => {
-    try {
-      const response = await axios.post('/api/auth/register', userData);
-      const { token: newToken, user: newUser } = response.data;
-      
-      setToken(newToken);
+      if (!response.ok) {
+        const error = await response.json();
+        return {
+          success: false,
+          message: error.message || 'Registration failed',
+        };
+      }
+
+      const data = await response.json();
+      const newUser = data.user;
+
+      // Store user data in sessionStorage
+      sessionStorage.setItem('user_authenticated', 'true');
+      sessionStorage.setItem('username', newUser.email || newUser.username);
+      sessionStorage.setItem('user_role', newUser.role);
+      sessionStorage.setItem('user_fullname', newUser.fullName || '');
+      sessionStorage.setItem('user_uuid', newUser.uuid);
+
       setUser(newUser);
-      localStorage.setItem('token', newToken);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
-      
+      queryClient.setQueryData(['auth', 'user'], newUser);
+
       return { success: true };
-    } catch (error) {
-      return { 
-        success: false, 
-        message: error.response?.data?.message || 'Registration failed' 
+    } catch (error: any) {
+      return {
+        success: false,
+        message: error.message || 'Registration failed',
       };
+    } finally {
+      setLoading(false);
     }
   };
 
   const logout = () => {
     setUser(null);
-    setToken(null);
-    localStorage.removeItem('token');
-    delete axios.defaults.headers.common['Authorization'];
+
+    // Clear sessionStorage auth data
+    sessionStorage.removeItem('user_authenticated');
+    sessionStorage.removeItem('username');
+    sessionStorage.removeItem('user_role');
+    sessionStorage.removeItem('user_fullname');
+    sessionStorage.removeItem('user_uuid');
+
+    queryClient.setQueryData(['auth', 'user'], null);
+    queryClient.clear();
   };
 
-  const updateProfile = async (updates) => {
+  const updateProfile = async (updates: any) => {
     try {
-      const response = await axios.put('/api/auth/me', updates);
-      setUser(response.data);
+      setLoading(true);
+      const role = sessionStorage.getItem('user_role');
+
+      const response = await fetch(getApiUrl('/api/auth/me'), {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-role': role || '',
+        },
+        body: JSON.stringify(updates),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        return {
+          success: false,
+          message: error.message || 'Update failed',
+        };
+      }
+
+      const data = await response.json();
+
+      // Update sessionStorage with new data
+      if (data.email) sessionStorage.setItem('username', data.email);
+      if (data.fullName) sessionStorage.setItem('user_fullname', data.fullName);
+
+      setUser(data);
+      queryClient.setQueryData(['auth', 'user'], data);
+
       return { success: true };
-    } catch (error) {
-      return { 
-        success: false, 
-        message: error.response?.data?.message || 'Update failed' 
+    } catch (error: any) {
+      return {
+        success: false,
+        message: error.message || 'Update failed',
       };
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -125,12 +199,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     register,
     logout,
     updateProfile,
-    isAuthenticated: !!user
+    isAuthenticated: !!user,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
-}; 
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};

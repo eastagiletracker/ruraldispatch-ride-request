@@ -21,8 +21,4 @@ export interface RideRequest {
   updatedAt?: Date | string;
 }
 
-export type RideRequestType =
-  | "Standard"
-  | "Emergency"
-  | "Medical"
-  | "Shopping";
+export type RideRequestType = 'Standard' | 'Emergency' | 'Medical' | 'Shopping';

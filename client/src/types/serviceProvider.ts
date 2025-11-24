@@ -13,15 +13,12 @@ export interface ServiceProvider {
 }
 
 export type ServiceProviderRole =
-  | "Transport Broker"
-  | "Staff"
-  | "Fleet Manager"
-  | "Driver"
-  | "Admin";
+  | 'Transport Broker'
+  | 'Staff'
+  | 'Fleet Manager'
+  | 'Driver'
+  | 'Admin';
 
-export type Specialization =
-  | "Caseworker"
-  | "Nutritionist"
-  | "Intake";
+export type Specialization = 'Caseworker' | 'Nutritionist' | 'Intake';
 
-export type Organization = "EASTCONN" | "Generations Health";
+export type Organization = 'EASTCONN' | 'Generations Health';

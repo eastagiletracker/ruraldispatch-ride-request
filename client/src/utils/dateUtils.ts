@@ -22,7 +22,7 @@ export function formatLocalDateTime(
   const date = new Date(utcDateString);
 
   // Check if date is valid
-  if (isNaN(date.getTime())) return 'Invalid Date';
+  if (Number.isNaN(date.getTime())) return 'Invalid Date';
 
   const defaultOptions: Intl.DateTimeFormatOptions = {
     year: 'numeric',
@@ -31,7 +31,7 @@ export function formatLocalDateTime(
     hour: '2-digit',
     minute: '2-digit',
     hour12: true,
-    ...options
+    ...options,
   };
 
   return date.toLocaleString('en-US', defaultOptions);
@@ -47,7 +47,7 @@ export function utcToDateTimeLocal(utcDateString: string | null | undefined): st
   if (!utcDateString) return '';
 
   const date = new Date(utcDateString);
-  if (isNaN(date.getTime())) return '';
+  if (Number.isNaN(date.getTime())) return '';
 
   // Get local time components
   const year = date.getFullYear();
@@ -71,7 +71,7 @@ export function dateTimeLocalToUTC(dateTimeLocalString: string): string {
   // datetime-local value is interpreted as local time
   const date = new Date(dateTimeLocalString);
 
-  if (isNaN(date.getTime())) return '';
+  if (Number.isNaN(date.getTime())) return '';
 
   // Convert to UTC ISO string
   return date.toISOString();
@@ -95,12 +95,12 @@ export function formatLocalDate(utcDateString: string | null | undefined): strin
   if (!utcDateString) return 'N/A';
 
   const date = new Date(utcDateString);
-  if (isNaN(date.getTime())) return 'Invalid Date';
+  if (Number.isNaN(date.getTime())) return 'Invalid Date';
 
   return date.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
-    day: 'numeric'
+    day: 'numeric',
   });
 }
 
@@ -113,12 +113,12 @@ export function formatLocalTime(utcDateString: string | null | undefined): strin
   if (!utcDateString) return 'N/A';
 
   const date = new Date(utcDateString);
-  if (isNaN(date.getTime())) return 'Invalid Time';
+  if (Number.isNaN(date.getTime())) return 'Invalid Time';
 
   return date.toLocaleTimeString('en-US', {
     hour: '2-digit',
     minute: '2-digit',
-    hour12: true
+    hour12: true,
   });
 }
 
@@ -131,7 +131,7 @@ export function getRelativeTime(utcDateString: string | null | undefined): strin
   if (!utcDateString) return '';
 
   const date = new Date(utcDateString);
-  if (isNaN(date.getTime())) return '';
+  if (Number.isNaN(date.getTime())) return '';
 
   const now = new Date();
   const diffMs = date.getTime() - now.getTime();
@@ -162,7 +162,7 @@ export function isToday(utcDateString: string | null | undefined): boolean {
   if (!utcDateString) return false;
 
   const date = new Date(utcDateString);
-  if (isNaN(date.getTime())) return false;
+  if (Number.isNaN(date.getTime())) return false;
 
   const today = new Date();
   return date.toDateString() === today.toDateString();
@@ -177,7 +177,7 @@ export function validateDateTime(dateTimeLocalString: string): string | null {
   if (!dateTimeLocalString) return 'Date and time are required';
 
   const date = new Date(dateTimeLocalString);
-  if (isNaN(date.getTime())) return 'Invalid date/time format';
+  if (Number.isNaN(date.getTime())) return 'Invalid date/time format';
 
   // Optional: Check if date is in the past
   const now = new Date();

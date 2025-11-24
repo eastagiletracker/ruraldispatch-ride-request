@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { fetchNotificationsByRide, closeRideSession } from '../utils/database';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { AlertCircle } from "lucide-react";
-import type { Notification, NotificationType, TwilioStatus } from "@/types";
+import { AlertCircle } from 'lucide-react';
+import type React from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
+import type { Notification, NotificationType, TwilioStatus } from '@/types';
+import { closeRideSession, fetchNotificationsByRide } from '../utils/database';
 
 interface SMSConversationProps {
   rideUuid: string;
@@ -23,22 +24,13 @@ const SMSConversation: React.FC<SMSConversationProps> = ({ rideUuid, riderPhone,
   const [loading, setLoading] = useState<boolean>(true);
   const [isSessionActive, setIsSessionActive] = useState<boolean>(true);
 
-  useEffect(() => {
-    if (rideUuid) {
-      loadNotifications();
-      // Poll for new messages every 20 seconds
-      const interval = setInterval(loadNotifications, 20000);
-      return () => clearInterval(interval);
-    }
-  }, [rideUuid]);
-
-  const loadNotifications = async () => {
+  const loadNotifications = useCallback(async () => {
     try {
       const data = await fetchNotificationsByRide(rideUuid);
       setNotifications(data);
 
       // Check if any notifications have active sessions
-      const hasActiveSession = data.some(notif => notif.sessionActive);
+      const hasActiveSession = data.some((notif) => notif.sessionActive);
       setIsSessionActive(hasActiveSession);
 
       setLoading(false);
@@ -46,7 +38,16 @@ const SMSConversation: React.FC<SMSConversationProps> = ({ rideUuid, riderPhone,
       console.error('Error loading notifications:', error);
       setLoading(false);
     }
-  };
+  }, [rideUuid]);
+
+  useEffect(() => {
+    if (rideUuid) {
+      loadNotifications();
+      // Poll for new messages every 20 seconds
+      const interval = setInterval(loadNotifications, 20000);
+      return () => clearInterval(interval);
+    }
+  }, [rideUuid, loadNotifications]);
 
   const handleCloseSession = async () => {
     if (window.confirm('Are you sure you want to close the SMS session for this ride?')) {
@@ -67,35 +68,37 @@ const SMSConversation: React.FC<SMSConversationProps> = ({ rideUuid, riderPhone,
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   };
 
   const getNotificationIcon = (type: NotificationType): string => {
     const icons: Record<NotificationType, string> = {
-      'rider_accepted': '✅',
-      'driver_assigned': '👤',
-      'ride_started': '🚗',
-      'rider_picked_up': '📍',
-      'rider_dropped_off': '🏁',
-      'ride_complete': '✔️',
-      'ride_cancelled': '❌',
-      'dispatcher_update': '📢',
-      'incoming_sms': '💬',
-      'custom': '📱'
+      rider_accepted: '✅',
+      driver_assigned: '👤',
+      ride_started: '🚗',
+      rider_picked_up: '📍',
+      rider_dropped_off: '🏁',
+      ride_complete: '✔️',
+      ride_cancelled: '❌',
+      dispatcher_update: '📢',
+      incoming_sms: '💬',
+      custom: '📱',
     };
     return icons[type] || '📧';
   };
 
-  const getStatusVariant = (status: TwilioStatus): "default" | "secondary" | "outline" | "destructive" => {
-    const variants: Record<TwilioStatus, "default" | "secondary" | "outline" | "destructive"> = {
-      'delivered': 'default',
-      'sent': 'secondary',
-      'received': 'secondary',
-      'queued': 'outline',
-      'sending': 'outline',
-      'failed': 'destructive',
-      'undelivered': 'destructive'
+  const getStatusVariant = (
+    status: TwilioStatus
+  ): 'default' | 'secondary' | 'outline' | 'destructive' => {
+    const variants: Record<TwilioStatus, 'default' | 'secondary' | 'outline' | 'destructive'> = {
+      delivered: 'default',
+      sent: 'secondary',
+      received: 'secondary',
+      queued: 'outline',
+      sending: 'outline',
+      failed: 'destructive',
+      undelivered: 'destructive',
     };
     return variants[status] || 'outline';
   };
@@ -107,9 +110,7 @@ const SMSConversation: React.FC<SMSConversationProps> = ({ rideUuid, riderPhone,
           <CardTitle>SMS Conversation</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-10 text-muted-foreground">
-            Loading messages...
-          </div>
+          <div className="text-center py-10 text-muted-foreground">Loading messages...</div>
         </CardContent>
       </Card>
     );
@@ -120,7 +121,7 @@ const SMSConversation: React.FC<SMSConversationProps> = ({ rideUuid, riderPhone,
       <Card className="mt-5">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
           <CardTitle>SMS Conversation</CardTitle>
-          <Badge variant={isSessionActive ? "default" : "secondary"}>
+          <Badge variant={isSessionActive ? 'default' : 'secondary'}>
             {isSessionActive ? 'Session Active' : 'Session Closed'}
           </Badge>
         </CardHeader>
@@ -138,15 +139,11 @@ const SMSConversation: React.FC<SMSConversationProps> = ({ rideUuid, riderPhone,
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
         <CardTitle>SMS Conversation ({notifications.length})</CardTitle>
         <div className="flex items-center gap-2">
-          <Badge variant={isSessionActive ? "default" : "secondary"}>
+          <Badge variant={isSessionActive ? 'default' : 'secondary'}>
             {isSessionActive ? 'Session Active' : 'Session Closed'}
           </Badge>
           {isSessionActive && (
-            <Button
-              onClick={handleCloseSession}
-              variant="destructive"
-              size="sm"
-            >
+            <Button onClick={handleCloseSession} variant="destructive" size="sm">
               Close Session
             </Button>
           )}
@@ -156,9 +153,9 @@ const SMSConversation: React.FC<SMSConversationProps> = ({ rideUuid, riderPhone,
       <CardContent className="space-y-4">
         <ScrollArea className="h-[500px] pr-4">
           <div className="flex flex-col gap-3">
-            {notifications.map((notif, index) => (
+            {notifications.map((notif) => (
               <div
-                key={index}
+                key={notif.uuid}
                 className={`p-3 rounded-lg border transition-shadow ${
                   notif.direction === 'inbound'
                     ? 'bg-amber-50 border-l-4 border-l-amber-500'
@@ -184,9 +181,7 @@ const SMSConversation: React.FC<SMSConversationProps> = ({ rideUuid, riderPhone,
                     {notif.direction === 'outbound' ? 'To:' : 'From:'} {notif.recipientPhone}
                     {notif.recipientName && ` (${notif.recipientName})`}
                   </span>
-                  <span className="italic">
-                    {formatTimestamp(notif.sentAt)}
-                  </span>
+                  <span className="italic">{formatTimestamp(notif.sentAt)}</span>
                 </div>
 
                 {notif.errorMessage && (

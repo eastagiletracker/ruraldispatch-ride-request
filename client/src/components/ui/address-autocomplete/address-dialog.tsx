@@ -4,8 +4,9 @@
  * Adapted from: https://github.com/NiazMorshed2007/shadcn-address-autocomplete
  */
 
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import { Loader2 } from 'lucide-react';
+import { memo, useEffect, useRef, useState } from 'react';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -14,11 +15,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
-import { AddressType, PartialAddressType, createDynamicAddressSchema } from "@/schemas/address-schema";
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import type { AddressType, PartialAddressType } from '@/schemas/address-schema';
 
 interface AddressDialogProps {
   children: React.ReactNode;
@@ -28,32 +28,33 @@ interface AddressDialogProps {
   onOpenChange?: (open: boolean) => void;
 }
 
-export function AddressDialog({
+const AddressDialogComponent: React.FC<AddressDialogProps> = ({
   children,
   address: initialAddress,
   onSave,
   open: controlledOpen,
   onOpenChange,
-}: AddressDialogProps) {
-  console.log('🟠 [AddressDialog] Component rendered - initialAddress:', initialAddress, 'open:', controlledOpen);
-
+}) => {
   const [open, setOpen] = useState(controlledOpen ?? false);
   const [address, setAddress] = useState<PartialAddressType>(initialAddress);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
+  const prevAddressRef = useRef<string | undefined>(undefined);
 
   // Sync controlled open state
   useEffect(() => {
-    console.log('🟠 [AddressDialog] Controlled open changed to:', controlledOpen);
     if (controlledOpen !== undefined) {
       setOpen(controlledOpen);
     }
   }, [controlledOpen]);
 
-  // Update address when initialAddress changes
+  // Update address when initialAddress changes (only if actually different)
   useEffect(() => {
-    console.log('🟠 [AddressDialog] Initial address changed to:', initialAddress);
-    setAddress(initialAddress);
+    const addressStr = JSON.stringify(initialAddress);
+    if (prevAddressRef.current !== addressStr) {
+      prevAddressRef.current = addressStr;
+      setAddress(initialAddress);
+    }
   }, [initialAddress]);
 
   const handleOpenChange = (newOpen: boolean) => {
@@ -90,11 +91,10 @@ export function AddressDialog({
     if (addr.postalCode) parts.push(addr.postalCode);
     if (addr.country) parts.push(addr.country);
 
-    return parts.join(", ");
+    return parts.join(', ');
   };
 
   const handleSave = async () => {
-    console.log('🟠 [AddressDialog] Save button clicked - current address:', address);
     setIsLoading(true);
     setErrors({});
 
@@ -103,7 +103,7 @@ export function AddressDialog({
       const newErrors: Record<string, string> = {};
 
       if (!address.address1 || address.address1.trim().length === 0) {
-        newErrors.address1 = "Address line 1 is required";
+        newErrors.address1 = 'Address line 1 is required';
       } else {
         const addr1 = address.address1.trim();
         const addr1Lower = addr1.toLowerCase();
@@ -111,24 +111,26 @@ export function AddressDialog({
         // Check if user entered full formatted address in address1 field
         const hasCity = address.city && addr1Lower.includes(address.city.toLowerCase());
         const hasRegion = address.region && addr1Lower.includes(address.region.toLowerCase());
-        const hasPostal = address.postalCode && addr1Lower.includes(address.postalCode.toLowerCase());
+        const hasPostal =
+          address.postalCode && addr1Lower.includes(address.postalCode.toLowerCase());
         const hasCountry = address.country && addr1Lower.includes(address.country.toLowerCase());
 
         if (hasCity || hasRegion || hasPostal || hasCountry) {
-          newErrors.address1 = "Enter only the street address (e.g., '123 Main St'), not the full address";
+          newErrors.address1 =
+            "Enter only the street address (e.g., '123 Main St'), not the full address";
         }
       }
 
       if (!address.city || address.city.trim().length === 0) {
-        newErrors.city = "City is required";
+        newErrors.city = 'City is required';
       }
 
       if (!address.region || address.region.trim().length === 0) {
-        newErrors.region = "State/Region is required";
+        newErrors.region = 'State/Region is required';
       }
 
       if (!address.postalCode || address.postalCode.trim().length === 0) {
-        newErrors.postalCode = "Postal code is required";
+        newErrors.postalCode = 'Postal code is required';
       } else {
         // Validate postal code format based on country
         const postalCode = address.postalCode.trim();
@@ -138,44 +140,39 @@ export function AddressDialog({
           // US ZIP code: 5 digits or 5+4 format (12345 or 12345-6789)
           const usZipRegex = /^\d{5}(-\d{4})?$/;
           if (!usZipRegex.test(postalCode)) {
-            newErrors.postalCode = "US ZIP code must be 5 digits (e.g., 10001) or ZIP+4 format (e.g., 10001-1234)";
+            newErrors.postalCode =
+              'US ZIP code must be 5 digits (e.g., 10001) or ZIP+4 format (e.g., 10001-1234)';
           }
         }
       }
 
       if (!address.country || address.country.trim().length === 0) {
-        newErrors.country = "Country is required";
+        newErrors.country = 'Country is required';
       }
 
       if (Object.keys(newErrors).length > 0) {
-        console.log('❌ [AddressDialog] Validation failed:', newErrors);
         setErrors(newErrors);
         setIsLoading(false);
         return;
       }
 
-      console.log('✅ [AddressDialog] Validation passed');
-
       // Ensure all required fields are present for AddressType
       const completeAddress: AddressType = {
         address1: address.address1 || undefined,
         address2: address.address2,
-        city: address.city || "",
-        region: address.region || "",
+        city: address.city || '',
+        region: address.region || '',
         postalCode: address.postalCode || undefined,
-        country: address.country || "",
+        country: address.country || '',
         formattedAddress: updateFormattedAddress(address),
         lat: address.lat || 0,
         lng: address.lng || 0,
       };
 
-      console.log('🟠 [AddressDialog] Complete address created:', completeAddress);
-      console.log('🟠 [AddressDialog] Calling onSave callback...');
       onSave(completeAddress);
       handleOpenChange(false);
-      console.log('✅ [AddressDialog] Save complete');
     } catch (error) {
-      console.error("❌ [AddressDialog] Error saving address:", error);
+      console.error('Error saving address:', error);
     } finally {
       setIsLoading(false);
     }
@@ -192,7 +189,7 @@ export function AddressDialog({
           <DialogDescription>
             {!address.address1 || !address.postalCode
               ? 'Please enter the complete street address with postal code.'
-              : 'Make changes to the address details. Click save when you\'re done.'}
+              : "Make changes to the address details. Click save when you're done."}
           </DialogDescription>
         </DialogHeader>
 
@@ -204,14 +201,12 @@ export function AddressDialog({
             </Label>
             <Input
               id="address1"
-              value={address.address1 || ""}
-              onChange={(e) => handleFieldChange("address1", e.target.value)}
+              value={address.address1 || ''}
+              onChange={(e) => handleFieldChange('address1', e.target.value)}
               placeholder="e.g., 123 Main St"
-              className={errors.address1 ? "border-destructive" : ""}
+              className={errors.address1 ? 'border-destructive' : ''}
             />
-            {errors.address1 && (
-              <p className="text-sm text-destructive">{errors.address1}</p>
-            )}
+            {errors.address1 && <p className="text-sm text-destructive">{errors.address1}</p>}
           </div>
 
           {/* Address Line 2 */}
@@ -219,8 +214,8 @@ export function AddressDialog({
             <Label htmlFor="address2">Address Line 2</Label>
             <Input
               id="address2"
-              value={address.address2 || ""}
-              onChange={(e) => handleFieldChange("address2", e.target.value)}
+              value={address.address2 || ''}
+              onChange={(e) => handleFieldChange('address2', e.target.value)}
               placeholder="Apartment, suite, etc. (optional)"
             />
           </div>
@@ -233,14 +228,12 @@ export function AddressDialog({
               </Label>
               <Input
                 id="city"
-                value={address.city || ""}
-                onChange={(e) => handleFieldChange("city", e.target.value)}
+                value={address.city || ''}
+                onChange={(e) => handleFieldChange('city', e.target.value)}
                 placeholder="e.g., New York"
-                className={errors.city ? "border-destructive" : ""}
+                className={errors.city ? 'border-destructive' : ''}
               />
-              {errors.city && (
-                <p className="text-sm text-destructive">{errors.city}</p>
-              )}
+              {errors.city && <p className="text-sm text-destructive">{errors.city}</p>}
             </div>
 
             <div className="grid gap-2">
@@ -249,14 +242,12 @@ export function AddressDialog({
               </Label>
               <Input
                 id="region"
-                value={address.region || ""}
-                onChange={(e) => handleFieldChange("region", e.target.value)}
+                value={address.region || ''}
+                onChange={(e) => handleFieldChange('region', e.target.value)}
                 placeholder="e.g., NY"
-                className={errors.region ? "border-destructive" : ""}
+                className={errors.region ? 'border-destructive' : ''}
               />
-              {errors.region && (
-                <p className="text-sm text-destructive">{errors.region}</p>
-              )}
+              {errors.region && <p className="text-sm text-destructive">{errors.region}</p>}
             </div>
           </div>
 
@@ -268,14 +259,12 @@ export function AddressDialog({
               </Label>
               <Input
                 id="postalCode"
-                value={address.postalCode || ""}
-                onChange={(e) => handleFieldChange("postalCode", e.target.value)}
+                value={address.postalCode || ''}
+                onChange={(e) => handleFieldChange('postalCode', e.target.value)}
                 placeholder="e.g., 10001"
-                className={errors.postalCode ? "border-destructive" : ""}
+                className={errors.postalCode ? 'border-destructive' : ''}
               />
-              {errors.postalCode && (
-                <p className="text-sm text-destructive">{errors.postalCode}</p>
-              )}
+              {errors.postalCode && <p className="text-sm text-destructive">{errors.postalCode}</p>}
             </div>
 
             <div className="grid gap-2">
@@ -284,14 +273,12 @@ export function AddressDialog({
               </Label>
               <Input
                 id="country"
-                value={address.country || ""}
-                onChange={(e) => handleFieldChange("country", e.target.value)}
+                value={address.country || ''}
+                onChange={(e) => handleFieldChange('country', e.target.value)}
                 placeholder="e.g., United States"
-                className={errors.country ? "border-destructive" : ""}
+                className={errors.country ? 'border-destructive' : ''}
               />
-              {errors.country && (
-                <p className="text-sm text-destructive">{errors.country}</p>
-              )}
+              {errors.country && <p className="text-sm text-destructive">{errors.country}</p>}
             </div>
           </div>
         </div>
@@ -313,4 +300,17 @@ export function AddressDialog({
       </DialogContent>
     </Dialog>
   );
-}
+};
+
+// Memoize component to prevent unnecessary re-renders
+export const AddressDialog = memo(AddressDialogComponent, (prevProps, nextProps) => {
+  // Custom comparison: only re-render if these props actually changed
+  return (
+    JSON.stringify(prevProps.address) === JSON.stringify(nextProps.address) &&
+    prevProps.onSave === nextProps.onSave &&
+    prevProps.open === nextProps.open &&
+    prevProps.onOpenChange === nextProps.onOpenChange
+  );
+});
+
+AddressDialog.displayName = 'AddressDialog';

@@ -1,21 +1,28 @@
 // Notification types
 export type NotificationType =
-  | "rider_accepted"
-  | "driver_assigned"
-  | "ride_started"
-  | "rider_picked_up"
-  | "rider_dropped_off"
-  | "ride_complete"
-  | "ride_cancelled"
-  | "dispatcher_update"
-  | "incoming_sms"
-  | "custom";
+  | 'rider_accepted'
+  | 'driver_assigned'
+  | 'ride_started'
+  | 'rider_picked_up'
+  | 'rider_dropped_off'
+  | 'ride_complete'
+  | 'ride_cancelled'
+  | 'dispatcher_update'
+  | 'incoming_sms'
+  | 'custom';
 
-export type MessageDirection = "outbound" | "inbound";
+export type MessageDirection = 'outbound' | 'inbound';
 
-export type RecipientRole = "rider" | "driver" | "dispatcher" | "staff" | "unknown";
+export type RecipientRole = 'rider' | 'driver' | 'dispatcher' | 'staff' | 'unknown';
 
-export type TwilioStatus = "queued" | "sending" | "sent" | "delivered" | "undelivered" | "failed" | "received";
+export type TwilioStatus =
+  | 'queued'
+  | 'sending'
+  | 'sent'
+  | 'delivered'
+  | 'undelivered'
+  | 'failed'
+  | 'received';
 
 export interface Notification {
   uuid: string;

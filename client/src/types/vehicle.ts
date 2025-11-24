@@ -11,7 +11,7 @@ export interface Vehicle {
 }
 
 export type AccessibilityNeed =
-  | "None"
-  | "Walker Accessible"
-  | "Wheelchair Accessible"
-  | "Oxygen Tank Accessible";
+  | 'None'
+  | 'Walker Accessible'
+  | 'Wheelchair Accessible'
+  | 'Oxygen Tank Accessible';
