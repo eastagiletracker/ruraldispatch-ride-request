@@ -31,8 +31,8 @@ interface RideRequestData {
   roundTrip?: boolean;
   notes?: string;
   purpose?: string;
-  assignedDriverUuid?: string;
-  assignedVehicleUuid?: string;
+  driverUuid?: string;
+  vehicleUuid?: string;
   driver?: Array<{ uuid: string; fullName: string }>;
   vehicle?: Array<{ uuid: string; model?: string; displayName?: string }>;
   // Legacy fallback fields for backward compatibility
@@ -104,8 +104,7 @@ export default function AssignDriver({ selectedRideRequestId, cancelFn }: Assign
 
     setSubmitting(true);
     try {
-      const isEditing =
-        selectedRideRequest.assignedDriverUuid || selectedRideRequest.assignedVehicleUuid;
+      const isEditing = selectedRideRequest.driverUuid || selectedRideRequest.vehicleUuid;
 
       console.log('Submitting assignment:', {
         selectedDriver,
@@ -115,8 +114,8 @@ export default function AssignDriver({ selectedRideRequestId, cancelFn }: Assign
       });
 
       await updateDocument('riderequests', selectedRideRequestId, {
-        assignedDriverUuid: selectedDriver.uuid,
-        assignedVehicleUuid: selectedVehicle.uuid,
+        driverUuid: selectedDriver.uuid,
+        vehicleUuid: selectedVehicle.uuid,
         rideRequestStatus: 400, // RIDE_CONFIRMATION_NEEDED - triggers driver assignment SMS
         rideStatus: 0, // REQUEST_IN_PROGRESS - driver needs to accept
       });
@@ -156,12 +155,12 @@ export default function AssignDriver({ selectedRideRequestId, cancelFn }: Assign
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle className="text-2xl">
-            {selectedRideRequest.assignedDriverUuid || selectedRideRequest.assignedVehicleUuid
+            {selectedRideRequest.driverUuid || selectedRideRequest.vehicleUuid
               ? 'Edit Assignment'
               : 'Assign Driver & Vehicle'}
           </DialogTitle>
           <DialogDescription>
-            {selectedRideRequest.assignedDriverUuid || selectedRideRequest.assignedVehicleUuid
+            {selectedRideRequest.driverUuid || selectedRideRequest.vehicleUuid
               ? 'Update the driver and vehicle for this ride request'
               : 'Select an available driver and vehicle for this ride request'}
           </DialogDescription>
@@ -445,10 +444,10 @@ export default function AssignDriver({ selectedRideRequestId, cancelFn }: Assign
             className="w-full sm:w-auto"
           >
             {submitting
-              ? selectedRideRequest.assignedDriverUuid || selectedRideRequest.assignedVehicleUuid
+              ? selectedRideRequest.driverUuid || selectedRideRequest.vehicleUuid
                 ? 'Updating...'
                 : 'Assigning...'
-              : selectedRideRequest.assignedDriverUuid || selectedRideRequest.assignedVehicleUuid
+              : selectedRideRequest.driverUuid || selectedRideRequest.vehicleUuid
                 ? 'Update Assignment'
                 : 'Assign to Ride'}
           </Button>

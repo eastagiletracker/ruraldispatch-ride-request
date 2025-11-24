@@ -4,6 +4,8 @@ export interface RideRequest {
   rideStatus?: number;
   rider: Array<{ fullName: string; phone: string }>;
   driver?: Array<{ fullName: string; mobilePhone: string }>;
+  riderName?: string;
+  riderPhone?: string;
   serviceUserName?: string;
   serviceUserPhone?: string;
   pickupAddress: string;

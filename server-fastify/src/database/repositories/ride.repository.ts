@@ -64,6 +64,8 @@ interface RideRequestInput {
 interface RideRequestUpdateInput {
   assignedDriverUuid?: string | null;
   assignedVehicleUuid?: string | null;
+  driverUuid?: string | null;
+  vehicleUuid?: string | null;
   serviceUserUuid?: string | null;
   pickupAddress?: string;
   dropOffAddress?: string;
@@ -177,8 +179,14 @@ export function createRideRepository(prisma: PrismaClient) {
     ): Promise<Ride> => {
       // Map MongoDB field names to Prisma schema
       const updates: any = {
+        ...(replacementFields.driverUuid !== undefined && {
+          driverUuid: replacementFields.driverUuid,
+        }),
         ...(replacementFields.assignedDriverUuid !== undefined && {
           driverUuid: replacementFields.assignedDriverUuid,
+        }),
+        ...(replacementFields.vehicleUuid !== undefined && {
+          vehicleUuid: replacementFields.vehicleUuid,
         }),
         ...(replacementFields.assignedVehicleUuid !== undefined && {
           vehicleUuid: replacementFields.assignedVehicleUuid,

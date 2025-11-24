@@ -7,8 +7,8 @@ export const getRider = (ride: RideRequest) =>
 export const getDriver = (ride: RideRequest) =>
   ride?.driver && ride.driver.length > 0 ? ride.driver[0] : undefined;
 
-// Helper to get rider name with fallback to serviceUserName
+// Helper to get rider name with fallback to riderName or serviceUserName
 export const getRiderName = (ride: RideRequest) => {
   const rider = getRider(ride);
-  return rider?.fullName || ride?.serviceUserName || 'Unknown';
+  return rider?.fullName || ride?.riderName || ride?.serviceUserName || 'Unknown';
 };
