@@ -39,6 +39,14 @@ interface RideRequestData {
   riderName?: string;
   serviceUserName?: string;
   estimatedTravelTime?: number;
+  estimatedDistance?: number;
+  riderPhone?: string;
+  caseManagerName?: string;
+  caseManagerPhone?: string;
+  walkerAccessible?: boolean;
+  wheelchairAccessible?: boolean;
+  serviceAnimalFriendly?: boolean;
+  oxygenTankAccessible?: boolean;
 }
 
 interface DriverData {
@@ -176,27 +184,66 @@ export default function AssignDriver({ selectedRideRequestId, cancelFn }: Assign
             {loading ? (
               /* Skeleton Loading State */
               <div className="space-y-3">
+                {/* Rider */}
                 <div className="flex items-start gap-2">
-                  <Skeleton className="mt-1 h-4 w-4" />
+                  <Skeleton className="mt-1 h-4 w-4 rounded-full" />
                   <div className="flex-1 space-y-2">
-                    <Skeleton className="h-3 w-16" />
+                    <Skeleton className="h-3 w-12" />
                     <Skeleton className="h-4 w-32" />
                   </div>
                 </div>
 
+                {/* Pickup Time */}
                 <div className="flex items-start gap-2">
-                  <Skeleton className="mt-1 h-4 w-4" />
-                  <div className="flex-1 space-y-2">
-                    <Skeleton className="h-3 w-24" />
-                    <Skeleton className="h-4 w-48" />
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-2">
-                  <Skeleton className="mt-1 h-4 w-4" />
+                  <Skeleton className="mt-1 h-4 w-4 rounded-full" />
                   <div className="flex-1 space-y-2">
                     <Skeleton className="h-3 w-20" />
                     <Skeleton className="h-4 w-40" />
+                  </div>
+                </div>
+
+                {/* Travel Time & Distance */}
+                <div className="flex items-start gap-2">
+                  <Skeleton className="mt-1 h-4 w-4 rounded-full" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-3 w-32" />
+                    <Skeleton className="h-4 w-28" />
+                  </div>
+                </div>
+
+                {/* Pickup Location */}
+                <div className="flex items-start gap-2">
+                  <Skeleton className="mt-1 h-4 w-4 rounded-full" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-3 w-28" />
+                    <Skeleton className="h-4 w-56" />
+                  </div>
+                </div>
+
+                {/* Drop off Location */}
+                <div className="flex items-start gap-2">
+                  <Skeleton className="mt-1 h-4 w-4 rounded-full" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-3 w-32" />
+                    <Skeleton className="h-4 w-52" />
+                  </div>
+                </div>
+
+                {/* Purpose */}
+                <div className="flex items-start gap-2">
+                  <Skeleton className="mt-1 h-4 w-4 rounded-full" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-3 w-24" />
+                    <Skeleton className="h-4 w-36" />
+                  </div>
+                </div>
+
+                {/* Roundtrip */}
+                <div className="flex items-start gap-2">
+                  <Skeleton className="mt-1 h-4 w-4 rounded-full" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-3 w-16" />
+                    <Skeleton className="h-4 w-10" />
                   </div>
                 </div>
               </div>
@@ -227,18 +274,6 @@ export default function AssignDriver({ selectedRideRequestId, cancelFn }: Assign
                   </div>
                 </div>
 
-                {selectedRideRequest.estimatedTravelTime && (
-                  <div className="flex items-start gap-2">
-                    <Clock className="mt-1 h-4 w-4 flex-shrink-0 text-blue-600" />
-                    <div className="flex-1">
-                      <p className="text-xs text-muted-foreground">Estimated Travel Time</p>
-                      <p className="text-sm font-medium">
-                        {selectedRideRequest.estimatedTravelTime} minutes
-                      </p>
-                    </div>
-                  </div>
-                )}
-
                 <div className="flex items-start gap-2">
                   <MapPin className="mt-1 h-4 w-4 flex-shrink-0 text-green-600" />
                   <div className="flex-1">
@@ -258,6 +293,74 @@ export default function AssignDriver({ selectedRideRequestId, cancelFn }: Assign
                     </p>
                   </div>
                 </div>
+
+                {(selectedRideRequest.estimatedTravelTime ||
+                  selectedRideRequest.estimatedDistance) && (
+                  <div className="flex items-start gap-2">
+                    <Clock className="mt-1 h-4 w-4 flex-shrink-0 text-blue-600" />
+                    <div className="flex-1">
+                      <p className="text-xs text-muted-foreground">Travel Time & Distance</p>
+                      <p className="text-sm font-medium">
+                        {selectedRideRequest.estimatedTravelTime
+                          ? `${selectedRideRequest.estimatedTravelTime} min`
+                          : 'N/A'}
+                        {' • '}
+                        {selectedRideRequest.estimatedDistance
+                          ? `${Number(selectedRideRequest.estimatedDistance).toFixed(2)} mi`
+                          : 'N/A'}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {selectedRideRequest.caseManagerName && (
+                  <div className="flex items-start gap-2">
+                    <User className="mt-1 h-4 w-4 flex-shrink-0 text-purple-600" />
+                    <div className="flex-1">
+                      <p className="text-xs text-muted-foreground">Case Manager</p>
+                      <p className="text-sm font-medium">
+                        {selectedRideRequest.caseManagerName}
+                        {selectedRideRequest.caseManagerPhone &&
+                          ` (${selectedRideRequest.caseManagerPhone})`}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {selectedRideRequest.riderPhone && (
+                  <div className="flex items-start gap-2">
+                    <Phone className="mt-1 h-4 w-4 flex-shrink-0 text-muted-foreground" />
+                    <div className="flex-1">
+                      <p className="text-xs text-muted-foreground">Rider Phone</p>
+                      <p className="text-sm font-medium">{selectedRideRequest.riderPhone}</p>
+                    </div>
+                  </div>
+                )}
+
+                {(selectedRideRequest.walkerAccessible ||
+                  selectedRideRequest.wheelchairAccessible ||
+                  selectedRideRequest.serviceAnimalFriendly ||
+                  selectedRideRequest.oxygenTankAccessible) && (
+                  <div className="flex items-start gap-2">
+                    <div className="mt-1 flex h-4 w-4 flex-shrink-0 items-center justify-center">
+                      <div className="h-2 w-2 rounded-full bg-blue-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-xs text-muted-foreground">Accessibility Requirements</p>
+                      <p className="text-sm font-medium">
+                        {[
+                          selectedRideRequest.walkerAccessible && 'Walker Accessible',
+                          selectedRideRequest.wheelchairAccessible && 'Wheelchair Accessible',
+                          selectedRideRequest.serviceAnimalFriendly && 'Service Animal Friendly',
+                          selectedRideRequest.oxygenTankAccessible &&
+                            'Oxygen Tank/Medical Device Accessible',
+                        ]
+                          .filter(Boolean)
+                          .join(', ')}
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 {selectedRideRequest.purpose && (
                   <div className="flex items-start gap-2">
@@ -284,80 +387,21 @@ export default function AssignDriver({ selectedRideRequestId, cancelFn }: Assign
                 </div>
 
                 {selectedRideRequest.notes &&
-                  selectedRideRequest.roundTrip &&
-                  selectedRideRequest.notes.includes('Wait time:') && (
-                    <div className="flex items-start gap-2">
-                      <div className="mt-1 flex h-4 w-4 flex-shrink-0 items-center justify-center">
-                        <div className="h-2 w-2 rounded-full bg-muted-foreground" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-xs text-muted-foreground">Estimated Wait Time</p>
-                        <p className="text-sm font-medium">
-                          {selectedRideRequest.notes
-                            .split('Wait time:')[1]
-                            ?.split('.')[0]
-                            ?.trim() || 'Not specified'}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                {selectedRideRequest.notes?.includes('Accessibility:') && (
-                  <div className="flex items-start gap-2">
-                    <div className="mt-1 flex h-4 w-4 flex-shrink-0 items-center justify-center">
-                      <div className="h-2 w-2 rounded-full bg-muted-foreground" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-xs text-muted-foreground">Accessibility Requirements</p>
-                      <p className="text-sm font-medium">
-                        {selectedRideRequest.notes
-                          .split('Accessibility:')[1]
-                          ?.split('.')[0]
-                          ?.trim() || 'None'}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {selectedRideRequest.notes?.includes('Rider Phone:') && (
-                  <div className="flex items-start gap-2">
-                    <Phone className="mt-1 h-4 w-4 flex-shrink-0 text-muted-foreground" />
-                    <div className="flex-1">
-                      <p className="text-xs text-muted-foreground">Rider Phone</p>
-                      <p className="text-sm font-medium">
-                        {selectedRideRequest.notes
-                          .split('Rider Phone:')[1]
-                          ?.split('.')[0]
-                          ?.trim() || 'Not provided'}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {selectedRideRequest.notes?.includes('Case Manager:') && (
-                  <div className="flex items-start gap-2">
-                    <User className="mt-1 h-4 w-4 flex-shrink-0 text-muted-foreground" />
-                    <div className="flex-1">
-                      <p className="text-xs text-muted-foreground">Case Manager</p>
-                      <p className="text-sm font-medium">
-                        {selectedRideRequest.notes
-                          .split('Case Manager:')[1]
-                          ?.split('Rider Phone:')[0]
-                          ?.trim() || 'Not provided'}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Extract and display custom notes/comments */}
-                {selectedRideRequest.notes &&
                   (() => {
-                    // Get everything after "Wait time: ..." up to the end
-                    const waitTimeSection = selectedRideRequest.notes.split('Wait time:')[1];
-                    if (!waitTimeSection) return null;
+                    let customNotes = selectedRideRequest.notes;
 
-                    // Skip the wait time value (up to the first period) and get the rest
-                    const customNotes = waitTimeSection.split('.').slice(1).join('.').trim();
+                    // Extract only the custom notes by removing all structured fields
+                    // Pattern: "Rider: ... Case Manager: ... Accessibility: ... Wait time: ... Travel time: ... [CUSTOM NOTES]"
+                    const travelTimeMatch = customNotes.match(/Travel time:\s*[^.]*\.\s*(.*)/s);
+                    if (travelTimeMatch && travelTimeMatch[1]) {
+                      customNotes = travelTimeMatch[1].trim();
+                    } else {
+                      // If no Travel time field, try other patterns
+                      const waitTimeMatch = customNotes.match(/Wait time:\s*[^.]*\.\s*(.*)/s);
+                      if (waitTimeMatch && waitTimeMatch[1]) {
+                        customNotes = waitTimeMatch[1].trim();
+                      }
+                    }
 
                     if (!customNotes || customNotes === '') return null;
 
@@ -368,7 +412,7 @@ export default function AssignDriver({ selectedRideRequestId, cancelFn }: Assign
                         </div>
                         <div className="flex-1">
                           <p className="mb-1 text-xs font-semibold text-yellow-900 dark:text-yellow-100">
-                            Important Notes for Driver
+                            Notes
                           </p>
                           <p className="whitespace-pre-wrap text-sm text-yellow-900 dark:text-yellow-100">
                             {customNotes}

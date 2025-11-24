@@ -37,6 +37,8 @@ interface RideRequestInput {
   serviceUserName?: string | null;
   riderPhone?: string | null;
   serviceUserPhone?: string | null;
+  caseManagerName?: string | null;
+  caseManagerPhone?: string | null;
   assignedDriverUuid?: string | null;
   driverUuid?: string | null;
   assignedVehicleUuid?: string | null;
@@ -55,6 +57,8 @@ interface RideRequestInput {
   roundTrip?: boolean;
   purpose?: string | null;
   notes?: string | null;
+  estimatedTravelTime?: number;
+  estimatedDistance?: number;
   walkerAccessible?: boolean;
   wheelchairAccessible?: boolean;
   serviceAnimalFriendly?: boolean;
@@ -82,6 +86,8 @@ interface RideRequestUpdateInput {
   roundTrip?: boolean;
   purpose?: string | null;
   notes?: string | null;
+  estimatedTravelTime?: number;
+  estimatedDistance?: number;
   walkerAccessible?: boolean;
   wheelchairAccessible?: boolean;
   serviceAnimalFriendly?: boolean;
@@ -138,6 +144,8 @@ export function createRideRepository(prisma: PrismaClient) {
           riderUuid: rideReq.serviceUserUuid || rideReq.riderUuid || null,
           riderName: rideReq.serviceUserName || null,
           riderPhone: rideReq.serviceUserPhone || null,
+          caseManagerName: rideReq.caseManagerName || null,
+          caseManagerPhone: rideReq.caseManagerPhone || null,
           driverUuid: rideReq.assignedDriverUuid || rideReq.driverUuid || null,
           vehicleUuid: rideReq.assignedVehicleUuid || rideReq.vehicleUuid || null,
           pickupAddress: rideReq.pickupAddress,
@@ -162,6 +170,8 @@ export function createRideRepository(prisma: PrismaClient) {
           roundTrip: rideReq.roundTrip || false,
           purpose: rideReq.purpose || null,
           notes: rideReq.notes || null,
+          estimatedTravelTime: rideReq.estimatedTravelTime || null,
+          estimatedDistance: rideReq.estimatedDistance || null,
           walkerAccessible: rideReq.walkerAccessible || false,
           wheelchairAccessible: rideReq.wheelchairAccessible || false,
           serviceAnimalFriendly: rideReq.serviceAnimalFriendly || false,
@@ -250,6 +260,12 @@ export function createRideRepository(prisma: PrismaClient) {
         }),
         ...(replacementFields.notes !== undefined && {
           notes: replacementFields.notes,
+        }),
+        ...(replacementFields.estimatedTravelTime !== undefined && {
+          estimatedTravelTime: replacementFields.estimatedTravelTime,
+        }),
+        ...(replacementFields.estimatedDistance !== undefined && {
+          estimatedDistance: replacementFields.estimatedDistance,
         }),
         ...(replacementFields.walkerAccessible !== undefined && {
           walkerAccessible: replacementFields.walkerAccessible,

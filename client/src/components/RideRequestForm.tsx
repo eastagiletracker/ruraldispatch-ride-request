@@ -38,6 +38,7 @@ export default function RideRequestForm({
   const [submitError, setSubmitError] = useState<string>('');
   const [calculatingTravelTime, setCalculatingTravelTime] = useState<boolean>(false);
   const [travelTimeCalculated, setTravelTimeCalculated] = useState<boolean>(false);
+  const [estimatedDistance, setEstimatedDistance] = useState<string>('');
 
   const {
     register,
@@ -118,9 +119,10 @@ export default function RideRequestForm({
     const pickup = getAddressString(pickupLocation);
     const dropoff = getAddressString(dropoffLocation);
 
-    // If either is empty, clear travel time and reset flag
+    // If either is empty, clear travel time, distance and reset flag
     if (!pickup || !dropoff) {
       setValue('estimatedTravelTime', '');
+      setEstimatedDistance('');
       setTravelTimeCalculated(false);
       return;
     }
@@ -144,10 +146,14 @@ export default function RideRequestForm({
           shouldValidate: true,
         });
 
+        // Convert meters to miles: 1 mile = 1609.34 meters
+        const distanceInMiles = (result.distanceMeters / 1609.34).toFixed(2);
+        setEstimatedDistance(distanceInMiles);
+
         setTravelTimeCalculated(true);
 
-        toast.success('Travel time calculated', {
-          description: `Estimated ${result.durationMinutes} minutes (${result.distanceText})`,
+        toast.success('Travel time & distance calculated', {
+          description: `${result.durationMinutes} min • ${distanceInMiles} miles`,
         });
       } catch (error) {
         console.error('Error calculating travel time:', error);
@@ -201,6 +207,15 @@ export default function RideRequestForm({
         }
       }
 
+      // Parse estimatedDistance as a number (miles)
+      let estimatedDistanceNum: number | undefined;
+      if (estimatedDistance) {
+        const distanceNum = parseFloat(estimatedDistance);
+        if (!Number.isNaN(distanceNum)) {
+          estimatedDistanceNum = distanceNum;
+        }
+      }
+
       const rideRequestData = {
         // Only include serviceUserUuid if we have a valid UUID from an existing user
         ...(selectedUser?.uuid && { serviceUserUuid: selectedUser.uuid }),
@@ -232,13 +247,15 @@ export default function RideRequestForm({
         ...(estimatedTravelTimeNum !== undefined && {
           estimatedTravelTime: estimatedTravelTimeNum,
         }),
-        notes:
-          `Rider: ${data.riderFullName} (${data.riderMobilePhone}). ` +
-          `Case Manager: ${data.caseManagerFullName} (${data.caseManagerAgency}, ${data.caseManagerPhone}). ` +
-          `Accessibility: ${accessibilityString}. ` +
-          `Wait time: ${data.estimatedWaitTime || 'Not specified'}. ` +
-          `Travel time: ${data.estimatedTravelTime || 'Not specified'}. ` +
-          `${data.notesComments || ''}`,
+        ...(estimatedDistanceNum !== undefined && {
+          estimatedDistance: estimatedDistanceNum,
+        }),
+        // Only store custom notes from the user - all other data is in dedicated fields
+        notes: data.notesComments || null,
+        walkerAccessible: data.walkerAccessible,
+        wheelchairAccessible: data.wheelchairAccessible,
+        serviceAnimalFriendly: data.serviceAnimalFriendly,
+        oxygenTankAccessible: data.oxygenTankAccessible,
       };
 
       const response = await createDocument('riderequests', rideRequestData);
@@ -459,39 +476,75 @@ export default function RideRequestForm({
                 )}
               />
 
-              <div className="space-y-2">
-                <Label htmlFor="estimatedTravelTime">
-                  Estimated Travel Time (minutes)
-                  {travelTimeCalculated && (
-                    <span className="ml-2 text-xs text-green-600 font-normal">
-                      ✓ Auto-calculated
-                    </span>
-                  )}
-                </Label>
-                <div className="relative">
-                  <Input
-                    id="estimatedTravelTime"
-                    type="number"
-                    min="1"
-                    {...register('estimatedTravelTime')}
-                    placeholder={calculatingTravelTime ? 'Calculating...' : 'e.g., 30'}
-                    disabled={calculatingTravelTime}
-                    className={travelTimeCalculated ? 'border-green-500' : ''}
-                  />
-                  {calculatingTravelTime && (
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                    </div>
-                  )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="estimatedTravelTime">
+                    Travel Time (minutes)
+                    {travelTimeCalculated && (
+                      <span className="ml-2 text-xs text-green-600 font-normal">
+                        ✓ Auto-calculated
+                      </span>
+                    )}
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="estimatedTravelTime"
+                      type="number"
+                      min="1"
+                      {...register('estimatedTravelTime')}
+                      placeholder={calculatingTravelTime ? 'Calculating...' : 'e.g., 30'}
+                      disabled={calculatingTravelTime}
+                      className={travelTimeCalculated ? 'border-green-500' : ''}
+                    />
+                    {calculatingTravelTime && (
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Estimated one-way travel time
+                  </p>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  {calculatingTravelTime
-                    ? 'Calculating travel time using Google Maps...'
-                    : travelTimeCalculated
-                      ? 'Auto-calculated using current traffic. You can adjust manually if needed.'
-                      : 'Enter estimated one-way travel time in minutes (used for SMS scheduling)'}
-                </p>
+
+                <div className="space-y-2">
+                  <Label htmlFor="estimatedDistance">
+                    Distance (miles)
+                    {travelTimeCalculated && (
+                      <span className="ml-2 text-xs text-green-600 font-normal">
+                        ✓ Auto-calculated
+                      </span>
+                    )}
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="estimatedDistance"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={estimatedDistance}
+                      onChange={(e) => setEstimatedDistance(e.target.value)}
+                      placeholder={calculatingTravelTime ? 'Calculating...' : 'e.g., 15.5'}
+                      disabled={calculatingTravelTime}
+                      className={travelTimeCalculated ? 'border-green-500' : ''}
+                    />
+                    {calculatingTravelTime && (
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Estimated one-way distance
+                  </p>
+                </div>
               </div>
+
+              {travelTimeCalculated && (
+                <p className="text-xs text-muted-foreground italic">
+                  ℹ️ Auto-calculated using Google Maps with current traffic. You can adjust manually if needed.
+                </p>
+              )}
 
               <div className="flex items-center space-x-2">
                 <Controller

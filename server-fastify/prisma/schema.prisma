@@ -147,6 +147,10 @@ model Ride {
   riderName  String?
   riderPhone String?
 
+  // Case manager info (for tracking which case manager requested the ride)
+  caseManagerName  String?
+  caseManagerPhone String?
+
   // Addresses
   pickupAddress  String
   dropOffAddress String
@@ -165,10 +169,11 @@ model Ride {
   rideRequestStatus Int @default(100)
 
   // Trip details
-  roundTrip            Boolean @default(false)
+  roundTrip            Boolean  @default(false)
   purpose              String?
   notes                String?
-  estimatedTravelTime  Int?    // Estimated travel time in minutes
+  estimatedTravelTime  Int?     // Estimated travel time in minutes
+  estimatedDistance    Decimal? // Estimated distance in miles
 
   // Accessibility requirements
   walkerAccessible      Boolean @default(false)

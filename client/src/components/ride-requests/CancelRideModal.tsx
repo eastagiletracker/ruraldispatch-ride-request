@@ -8,6 +8,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import type { RideRequest } from './types';
+import { getRiderName } from './helpers';
 
 interface CancelRideModalProps {
   isOpen: boolean;
@@ -34,7 +35,7 @@ export function CancelRideModal({ isOpen, onClose, rideRequest, onConfirm }: Can
             <div>
               <p className="text-sm font-medium">Rider</p>
               <p className="text-sm text-muted-foreground">
-                {rideRequest.rider?.[0]?.fullName || 'Unknown Rider'}
+                {getRiderName(rideRequest)}
               </p>
             </div>
           </div>

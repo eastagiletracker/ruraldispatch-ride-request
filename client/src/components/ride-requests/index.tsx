@@ -1,4 +1,8 @@
-import { RIDE_REQUEST_STATUSES, RIDE_STATUSES } from '@shared/schemas';
+import {
+  RIDE_REQUEST_STATUSES,
+  RIDE_STATUSES,
+  RIDE_REQUEST_CLOSING_STATUSES,
+} from '@shared/schemas';
 import { Car, CheckCircle2, Clock, Download } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -20,6 +24,7 @@ import { AssignedRideRow } from './AssignedRideRow';
 import { CancelRideModal } from './CancelRideModal';
 import { CompletedRideCard } from './CompletedRideCard';
 import { CompletedRideRow } from './CompletedRideRow';
+import { getRiderName } from './helpers';
 import { PendingRideCard } from './PendingRideCard';
 import { PendingRideRow } from './PendingRideRow';
 import { SkeletonCard, SkeletonTableRow, SkeletonTableRowAssigned } from './SkeletonComponents';
@@ -70,7 +75,7 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
         rideRequestStatus: RIDE_REQUEST_STATUSES.ALL_RIDE_REQUEST_CANCELED,
       });
       toast.success('Ride request cancelled successfully!', {
-        description: `Request for ${rideRequest.rider?.[0]?.fullName || 'rider'} has been cancelled.`,
+        description: `Request for ${getRiderName(rideRequest)} has been cancelled.`,
       });
       closeCancelModal();
       getRideRequests();
@@ -112,7 +117,19 @@ export default function RideRequests({ callbackFn }: RideRequestsProps) {
     try {
       const fetchedRideRequests = (await fetchCollection('riderequests')) as RideRequest[];
       if (fetchedRideRequests) {
-        const rideReqsSortedByRrStatus = fetchedRideRequests.sort(
+        // Filter out cancelled rides, but keep completed rides (status 1100)
+        const activeRideRequests = fetchedRideRequests.filter(
+          (rr) =>
+            rr.rideRequestStatus !== RIDE_REQUEST_STATUSES.ALL_RIDE_REQUEST_CANCELED &&
+            rr.rideRequestStatus !== RIDE_REQUEST_STATUSES.DRIVER_UNAVAILABLE &&
+            rr.rideRequestStatus !== RIDE_REQUEST_STATUSES.VEHICLE_UNAVAILABLE &&
+            rr.rideRequestStatus !== RIDE_REQUEST_STATUSES.RIDE_CANCELED_UNCONFIRMED &&
+            rr.rideRequestStatus !== RIDE_REQUEST_STATUSES.ECTC_TRANSPORT_BROKER_DENIED &&
+            rr.rideRequestStatus !== RIDE_REQUEST_STATUSES.ECTC_FLEET_MANAGER_DENIED &&
+            rr.rideRequestStatus !== RIDE_REQUEST_STATUSES.ECTC_STAFF_DENIED
+        );
+
+        const rideReqsSortedByRrStatus = activeRideRequests.sort(
           (a, b) => a.rideRequestStatus - b.rideRequestStatus
         );
         const length = rideReqsSortedByRrStatus.length;
