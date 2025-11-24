@@ -126,7 +126,7 @@ export default function AssignDriver({ selectedRideRequestId, cancelFn }: Assign
         driverUuid: selectedDriver.uuid,
         vehicleUuid: selectedVehicle.uuid,
         rideRequestStatus: 400, // RIDE_CONFIRMATION_NEEDED - triggers driver assignment SMS
-        rideStatus: 0, // REQUEST_IN_PROGRESS - driver needs to accept
+        rideStatus: 100, // RIDE_CONFIRMED - triggers scheduler to send pickup time SMS
       });
 
       toast.success(
