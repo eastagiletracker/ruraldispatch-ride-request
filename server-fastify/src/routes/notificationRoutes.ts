@@ -265,11 +265,16 @@ const notificationRoutes: FastifyPluginAsync = async (fastify) => {
 
         fastify.log.info('\n✅ SMS RESPONSE PROCESSING COMPLETE');
         fastify.log.info(`🎯 Action Success: ${action.success}`);
-        fastify.log.info(`🎯 New Ride Status: ${action.newRideStatus ?? 'unchanged'}`);
-        fastify.log.info(`🎯 New Request Status: ${action.newRequestStatus ?? 'unchanged'}`);
-        fastify.log.info(`🎯 Notifications to send: ${action.notifications?.length ?? 0}`);
-        fastify.log.info(`🎯 Has scheduled notification: ${!!action.scheduleNotification}`);
-        fastify.log.info(`🎯 Has scheduled status change: ${!!action.scheduleStatusChange}`);
+        if (action.success) {
+          fastify.log.info(`🎯 New Ride Status: ${action.newRideStatus ?? 'unchanged'}`);
+          fastify.log.info(`🎯 New Request Status: ${action.newRequestStatus ?? 'unchanged'}`);
+          fastify.log.info(`🎯 Notifications to send: ${action.notifications?.length ?? 0}`);
+          fastify.log.info(`🎯 Has scheduled notification: ${!!action.scheduleNotification}`);
+          fastify.log.info(`🎯 Has scheduled status change: ${!!action.scheduleStatusChange}`);
+        } else {
+          fastify.log.info(`🎯 Error: ${action.error}`);
+          fastify.log.info(`🎯 Requires Response: ${action.requiresResponse}`);
+        }
 
         if (action.success) {
           // Execute status updates
