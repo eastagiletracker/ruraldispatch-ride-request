@@ -265,10 +265,24 @@ Thank you for using our service! If you have any feedback, please contact us.`;
   }
 
   /**
-   * Close out ride session (cleanup/logging)
+   * Close out ride session (cleanup/logging and cancel scheduled messages)
    */
-  async closeRideSession(rideUuid: string): Promise<{ success: boolean; message: string }> {
-    console.log(`Closing ride session for ride #${rideUuid}`);
+  async closeRideSession(rideUuid: string): Promise<{ success: boolean; message: string; canceledMessages?: number }> {
+    console.log(`🔒 Closing ride session for ride #${rideUuid}`);
+    
+    // Cancel any scheduled messages for this ride
+    const cancelResults = await this.cancelScheduledMessagesForRide(rideUuid);
+    const successfulCancellations = cancelResults.filter(r => r.success).length;
+    
+    if (successfulCancellations > 0) {
+      console.log(`✅ Canceled ${successfulCancellations} scheduled message(s) when closing session`);
+      return { 
+        success: true, 
+        message: `Session closed for ride #${rideUuid}. Canceled ${successfulCancellations} scheduled message(s).`,
+        canceledMessages: successfulCancellations
+      };
+    }
+    
     return { success: true, message: `Session closed for ride #${rideUuid}` };
   }
 

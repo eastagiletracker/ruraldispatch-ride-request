@@ -85,11 +85,19 @@ const SMSConversationModal: React.FC<SMSConversationModalProps> = ({
 
   const handleCloseSession = async () => {
     try {
-      await closeRideSession(rideUuid);
+      const result = await closeRideSession(rideUuid);
       setIsSessionActive(false);
       setShowCloseConfirm(false);
       loadNotifications();
-      toast.success('SMS session closed successfully');
+      
+      // Show appropriate success message based on whether scheduled messages were canceled
+      if (result.serviceResult?.canceledMessages && result.serviceResult.canceledMessages > 0) {
+        toast.success(
+          `SMS session closed. Canceled ${result.serviceResult.canceledMessages} scheduled message(s).`
+        );
+      } else {
+        toast.success('SMS session closed successfully');
+      }
     } catch (error) {
       console.error('Error closing session:', error);
       toast.error('Failed to close SMS session');

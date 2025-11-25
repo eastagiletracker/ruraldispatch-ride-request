@@ -64,4 +64,10 @@ export interface CloseSessionResponse {
   success: boolean;
   message: string;
   closedCount?: number;
+  result?: any;
+  serviceResult?: {
+    success: boolean;
+    message: string;
+    canceledMessages?: number;
+  };
 }
