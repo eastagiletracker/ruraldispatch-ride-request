@@ -93,12 +93,12 @@ describe('TimeCalculator', () => {
 
     it('should use default 30 minutes when travel time not provided', () => {
       const pickupTime = new Date(Date.now() + 60 * 60 * 1000);
-      const ride = {
+      const ride: Partial<RideWithSchedulingFields> & { pickupRequestedTime: Date } = {
         pickupRequestedTime: pickupTime,
         estimatedTravelTime: undefined,
-      } as RideWithSchedulingFields;
+      };
 
-      const result = TimeCalculator.calculateDropoffTime(ride);
+      const result = TimeCalculator.calculateDropoffTime(ride as RideWithSchedulingFields);
 
       expect(result.travelTimeMinutes).toBe(30);
       expect(result.targetTime.getTime()).toBe(pickupTime.getTime() + 30 * 60 * 1000);
@@ -137,13 +137,13 @@ describe('TimeCalculator', () => {
 
     it('should use default values when times not provided', () => {
       const pickupTime = new Date(Date.now() + 60 * 60 * 1000);
-      const ride = {
+      const ride: Partial<RideWithSchedulingFields> & { pickupRequestedTime: Date } = {
         pickupRequestedTime: pickupTime,
         estimatedTravelTime: undefined,
         estimatedWaitingTime: undefined,
-      } as RideWithSchedulingFields;
+      };
 
-      const result = TimeCalculator.calculateRoundtripReturnTime(ride);
+      const result = TimeCalculator.calculateRoundtripReturnTime(ride as RideWithSchedulingFields);
 
       expect(result.travelTimeMinutes).toBe(30); // Default travel
       expect(result.waitingTimeMinutes).toBe(60); // Default waiting

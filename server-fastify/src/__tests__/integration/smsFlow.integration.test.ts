@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { RIDE_STATUSES } from '../../constants/rideStatuses.js';
 import { processSMSResponse, parseResponse, determineContext } from '../../services/smsResponseHandler.js';
-import type { Ride, ServiceProvider } from '../../types/database.types.js';
+import type { Ride } from '../../types/database.types.js';
 
 /**
  * Integration Tests for Complete SMS Flow
@@ -334,7 +334,9 @@ describe('SMS Flow Integration Tests', () => {
       // First check: Driver en route
       let result = processSMSResponse(ride, 'driver', '2');
       expect(result.success).toBe(true);
-      expect(result.metadata?.driverEnRoute).toBe(true);
+      if (result.success) {
+        expect(result.metadata?.driverEnRoute).toBe(true);
+      }
 
       // Second check (5 min later): Still en route
       result = processSMSResponse(ride, 'driver', '2');
@@ -343,7 +345,9 @@ describe('SMS Flow Integration Tests', () => {
       // Third check (5 min later): Finally arrived
       result = processSMSResponse(ride, 'driver', '1');
       expect(result.success).toBe(true);
-      expect(result.metadata?.driverArrived).toBe(true);
+      if (result.success) {
+        expect(result.metadata?.driverArrived).toBe(true);
+      }
     });
 
     it('should handle rider not ready for extended period', () => {
@@ -352,7 +356,9 @@ describe('SMS Flow Integration Tests', () => {
       // First check: Rider not ready
       let result = processSMSResponse(ride, 'driver', '2');
       expect(result.success).toBe(true);
-      expect(result.metadata?.driverWaiting).toBe(true);
+      if (result.success) {
+        expect(result.metadata?.driverWaiting).toBe(true);
+      }
 
       // Second check: Still not ready
       result = processSMSResponse(ride, 'driver', '2');
@@ -361,7 +367,9 @@ describe('SMS Flow Integration Tests', () => {
       // Third check: Finally ready
       result = processSMSResponse(ride, 'driver', '1');
       expect(result.success).toBe(true);
-      expect(result.newRideStatus).toBe(RIDE_STATUSES.RIDER_PICKED_UP);
+      if (result.success) {
+        expect(result.newRideStatus).toBe(RIDE_STATUSES.RIDER_PICKED_UP);
+      }
     });
   });
 });

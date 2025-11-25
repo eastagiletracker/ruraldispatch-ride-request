@@ -11,12 +11,47 @@ describe('NotificationScheduler', () => {
   let consoleLogSpy: any;
   let consoleWarnSpy: any;
 
-  const mockRide: Ride = {
-    uuid: 'ride-123',
-    pickupRequestedTime: new Date('2025-11-25T18:00:00Z'),
+  // Factory function for creating test rides
+  const createMockRide = (overrides = {}): Ride =>
+    ({
+      uuid: 'ride-123',
+      displayId: 'RIDE-123',
+      riderUuid: null,
+      driverUuid: null,
+      vehicleUuid: null,
+      riderName: null,
+      riderPhone: null,
+      caseManagerName: null,
+      caseManagerPhone: null,
+      pickupAddress: 'Test Pickup',
+      dropOffAddress: 'Test Dropoff',
+      pickupRequestedTime: new Date('2025-11-25T18:00:00Z'),
+      dropOffRequestedTime: null,
+      rideStartedActualTime: null,
+      pickupActualTime: null,
+      dropOffActualTime: null,
+      rideCompleteRequestedTime: null,
+      rideCompleteActualTime: null,
+      rideStatus: 0,
+      rideRequestStatus: 100,
+      roundTrip: false,
+      purpose: null,
+      notes: null,
+      estimatedTravelTime: 30,
+      estimatedDistance: null,
+      walkerAccessible: false,
+      wheelchairAccessible: false,
+      serviceAnimalFriendly: false,
+      oxygenTankAccessible: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      ...overrides,
+    } as Ride);
+
+  const mockRide = createMockRide({
     estimatedTravelTime: 30,
     estimatedWaitingTime: 60,
-  } as Ride;
+  });
 
   const mockDriver: ServiceProvider = {
     uuid: 'driver-123',
@@ -80,7 +115,7 @@ describe('NotificationScheduler', () => {
       // Verify task was added
       const tasks = taskManager.getRideTasks(mockRide.uuid);
       expect(tasks).toHaveLength(1);
-      expect(tasks[0].taskName).toBe('driver_arrival_check');
+      expect(tasks[0]!.taskName).toBe('driver_arrival_check');
 
       // Verify notification not sent yet
       expect(notificationService.sendDriverArrivalCheck).not.toHaveBeenCalled();
@@ -126,7 +161,7 @@ describe('NotificationScheduler', () => {
 
       const tasks = taskManager.getRideTasks(mockRide.uuid);
       expect(tasks).toHaveLength(1);
-      expect(tasks[0].taskName).toBe('dropoff_check');
+      expect(tasks[0]!.taskName).toBe('dropoff_check');
     });
 
     it('should send immediately for past dropoff time', () => {
@@ -169,7 +204,7 @@ describe('NotificationScheduler', () => {
 
       const tasks = taskManager.getRideTasks(mockRide.uuid);
       expect(tasks).toHaveLength(1);
-      expect(tasks[0].taskName).toBe('roundtrip_return_check');
+      expect(tasks[0]!.taskName).toBe('roundtrip_return_check');
     });
 
     it('should send immediately for past return time', () => {
@@ -209,7 +244,7 @@ describe('NotificationScheduler', () => {
 
       const tasks = taskManager.getRideTasks(mockRide.uuid);
       expect(tasks).toHaveLength(1);
-      expect(tasks[0].taskName).toBe(`status_change_${newStatus}`);
+      expect(tasks[0]!.taskName).toBe(`status_change_${newStatus}`);
     });
 
   });
@@ -233,7 +268,7 @@ describe('NotificationScheduler', () => {
 
       const tasks = taskManager.getRideTasks(mockRide.uuid);
       expect(tasks).toHaveLength(1);
-      expect(tasks[0].taskName).toBe(`notification_${template}_${recipient}`);
+      expect(tasks[0]!.taskName).toBe(`notification_${template}_${recipient}`);
     });
 
   });

@@ -24,8 +24,8 @@ describe('TaskManager', () => {
 
       const tasks = taskManager.getRideTasks(rideUuid);
       expect(tasks).toHaveLength(1);
-      expect(tasks[0].taskName).toBe('arrival-check');
-      expect(tasks[0].timeoutId).toBe(timeoutId);
+      expect(tasks[0]!.taskName).toBe('arrival-check');
+      expect(tasks[0]!.timeoutId).toBe(timeoutId);
 
       clearTimeout(timeoutId);
     });
@@ -40,8 +40,8 @@ describe('TaskManager', () => {
 
       const tasks = taskManager.getRideTasks(rideUuid);
       expect(tasks).toHaveLength(2);
-      expect(tasks[0].taskName).toBe('arrival-check');
-      expect(tasks[1].taskName).toBe('pickup-check');
+      expect(tasks[0]!.taskName).toBe('arrival-check');
+      expect(tasks[1]!.taskName).toBe('pickup-check');
 
       clearTimeout(timeout1);
       clearTimeout(timeout2);
@@ -55,7 +55,7 @@ describe('TaskManager', () => {
 
       const tasks = taskManager.getRideTasks(rideUuid);
       expect(tasks).toHaveLength(1);
-      expect(tasks[0].taskName).toBe('dropoff-check');
+      expect(tasks[0]!.taskName).toBe('dropoff-check');
 
       clearTimeout(timeoutId);
     });
@@ -88,7 +88,7 @@ describe('TaskManager', () => {
 
       const tasks = taskManager.getRideTasks(rideUuid);
       expect(tasks).toHaveLength(1);
-      expect(tasks[0].taskName).toBe('pickup-check');
+      expect(tasks[0]!.taskName).toBe('pickup-check');
 
       clearTimeout(timeout1);
       clearTimeout(timeout2);
@@ -119,7 +119,7 @@ describe('TaskManager', () => {
 
       const tasks = taskManager.getRideTasks(rideUuid);
       expect(tasks).toHaveLength(1);
-      expect(tasks[0].taskName).toBe('arrival-check');
+      expect(tasks[0]!.taskName).toBe('arrival-check');
 
       clearTimeout(timeoutId);
     });
@@ -305,9 +305,9 @@ describe('TaskManager', () => {
       expect(status.totalRides).toBe(1);
       expect(status.totalTasks).toBe(2);
       expect(status.rides).toHaveLength(1);
-      expect(status.rides[0].rideUuid).toBe(rideUuid);
-      expect(status.rides[0].taskCount).toBe(2);
-      expect(status.rides[0].tasks).toEqual(['arrival-check', 'pickup-check']);
+      expect(status.rides[0]!.rideUuid).toBe(rideUuid);
+      expect(status.rides[0]!.taskCount).toBe(2);
+      expect(status.rides[0]!.tasks).toEqual(['arrival-check', 'pickup-check']);
 
       clearTimeout(timeout1);
       clearTimeout(timeout2);

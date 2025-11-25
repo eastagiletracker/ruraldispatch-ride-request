@@ -6,7 +6,7 @@ describe('Webhook Active Ride Filtering Logic', () => {
     it('should match driver phone number correctly', () => {
       const ride = {
         uuid: 'test-ride-123',
-        rideStatus: RIDE_STATUSES.RIDE_CONFIRMED,
+        rideStatus: RIDE_STATUSES.RIDE_CONFIRMED as number,
         rider: {
           fullName: 'Test Rider',
           phone: '+15551234567',
@@ -60,6 +60,7 @@ describe('Webhook Active Ride Filtering Logic', () => {
         },
         driver: {
           mobilePhone: '+15559876543',
+          phone: '+15559876543',
         },
       };
 

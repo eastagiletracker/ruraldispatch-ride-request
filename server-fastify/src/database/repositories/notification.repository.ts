@@ -33,6 +33,9 @@ interface NotificationInput {
   twilioMessageSid?: string | null;
   twilioStatus?: string;
   errorMessage?: string | null;
+  scheduledMessageSid?: string | null;
+  scheduledSendAt?: Date | string | null;
+  isScheduled?: boolean;
   sentAt?: Date | string;
   deliveredAt?: Date | string | null;
   sessionActive?: boolean;
@@ -108,6 +111,9 @@ export function createNotificationRepository(prisma: PrismaClient) {
           twilioMessageSid: notification.twilioMessageSid || null,
           twilioStatus: notification.twilioStatus || 'pending',
           errorMessage: notification.errorMessage || null,
+          scheduledMessageSid: notification.scheduledMessageSid || null,
+          scheduledSendAt: notification.scheduledSendAt ? new Date(notification.scheduledSendAt) : null,
+          isScheduled: notification.isScheduled || false,
           sentAt: notification.sentAt ? new Date(notification.sentAt) : new Date(),
           deliveredAt: notification.deliveredAt ? new Date(notification.deliveredAt) : null,
           sessionActive:

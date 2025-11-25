@@ -150,14 +150,14 @@ export class TwilioProvider {
         to: string;
         messagingServiceSid: string;
         scheduleType: 'fixed';
-        sendAt: string;
+        sendAt: Date;
         statusCallback?: string;
       } = {
         body: message,
         to,
         messagingServiceSid: this.messagingServiceSid,
         scheduleType: 'fixed',
-        sendAt: sendAtDate.toISOString(),
+        sendAt: sendAtDate,
       };
 
       // Add status callback if configured and not disabled

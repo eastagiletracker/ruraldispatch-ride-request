@@ -577,7 +577,8 @@ Thank you for using our service! If you have any feedback, please contact us.`;
     if (result.success && result.messageSid && this.api) {
       // Save notification record to database
       try {
-        await this.api.createNotification({
+        await this.api.addNotification({
+          uuid: randomUUID(),
           rideUuid: ride.uuid,
           notificationType: 'driver_arrival_check',
           direction: 'outbound',
@@ -590,7 +591,7 @@ Thank you for using our service! If you have any feedback, please contact us.`;
           scheduledMessageSid: result.messageSid,
           scheduledSendAt: new Date(sendAt),
           isScheduled: true,
-          sentAt: new Date(sendAt), // Will be the scheduled send time
+          sentAt: new Date(sendAt),
           sessionActive: true,
         });
 
@@ -621,8 +622,10 @@ Thank you for using our service! If you have any feedback, please contact us.`;
       // Update notification record in database
       try {
         const notification = await this.api.getNotificationByMessageSid(messageSid);
-        if (notification) {
-          await this.api.updateNotificationStatus(notification.uuid, 'canceled', null);
+        if (notification && notification.twilioMessageSid) {
+          await this.api.updateNotificationStatus(notification.twilioMessageSid, {
+            status: 'canceled',
+          });
           console.log(`✅ Updated notification status to canceled in database`);
         }
       } catch (error) {
