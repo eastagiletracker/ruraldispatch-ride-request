@@ -142,6 +142,7 @@ const SMSConversationModal: React.FC<SMSConversationModalProps> = ({
             </TooltipContent>
           </Tooltip>
         );
+      case 'accepted':
       case 'queued':
       case 'sending':
         return (
@@ -150,7 +151,7 @@ const SMSConversationModal: React.FC<SMSConversationModalProps> = ({
               <Clock className="h-3 w-3 cursor-help text-orange-600" />
             </TooltipTrigger>
             <TooltipContent>
-              <p className="text-xs">Pending - Message queued or sending</p>
+              <p className="text-xs">Pending - Message accepted and being processed</p>
             </TooltipContent>
           </Tooltip>
         );

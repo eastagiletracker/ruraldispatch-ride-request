@@ -167,9 +167,10 @@ export function processSMSResponse(
 
     case 'DRIVER_ARRIVAL_CHECK':
       if (responseCode === 1) {
-        // Driver arrived
+        // Driver arrived - transition to RIDE_STARTED status
         return {
           success: true,
+          newRideStatus: RIDE_STATUSES.RIDE_STARTED,
           notifications: [
             { recipient: 'rider', template: 'DRIVER_ARRIVED' },
             { recipient: 'case_manager', template: 'DRIVER_ARRIVED' },

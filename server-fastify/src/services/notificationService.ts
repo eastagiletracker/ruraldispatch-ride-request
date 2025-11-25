@@ -192,6 +192,41 @@ Thank you for using our service! If you have any feedback, please contact us.`;
           console.error('L Error sending rider notification:', errorMessage);
         }
 
+        // Send notification to case manager
+        try {
+          console.log('=📭 Sending case manager notification...');
+          if (ride.caseManagerPhone) {
+            // Create case manager user object with data from ride
+            const caseManagerUser = {
+              uuid: 'case-manager', // Placeholder UUID
+              fullName: ride.caseManagerName || 'Case Manager',
+              phone: ride.caseManagerPhone,
+              email: null,
+              address: null,
+              role: 'case_manager',
+              smsConsentGiven: true,
+              smsConsentTimestamp: null,
+              smsConsentIpAddress: null,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            };
+
+            const caseManagerNotif = await this.notifyRideAccepted(
+              ride,
+              caseManagerUser,
+              userData.driver,
+              userData.vehicle || null
+            );
+            notifications.push({ type: 'case_manager_accepted', ...caseManagerNotif });
+            console.log('✅ Case manager notification result:', caseManagerNotif.success ? 'SUCCESS' : 'FAILED');
+          } else {
+            console.log('⚠️ No case manager phone number available');
+          }
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          console.error('❌ Error sending case manager notification:', errorMessage);
+        }
+
         // NOTE: Driver approval notification removed - driver will be notified at pickup time
         console.log('=� Driver will be notified at pickup time (no approval needed)');
       }

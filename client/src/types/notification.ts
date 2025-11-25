@@ -16,6 +16,7 @@ export type MessageDirection = 'outbound' | 'inbound';
 export type RecipientRole = 'rider' | 'driver' | 'dispatcher' | 'staff' | 'unknown';
 
 export type TwilioStatus =
+  | 'accepted'
   | 'queued'
   | 'sending'
   | 'sent'

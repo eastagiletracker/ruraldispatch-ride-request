@@ -23,7 +23,8 @@
       "Bash(bunx biome init:*)",
       "Bash(npx tsc:*)",
       "Bash(npx @biomejs/biome format:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(bun test:*)"
     ],
     "deny": [],
     "ask": []
