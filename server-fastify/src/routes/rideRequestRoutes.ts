@@ -26,6 +26,9 @@ interface UserData {
 const rideRequestRoutes: FastifyPluginAsync = async (fastify) => {
   const api = fastify.database;
 
+  // Initialize notificationService with database API
+  notificationService.setApi(api);
+
   /**
    * Helper to transform ride data for client compatibility
    * Converts rider/driver from single objects to arrays

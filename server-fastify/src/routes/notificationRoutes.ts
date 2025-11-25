@@ -63,6 +63,9 @@ function determineSenderRole(ride: any, phoneNumber: string): SenderRole {
 const notificationRoutes: FastifyPluginAsync = async (fastify) => {
   const api = fastify.database;
 
+  // Initialize notificationService with database API
+  notificationService.setApi(api);
+
   /**
    * GET /api/notifications/ride/:rideUuid
    * Get all notifications for a specific ride

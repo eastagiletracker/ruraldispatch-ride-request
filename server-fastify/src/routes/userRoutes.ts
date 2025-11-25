@@ -20,6 +20,9 @@ import notificationService from '../services/notificationService.js';
 const userRoutes: FastifyPluginAsync = async (fastify) => {
   const api = fastify.database;
 
+  // Initialize notificationService with database API
+  notificationService.setApi(api);
+
   /**
    * GET /api/users
    * Get all users (permission required)

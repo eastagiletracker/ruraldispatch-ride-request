@@ -62,7 +62,17 @@ class NotificationScheduler {
 
     // Use Twilio's scheduled messages instead of setTimeout
     // This persists across server restarts
-    const sendAt = new Date(timeInfo.targetTime).toISOString();
+    // Add 15-second buffer to ensure we're safely above Twilio's 5-minute minimum
+    const targetTime = new Date(timeInfo.targetTime);
+    const minTwilioTime = new Date(Date.now() + 300 * 1000 + 15 * 1000); // 5 min + 15 sec buffer
+    
+    const sendAt = targetTime > minTwilioTime 
+      ? targetTime.toISOString() 
+      : minTwilioTime.toISOString();
+    
+    if (targetTime <= minTwilioTime) {
+      console.log(`[ADJUST] Pickup time too soon, adjusting to Twilio minimum (5min + 15sec buffer)`);
+    }
     
     notificationService.scheduleDriverArrivalCheck(ride, driver, sendAt)
       .then((result) => {
