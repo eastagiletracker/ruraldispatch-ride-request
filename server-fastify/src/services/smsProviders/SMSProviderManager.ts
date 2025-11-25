@@ -155,4 +155,42 @@ export class SMSProviderManager {
 
     return await provider.sendSMS(to, message);
   }
+
+  /**
+   * Schedule SMS via Twilio (requires Messaging Service)
+   * @param to - Recipient phone number
+   * @param message - Message body
+   * @param sendAt - ISO 8601 datetime when message should be sent
+   * @returns SMS result with scheduled message SID
+   */
+  async scheduleScheduledSMS(to: string, message: string, sendAt: string): Promise<SMSResult> {
+    if (!this.twilioConfigured) {
+      return {
+        success: false,
+        provider: 'twilio',
+        error: 'Twilio is not configured',
+        to,
+        body: message,
+        timestamp: new Date(),
+      };
+    }
+
+    return await this.twilioProvider.scheduleScheduledSMS(to, message, sendAt);
+  }
+
+  /**
+   * Cancel a scheduled Twilio message
+   * @param messageSid - The Twilio message SID to cancel
+   * @returns Success status
+   */
+  async cancelScheduledSMS(messageSid: string): Promise<{ success: boolean; error?: string }> {
+    if (!this.twilioConfigured) {
+      return {
+        success: false,
+        error: 'Twilio is not configured',
+      };
+    }
+
+    return await this.twilioProvider.cancelScheduledSMS(messageSid);
+  }
 }

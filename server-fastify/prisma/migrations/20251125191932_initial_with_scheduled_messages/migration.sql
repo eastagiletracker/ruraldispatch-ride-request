@@ -1,6 +1,6 @@
 -- CreateTable
 CREATE TABLE "users" (
-    "uuid" UUID NOT NULL,
+    "uuid" UUID NOT NULL DEFAULT uuid_generate_v7(),
     "fullName" TEXT NOT NULL,
     "phone" TEXT NOT NULL,
     "email" TEXT,
@@ -31,7 +31,7 @@ CREATE TABLE "organizations" (
 
 -- CreateTable
 CREATE TABLE "service_providers" (
-    "uuid" UUID NOT NULL,
+    "uuid" UUID NOT NULL DEFAULT uuid_generate_v7(),
     "fullName" TEXT NOT NULL,
     "phone" TEXT,
     "mobilePhone" TEXT,
@@ -46,7 +46,7 @@ CREATE TABLE "service_providers" (
 
 -- CreateTable
 CREATE TABLE "vehicles" (
-    "uuid" UUID NOT NULL,
+    "uuid" UUID NOT NULL DEFAULT uuid_generate_v7(),
     "displayName" TEXT NOT NULL,
     "fleetId" TEXT,
     "model" TEXT,
@@ -67,7 +67,7 @@ CREATE TABLE "vehicles" (
 
 -- CreateTable
 CREATE TABLE "rides" (
-    "uuid" UUID NOT NULL,
+    "uuid" UUID NOT NULL DEFAULT uuid_generate_v7(),
     "displayId" TEXT NOT NULL,
     "riderUuid" UUID,
     "driverUuid" UUID,
@@ -104,7 +104,7 @@ CREATE TABLE "rides" (
 
 -- CreateTable
 CREATE TABLE "notifications" (
-    "uuid" UUID NOT NULL,
+    "uuid" UUID NOT NULL DEFAULT uuid_generate_v7(),
     "rideUuid" UUID,
     "notificationType" TEXT NOT NULL,
     "direction" TEXT NOT NULL,
@@ -115,6 +115,9 @@ CREATE TABLE "notifications" (
     "twilioMessageSid" TEXT,
     "twilioStatus" TEXT DEFAULT 'pending',
     "errorMessage" TEXT,
+    "scheduledMessageSid" TEXT,
+    "scheduledSendAt" TIMESTAMP(3),
+    "isScheduled" BOOLEAN NOT NULL DEFAULT false,
     "sentAt" TIMESTAMP(3) NOT NULL,
     "deliveredAt" TIMESTAMP(3),
     "sessionActive" BOOLEAN NOT NULL DEFAULT true,
@@ -127,7 +130,7 @@ CREATE TABLE "notifications" (
 
 -- CreateTable
 CREATE TABLE "system_users" (
-    "uuid" UUID NOT NULL,
+    "uuid" UUID NOT NULL DEFAULT uuid_generate_v7(),
     "username" TEXT NOT NULL,
     "passwordHash" TEXT NOT NULL,
     "fullName" TEXT NOT NULL,
@@ -204,9 +207,6 @@ CREATE INDEX "rides_rideRequestStatus_idx" ON "rides"("rideRequestStatus");
 
 -- CreateIndex
 CREATE INDEX "rides_pickupRequestedTime_idx" ON "rides"("pickupRequestedTime");
-
--- CreateIndex
-CREATE INDEX "rides_displayId_idx" ON "rides"("displayId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "notifications_twilioMessageSid_key" ON "notifications"("twilioMessageSid");

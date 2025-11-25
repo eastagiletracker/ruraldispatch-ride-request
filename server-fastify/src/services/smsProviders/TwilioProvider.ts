@@ -110,6 +110,121 @@ export class TwilioProvider {
   }
 
   /**
+   * Schedule SMS to be sent at a specific time (Twilio Messaging Service only)
+   * @param to - Recipient phone number
+   * @param message - Message body
+   * @param sendAt - ISO 8601 datetime when message should be sent (must be within 7 days)
+   * @returns SMS result with scheduled message SID
+   */
+  async scheduleScheduledSMS(to: string, message: string, sendAt: string): Promise<SMSResult> {
+    try {
+      if (!this.client) {
+        throw new Error('Twilio client is not configured');
+      }
+
+      if (!this.messagingServiceSid) {
+        throw new Error('Twilio Messaging Service SID is required for scheduling messages');
+      }
+
+      // Validate phone number format
+      if (!to || !to.match(/^\+?[1-9]\d{1,14}$/)) {
+        throw new Error(`Invalid phone number format: ${to}`);
+      }
+
+      // Validate sendAt is in the future and within 7 days
+      const sendAtDate = new Date(sendAt);
+      const now = new Date();
+      const maxScheduleDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+      if (sendAtDate <= now) {
+        throw new Error('sendAt must be in the future');
+      }
+
+      if (sendAtDate > maxScheduleDate) {
+        throw new Error('sendAt must be within 7 days from now');
+      }
+
+      // Prepare scheduled message options
+      const messageOptions: {
+        body: string;
+        to: string;
+        messagingServiceSid: string;
+        scheduleType: 'fixed';
+        sendAt: string;
+        statusCallback?: string;
+      } = {
+        body: message,
+        to,
+        messagingServiceSid: this.messagingServiceSid,
+        scheduleType: 'fixed',
+        sendAt: sendAtDate.toISOString(),
+      };
+
+      // Add status callback if configured and not disabled
+      if (this.statusCallbackUrl && !this.disableStatusCallback) {
+        messageOptions.statusCallback = this.statusCallbackUrl;
+        console.log(`📅 Status callback set to: ${this.statusCallbackUrl}`);
+      }
+
+      const result = await this.client.messages.create(messageOptions);
+
+      console.log(`📅 SMS scheduled successfully via Twilio for ${sendAtDate.toISOString()}`);
+      console.log(`   Message SID: ${result.sid}`);
+      console.log(`   Status: ${result.status}`);
+
+      return {
+        success: true,
+        provider: 'twilio',
+        messageSid: result.sid,
+        to,
+        body: message,
+        status: result.status, // Should be 'scheduled' or 'accepted'
+        timestamp: new Date(),
+      };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error(`❌ Failed to schedule SMS via Twilio to ${to}:`, errorMessage);
+
+      return {
+        success: false,
+        provider: 'twilio',
+        error: errorMessage,
+        to,
+        body: message,
+        timestamp: new Date(),
+      };
+    }
+  }
+
+  /**
+   * Cancel a scheduled message
+   * @param messageSid - The SID of the scheduled message to cancel
+   * @returns Success status
+   */
+  async cancelScheduledSMS(messageSid: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      if (!this.client) {
+        throw new Error('Twilio client is not configured');
+      }
+
+      // Update message status to 'canceled'
+      await this.client.messages(messageSid).update({ status: 'canceled' });
+
+      console.log(`🚫 Successfully canceled scheduled message: ${messageSid}`);
+
+      return { success: true };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error(`❌ Failed to cancel scheduled message ${messageSid}:`, errorMessage);
+
+      return {
+        success: false,
+        error: errorMessage,
+      };
+    }
+  }
+
+  /**
    * Get provider name
    */
   getName(): string {

@@ -17,6 +17,7 @@ export type RecipientRole = 'rider' | 'driver' | 'dispatcher' | 'staff' | 'unkno
 
 export type TwilioStatus =
   | 'accepted'
+  | 'scheduled'
   | 'queued'
   | 'sending'
   | 'sent'

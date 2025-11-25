@@ -217,9 +217,12 @@ model Notification {
   messageBody      String  @db.Text
 
   // Twilio/Vonage tracking
-  twilioMessageSid String? @unique
-  twilioStatus     String? @default("pending")
-  errorMessage     String?
+  twilioMessageSid     String? @unique
+  twilioStatus         String? @default("pending")
+  errorMessage         String?
+  scheduledMessageSid  String? // Twilio scheduled message SID (for cancellation)
+  scheduledSendAt      DateTime? // When message is scheduled to be sent
+  isScheduled          Boolean @default(false) // Whether message is scheduled vs sent immediately
 
   // Timing
   sentAt      DateTime

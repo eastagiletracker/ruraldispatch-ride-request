@@ -526,6 +526,155 @@ Thank you for using our service! If you have any feedback, please contact us.`;
       driver,
     });
   }
+
+  /**
+   * Schedule driver arrival check using Twilio's built-in scheduling
+   * @param ride - Ride data
+   * @param driver - Driver data
+   * @param sendAt - ISO 8601 datetime when message should be sent
+   * @returns SMS result with scheduled message SID
+   */
+  async scheduleDriverArrivalCheck(
+    ride: Ride,
+    driver: ServiceProvider,
+    sendAt: string
+  ): Promise<SMSResult & { scheduledMessageSid?: string }> {
+    const driverPhone = driver.mobilePhone || driver.phone;
+    if (!driverPhone) {
+      return {
+        success: false,
+        provider: 'twilio',
+        error: 'Driver has no phone number',
+        to: '',
+        body: '',
+        timestamp: new Date(),
+      };
+    }
+
+    // Get the template message
+    const messageBody = smsTemplates.getSMSTemplate('DRIVER_ARRIVAL_CHECK', 'driver', {
+      ride,
+      driver,
+    });
+    if (!messageBody) {
+      return {
+        success: false,
+        provider: 'twilio',
+        error: 'Failed to generate message template',
+        to: driverPhone,
+        body: '',
+        timestamp: new Date(),
+      };
+    }
+
+    console.log(`📅 Scheduling driver arrival check for ride #${ride.uuid}`);
+    console.log(`   Driver: ${driver.fullName} (${driverPhone})`);
+    console.log(`   Send at: ${sendAt}`);
+
+    // Schedule via Twilio
+    const result = await this.smsProvider.scheduleScheduledSMS(driverPhone, messageBody, sendAt);
+
+    if (result.success && result.messageSid && this.api) {
+      // Save notification record to database
+      try {
+        await this.api.createNotification({
+          rideUuid: ride.uuid,
+          notificationType: 'driver_arrival_check',
+          direction: 'outbound',
+          recipientPhone: driverPhone,
+          recipientName: driver.fullName,
+          recipientRole: 'driver',
+          messageBody,
+          twilioMessageSid: result.messageSid,
+          twilioStatus: result.status || 'scheduled',
+          scheduledMessageSid: result.messageSid,
+          scheduledSendAt: new Date(sendAt),
+          isScheduled: true,
+          sentAt: new Date(sendAt), // Will be the scheduled send time
+          sessionActive: true,
+        });
+
+        console.log(`✅ Scheduled driver arrival check saved to database`);
+      } catch (error) {
+        console.error('❌ Failed to save scheduled notification to database:', error);
+      }
+
+      return {
+        ...result,
+        scheduledMessageSid: result.messageSid,
+      };
+    }
+
+    return result;
+  }
+
+  /**
+   * Cancel a scheduled message
+   * @param messageSid - The Twilio message SID to cancel
+   * @returns Success status
+   */
+  async cancelScheduledMessage(messageSid: string): Promise<{ success: boolean; error?: string }> {
+    console.log(`🚫 Canceling scheduled message: ${messageSid}`);
+    const result = await this.smsProvider.cancelScheduledSMS(messageSid);
+
+    if (result.success && this.api) {
+      // Update notification record in database
+      try {
+        const notification = await this.api.getNotificationByMessageSid(messageSid);
+        if (notification) {
+          await this.api.updateNotificationStatus(notification.uuid, 'canceled', null);
+          console.log(`✅ Updated notification status to canceled in database`);
+        }
+      } catch (error) {
+        console.error('❌ Failed to update notification in database:', error);
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Cancel all scheduled messages for a ride
+   * @param rideUuid - The ride UUID
+   * @returns Array of cancellation results
+   */
+  async cancelScheduledMessagesForRide(
+    rideUuid: string
+  ): Promise<Array<{ messageSid: string; success: boolean; error?: string }>> {
+    console.log(`🚫 Canceling all scheduled messages for ride #${rideUuid}`);
+
+    if (!this.api) {
+      console.error('❌ API not initialized');
+      return [];
+    }
+
+    try {
+      // Get all scheduled notifications for the ride
+      const notifications = await this.api.getNotificationsByRide(rideUuid);
+      const scheduledNotifications = notifications.filter(
+        (n: any) =>
+          n.isScheduled && (n.twilioStatus === 'scheduled' || n.twilioStatus === 'accepted')
+      );
+
+      console.log(`   Found ${scheduledNotifications.length} scheduled messages to cancel`);
+
+      const results = [];
+      for (const notif of scheduledNotifications) {
+        if (notif.scheduledMessageSid) {
+          const result = await this.cancelScheduledMessage(notif.scheduledMessageSid);
+          results.push({
+            messageSid: notif.scheduledMessageSid,
+            ...result,
+          });
+        }
+      }
+
+      return results;
+    } catch (error) {
+      console.error('❌ Failed to cancel scheduled messages:', error);
+      return [];
+    }
+  }
 }
 
 // Export singleton instance

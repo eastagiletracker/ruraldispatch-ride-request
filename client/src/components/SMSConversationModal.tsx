@@ -107,6 +107,17 @@ const SMSConversationModal: React.FC<SMSConversationModalProps> = ({
 
   const getStatusIcon = (status: TwilioStatus) => {
     switch (status) {
+      case 'scheduled':
+        return (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Clock className="h-3 w-3 cursor-help text-amber-600" />
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="text-xs">Scheduled - Message will be sent at the specified time</p>
+            </TooltipContent>
+          </Tooltip>
+        );
       case 'delivered':
         return (
           <Tooltip>
@@ -269,6 +280,7 @@ const SMSConversationModal: React.FC<SMSConversationModalProps> = ({
             <div className="space-y-4">
               {notifications.map((notif, index) => {
                 const isInbound = notif.direction === 'inbound';
+                const isScheduled = notif.twilioStatus === 'scheduled' || notif.twilioStatus === 'accepted';
                 const prevNotif = index > 0 ? notifications[index - 1] : null;
                 const showDateDivider =
                   !prevNotif || formatDate(notif.sentAt) !== formatDate(prevNotif.sentAt);
@@ -292,7 +304,9 @@ const SMSConversationModal: React.FC<SMSConversationModalProps> = ({
                           className={`rounded-2xl px-4 py-3 ${
                             isInbound
                               ? 'bg-muted text-foreground rounded-tl-none'
-                              : 'bg-primary text-primary-foreground rounded-tr-none'
+                              : isScheduled
+                                ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-900 dark:text-amber-100 rounded-tr-none border border-amber-300 dark:border-amber-700'
+                                : 'bg-primary text-primary-foreground rounded-tr-none'
                           }`}
                         >
                           <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">
@@ -304,6 +318,11 @@ const SMSConversationModal: React.FC<SMSConversationModalProps> = ({
                         <div
                           className={`flex items-center gap-2 mt-1 px-2 ${isInbound ? '' : 'justify-end'}`}
                         >
+                          {isScheduled && (
+                            <span className="text-xs font-medium text-amber-600 dark:text-amber-400">
+                              Scheduled
+                            </span>
+                          )}
                           <span className="text-xs text-muted-foreground">
                             {formatTime(notif.sentAt)}
                           </span>
