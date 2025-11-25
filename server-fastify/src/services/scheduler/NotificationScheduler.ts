@@ -7,13 +7,14 @@ import timeCalculator from './TimeCalculator.js';
 
 /**
  * Notification Scheduler
- * Handles individual notification scheduling operations
+ * Handles individual notification scheduling operations using Twilio scheduled messages
  *
  * Responsibilities:
- * - Schedule specific notification types (1 hour prior, arrival, dropoff, etc.)
- * - Schedule status changes
- * - Schedule generic notifications
+ * - Schedule specific notification types using Twilio's persistent scheduling
+ * - Schedule status changes using in-memory setTimeout (server-specific)
  * - Execute scheduled tasks and handle cleanup
+ *
+ * IMPORTANT: Uses Twilio scheduled messages for SMS (persists across server restarts)
  */
 
 type RecipientRole = 'driver' | 'rider' | 'case_manager';
@@ -35,7 +36,8 @@ class NotificationScheduler {
   }
 
   /**
-   * Schedule driver arrival check at pickup time
+   * Schedule driver arrival check at pickup time using Twilio scheduled messages
+   * This persists across server restarts
    */
   scheduleDriverArrivalCheck(ride: Ride, driver: ServiceProvider): void {
     const timeInfo = timeCalculator.calculatePickupTime(ride);
@@ -43,7 +45,7 @@ class NotificationScheduler {
     if (timeInfo.isPast) {
       // Send immediately if pickup time has passed
       console.log(
-        `�  Pickup time has passed for ride #${ride.uuid}, sending arrival check immediately`
+        `[WARN] Pickup time has passed for ride #${ride.uuid}, sending arrival check immediately`
       );
       notificationService.sendDriverArrivalCheck(ride, driver);
       return;
@@ -54,23 +56,29 @@ class NotificationScheduler {
       timeInfo.delay
     );
 
-    console.log(`� Scheduling driver arrival check for ride #${ride.uuid}`);
+    console.log(`[SCHEDULE] Driver arrival check for ride #${ride.uuid} via Twilio`);
     console.log(`   Pickup time: ${timeString}`);
     console.log(`   Delay: ${delayMinutes} minutes`);
 
-    const timeoutId = setTimeout(async () => {
-      try {
-        console.log(`� Sending driver arrival check for ride #${ride.uuid}`);
-        await notificationService.sendDriverArrivalCheck(ride, driver);
-      } catch (error) {
-        console.error('L Error sending driver arrival check:', error);
-      } finally {
-        // Remove task after execution (success or failure)
-        this.taskManager.removeTask(ride.uuid, 'driver_arrival_check');
-      }
-    }, timeInfo.delay);
-
-    this.taskManager.addTask(ride.uuid, 'driver_arrival_check', timeoutId);
+    // Use Twilio's scheduled messages instead of setTimeout
+    // This persists across server restarts
+    const sendAt = new Date(timeInfo.targetTime).toISOString();
+    
+    notificationService.scheduleDriverArrivalCheck(ride, driver, sendAt)
+      .then((result) => {
+        if (result.success && result.messageSid) {
+          console.log(`[SUCCESS] Driver arrival check scheduled via Twilio`);
+          console.log(`   Message SID: ${result.messageSid}`);
+          console.log(`   Scheduled for: ${sendAt}`);
+          // Store the message SID for potential cancellation
+          this.taskManager.addTask(ride.uuid, 'driver_arrival_check', result.messageSid as any);
+        } else {
+          console.error(`[ERROR] Failed to schedule driver arrival check: ${result.error}`);
+        }
+      })
+      .catch((error) => {
+        console.error('[ERROR] Error scheduling driver arrival check:', error);
+      });
   }
 
   /**
@@ -81,7 +89,7 @@ class NotificationScheduler {
 
     if (timeInfo.isPast) {
       // Send immediately if dropoff time has passed
-      console.log(`�  Dropoff time has passed for ride #${ride.uuid}, sending check immediately`);
+      console.log(`[WARN] Dropoff time has passed for ride #${ride.uuid}, sending check immediately`);
       notificationService.sendDropoffCheck(ride, driver);
       return;
     }
@@ -91,16 +99,16 @@ class NotificationScheduler {
       timeInfo.delay
     );
 
-    console.log(`� Scheduling dropoff check for ride #${ride.uuid}`);
+    console.log(`[SCHEDULE] Dropoff check for ride #${ride.uuid}`);
     console.log(`   Estimated dropoff: ${timeString}`);
     console.log(`   Delay: ${delayMinutes} minutes`);
 
     const timeoutId = setTimeout(async () => {
       try {
-        console.log(`� Sending dropoff check for ride #${ride.uuid}`);
+        console.log(`[SEND] Dropoff check for ride #${ride.uuid}`);
         await notificationService.sendDropoffCheck(ride, driver);
       } catch (error) {
-        console.error('L Error sending dropoff check:', error);
+        console.error('[ERROR] Error sending dropoff check:', error);
       } finally {
         // Remove task after execution (success or failure)
         this.taskManager.removeTask(ride.uuid, 'dropoff_check');
@@ -119,7 +127,7 @@ class NotificationScheduler {
     if (timeInfo.isPast) {
       // Send immediately if return time has passed
       console.log(
-        `�  Return pickup time has passed for ride #${ride.uuid}, sending check immediately`
+        `[WARN] Return pickup time has passed for ride #${ride.uuid}, sending check immediately`
       );
       notificationService.sendRoundtripReturnCheck(ride, driver);
       return;
@@ -130,16 +138,16 @@ class NotificationScheduler {
       timeInfo.delay
     );
 
-    console.log(`� Scheduling roundtrip return check for ride #${ride.uuid}`);
+    console.log(`[SCHEDULE] Roundtrip return check for ride #${ride.uuid}`);
     console.log(`   Estimated return pickup: ${timeString}`);
     console.log(`   Delay: ${delayMinutes} minutes`);
 
     const timeoutId = setTimeout(async () => {
       try {
-        console.log(`� Sending roundtrip return check for ride #${ride.uuid}`);
+        console.log(`[SEND] Roundtrip return check for ride #${ride.uuid}`);
         await notificationService.sendRoundtripReturnCheck(ride, driver);
       } catch (error) {
-        console.error('L Error sending roundtrip return check:', error);
+        console.error('[ERROR] Error sending roundtrip return check:', error);
       } finally {
         // Remove task after execution (success or failure)
         this.taskManager.removeTask(ride.uuid, 'roundtrip_return_check');
@@ -160,14 +168,14 @@ class NotificationScheduler {
   ): void {
     const timeInfo = timeCalculator.calculateDelayFromNow(delayMinutes);
 
-    console.log(`� Scheduling status change for ride #${ride.uuid}`);
+    console.log(`[SCHEDULE] Status change for ride #${ride.uuid}`);
     console.log(`   New status: ${newStatus}`);
     console.log(`   Delay: ${delayMinutes} minutes`);
 
     const timeoutId = setTimeout(async () => {
       const taskName = `status_change_${newStatus}`;
       try {
-        console.log(`� Changing status for ride #${ride.uuid} to ${newStatus}`);
+        console.log(`[UPDATE] Changing status for ride #${ride.uuid} to ${newStatus}`);
         const updates: Record<string, unknown> = { rideStatus: newStatus };
 
         if (isClosingStatus(newStatus)) {
@@ -175,13 +183,13 @@ class NotificationScheduler {
         }
 
         await apiUpdateFunction(ride.uuid, updates);
-        console.log(` Ride #${ride.uuid} status changed to ${newStatus}`);
+        console.log(`[SUCCESS] Ride #${ride.uuid} status changed to ${newStatus}`);
 
         if (isClosingStatus(newStatus)) {
           this.taskManager.cancelAllTasks(ride.uuid);
         }
       } catch (error) {
-        console.error('L Error changing ride status:', error);
+        console.error('[ERROR] Error changing ride status:', error);
       } finally {
         // Remove task after execution (success or failure)
         this.taskManager.removeTask(ride.uuid, taskName);
@@ -203,14 +211,14 @@ class NotificationScheduler {
   ): void {
     const timeInfo = timeCalculator.calculateDelayFromNow(delayMinutes);
 
-    console.log(`� Scheduling ${template} notification for ride #${ride.uuid}`);
+    console.log(`[SCHEDULE] ${template} notification for ride #${ride.uuid}`);
     console.log(`   Recipient: ${recipient}`);
     console.log(`   Delay: ${delayMinutes} minutes`);
 
     const timeoutId = setTimeout(async () => {
       const taskName = `notification_${template}_${recipient}`;
       try {
-        console.log(`� Sending scheduled ${template} notification for ride #${ride.uuid}`);
+        console.log(`[SEND] Scheduled ${template} notification for ride #${ride.uuid}`);
 
         const phoneNumber = await notificationService.getRecipientPhone(recipient, data);
         if (phoneNumber) {
@@ -219,10 +227,10 @@ class NotificationScheduler {
             ...data,
           });
         } else {
-          console.warn(`�  No phone number found for ${recipient}`);
+          console.warn(`[WARN] No phone number found for ${recipient}`);
         }
       } catch (error) {
-        console.error('L Error sending scheduled notification:', error);
+        console.error('[ERROR] Error sending scheduled notification:', error);
       } finally {
         // Remove task after execution (success or failure)
         this.taskManager.removeTask(ride.uuid, taskName);

@@ -105,7 +105,21 @@ const SMSConversationModal: React.FC<SMSConversationModalProps> = ({
     return formatLocalDate(String(timestamp));
   };
 
-  const getStatusIcon = (status: TwilioStatus) => {
+  const getStatusIcon = (status: TwilioStatus, isScheduledMessage: boolean = false) => {
+    // For scheduled messages with 'accepted' status, show scheduled icon
+    if (isScheduledMessage && status === 'accepted') {
+      return (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Clock className="h-3 w-3 cursor-help text-amber-600" />
+          </TooltipTrigger>
+          <TooltipContent>
+            <p className="text-xs">Scheduled - Message scheduled to be sent at specified time</p>
+          </TooltipContent>
+        </Tooltip>
+      );
+    }
+
     switch (status) {
       case 'scheduled':
         return (
@@ -114,18 +128,29 @@ const SMSConversationModal: React.FC<SMSConversationModalProps> = ({
               <Clock className="h-3 w-3 cursor-help text-amber-600" />
             </TooltipTrigger>
             <TooltipContent>
-              <p className="text-xs">Scheduled - Message will be sent at the specified time</p>
+              <p className="text-xs">Scheduled - Message scheduled to be sent at specified time</p>
             </TooltipContent>
           </Tooltip>
         );
-      case 'delivered':
+      case 'queued':
         return (
           <Tooltip>
             <TooltipTrigger asChild>
-              <CheckCircle2 className="h-3 w-3 cursor-help text-green-600" />
+              <Clock className="h-3 w-3 cursor-help text-blue-500" />
             </TooltipTrigger>
             <TooltipContent>
-              <p className="text-xs">Delivered - Message successfully delivered to recipient</p>
+              <p className="text-xs">Queued - Message queued to be sent out</p>
+            </TooltipContent>
+          </Tooltip>
+        );
+      case 'sending':
+        return (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Clock className="h-3 w-3 cursor-help text-blue-500 animate-pulse" />
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="text-xs">Sending - Dispatching message to carrier</p>
             </TooltipContent>
           </Tooltip>
         );
@@ -136,9 +161,29 @@ const SMSConversationModal: React.FC<SMSConversationModalProps> = ({
               <CheckCircle2 className="h-3 w-3 cursor-help text-blue-600" />
             </TooltipTrigger>
             <TooltipContent>
-              <p className="text-xs">
-                Sent - Message sent to carrier, awaiting delivery confirmation
-              </p>
+              <p className="text-xs">Sent - Carrier accepted message, awaiting delivery confirmation</p>
+            </TooltipContent>
+          </Tooltip>
+        );
+      case 'delivered':
+        return (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <CheckCircle2 className="h-3 w-3 cursor-help text-green-600" />
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="text-xs">Delivered - Message delivered to recipient's device</p>
+            </TooltipContent>
+          </Tooltip>
+        );
+      case 'receiving':
+        return (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Clock className="h-3 w-3 cursor-help text-blue-500" />
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="text-xs">Receiving - Incoming message being processed</p>
             </TooltipContent>
           </Tooltip>
         );
@@ -149,20 +194,29 @@ const SMSConversationModal: React.FC<SMSConversationModalProps> = ({
               <CheckCircle2 className="h-3 w-3 cursor-help text-blue-600" />
             </TooltipTrigger>
             <TooltipContent>
-              <p className="text-xs">Received - Incoming message received</p>
+              <p className="text-xs">Received - Incoming message received and processed</p>
             </TooltipContent>
           </Tooltip>
         );
       case 'accepted':
-      case 'queued':
-      case 'sending':
         return (
           <Tooltip>
             <TooltipTrigger asChild>
-              <Clock className="h-3 w-3 cursor-help text-orange-600" />
+              <Clock className="h-3 w-3 cursor-help text-blue-500" />
             </TooltipTrigger>
             <TooltipContent>
-              <p className="text-xs">Pending - Message accepted and being processed</p>
+              <p className="text-xs">Accepted - API request received, selecting sender</p>
+            </TooltipContent>
+          </Tooltip>
+        );
+      case 'read':
+        return (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <CheckCircle2 className="h-3 w-3 cursor-help text-green-700" />
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="text-xs">Read - Recipient opened the message</p>
             </TooltipContent>
           </Tooltip>
         );
@@ -173,7 +227,7 @@ const SMSConversationModal: React.FC<SMSConversationModalProps> = ({
               <XCircle className="h-3 w-3 cursor-help text-red-600" />
             </TooltipTrigger>
             <TooltipContent>
-              <p className="text-xs">Failed - Message failed to send</p>
+              <p className="text-xs">Failed - Message failed to send (queue overflow, suspension, or media error)</p>
             </TooltipContent>
           </Tooltip>
         );
@@ -184,7 +238,18 @@ const SMSConversationModal: React.FC<SMSConversationModalProps> = ({
               <XCircle className="h-3 w-3 cursor-help text-red-600" />
             </TooltipTrigger>
             <TooltipContent>
-              <p className="text-xs">Undelivered - Message sent but not delivered to recipient</p>
+              <p className="text-xs">Undelivered - Carrier could not deliver (filtering or device unavailable)</p>
+            </TooltipContent>
+          </Tooltip>
+        );
+      case 'canceled':
+        return (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <AlertCircle className="h-3 w-3 cursor-help text-gray-500" />
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="text-xs">Canceled - Scheduled message was canceled</p>
             </TooltipContent>
           </Tooltip>
         );
@@ -326,7 +391,7 @@ const SMSConversationModal: React.FC<SMSConversationModalProps> = ({
                           <span className="text-xs text-muted-foreground">
                             {formatTime(notif.sentAt)}
                           </span>
-                          {!isInbound && getStatusIcon(notif.twilioStatus)}
+                          {!isInbound && getStatusIcon(notif.twilioStatus, isScheduled)}
                         </div>
 
                         {/* Error message */}

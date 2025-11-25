@@ -24,7 +24,11 @@ export type TwilioStatus =
   | 'delivered'
   | 'undelivered'
   | 'failed'
-  | 'received';
+  | 'receiving'
+  | 'received'
+  | 'read'
+  | 'canceled'
+  | 'partially_delivered';
 
 export interface Notification {
   uuid: string;

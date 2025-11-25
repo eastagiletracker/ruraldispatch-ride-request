@@ -83,6 +83,7 @@ describe('NotificationScheduler', () => {
     vi.spyOn(notificationService, 'sendDriverArrivalCheck');
     vi.spyOn(notificationService, 'sendDropoffCheck');
     vi.spyOn(notificationService, 'sendRoundtripReturnCheck');
+    vi.spyOn(notificationService, 'scheduleDriverArrivalCheck');
 
     // Reset mocks
     vi.clearAllMocks();
@@ -95,7 +96,7 @@ describe('NotificationScheduler', () => {
   });
 
   describe('scheduleDriverArrivalCheck', () => {
-    it('should schedule arrival check for future pickup time', () => {
+    it('should schedule arrival check for future pickup time', async () => {
       const futureTime = new Date(Date.now() + 60 * 60 * 1000);
       const delay = 60 * 60 * 1000;
 
@@ -110,15 +111,32 @@ describe('NotificationScheduler', () => {
         delayMinutes: 60,
       });
 
+      // Mock the scheduleDriverArrivalCheck to return a successful result
+      (notificationService.scheduleDriverArrivalCheck as any).mockResolvedValue({
+        success: true,
+        messageSid: 'SM123456',
+        provider: 'twilio',
+        to: mockDriver.mobilePhone,
+        body: 'Test message',
+        timestamp: new Date(),
+      });
+
       scheduler.scheduleDriverArrivalCheck(mockRide, mockDriver);
 
-      // Verify task was added
+      // Wait for the async operation to complete
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      // Verify task was added (with message SID as the task value)
       const tasks = taskManager.getRideTasks(mockRide.uuid);
       expect(tasks).toHaveLength(1);
       expect(tasks[0]!.taskName).toBe('driver_arrival_check');
 
-      // Verify notification not sent yet
-      expect(notificationService.sendDriverArrivalCheck).not.toHaveBeenCalled();
+      // Verify the Twilio scheduling method was called
+      expect(notificationService.scheduleDriverArrivalCheck).toHaveBeenCalledWith(
+        mockRide,
+        mockDriver,
+        expect.any(String) // ISO timestamp
+      );
     });
 
     it('should send immediately for past pickup time', () => {

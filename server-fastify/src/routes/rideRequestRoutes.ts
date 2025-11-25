@@ -271,8 +271,23 @@ const rideRequestRoutes: FastifyPluginAsync = async (fastify) => {
         await api.closeRideSession(rideUuid);
         fastify.log.info(`✅ Auto-closed SMS session for ride #${rideUuid}`);
 
-        // Cancel any remaining scheduled tasks
+        // Cancel any remaining scheduled tasks (in-memory timeouts)
         scheduler.cancelRideTasks(rideUuid);
+        
+        // Cancel any scheduled Twilio messages
+        console.log(`[CANCEL] Canceling scheduled Twilio messages for completed ride #${rideUuid}`);
+        await notificationService.cancelScheduledMessagesForRide(rideUuid);
+      }
+
+      // Cancel scheduled messages if ride is cancelled by rider (status 109)
+      if (
+        updatedRide.rideStatus === RIDE_STATUSES.RIDE_CANCELED_BY_RIDER &&
+        oldRide.rideStatus !== RIDE_STATUSES.RIDE_CANCELED_BY_RIDER
+      ) {
+        console.log(`[CANCEL] Ride cancelled by rider #${rideUuid} - canceling scheduled messages`);
+        scheduler.cancelRideTasks(rideUuid);
+        await notificationService.cancelScheduledMessagesForRide(rideUuid);
+        await api.closeRideSession(rideUuid);
       }
 
       // Save notification records to database
