@@ -283,7 +283,7 @@ function App() {
   return (
     <AuthProvider>
       <AppRoutes />
-      <Toaster />
+      <Toaster position="top-center" duration={7000} closeButton />
     </AuthProvider>
   );
 }

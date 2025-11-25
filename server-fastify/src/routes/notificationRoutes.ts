@@ -233,10 +233,10 @@ const notificationRoutes: FastifyPluginAsync = async (fastify) => {
       if (activeRide) {
         fastify.log.info(`✅ Found active ride: #${activeRide.uuid}`);
         fastify.log.info(
-          `   Rider: ${activeRide.rider?.[0]?.fullName} (${activeRide.rider?.[0]?.phone})`
+          `   Rider: ${activeRide.rider?.fullName || 'N/A'} (${activeRide.rider?.phone || activeRide.riderPhone || 'N/A'})`
         );
         fastify.log.info(
-          `   Driver: ${activeRide.driver?.[0]?.fullName} (${activeRide.driver?.[0]?.mobilePhone || activeRide.driver?.[0]?.phone})`
+          `   Driver: ${activeRide.driver?.fullName || 'N/A'} (${activeRide.driver?.mobilePhone || activeRide.driver?.phone || 'N/A'})`
         );
         fastify.log.info(`   Current Status: ${activeRide.rideStatus}`);
       } else {
@@ -301,9 +301,9 @@ const notificationRoutes: FastifyPluginAsync = async (fastify) => {
             }
           }
 
-          const riderData = activeRide.rider?.[0];
-          const driverData = activeRide.driver?.[0];
-          const vehicleData = activeRide.vehicle?.[0];
+          const riderData = activeRide.rider;
+          const driverData = activeRide.driver;
+          const vehicleData = activeRide.vehicle;
 
           const data = {
             rider: riderData,

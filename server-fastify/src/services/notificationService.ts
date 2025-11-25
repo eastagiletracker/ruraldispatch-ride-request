@@ -83,12 +83,12 @@ export class NotificationService {
       minute: '2-digit',
       hour12: true,
     });
-    const message = `Your ride has been accepted!
+    const message = `Ride Confirmed
 Driver: ${driver.fullName}
 ${vehicleInfo}
 Pickup: ${ride.pickupAddress}
 Time: ${pickupTime}
-Questions? Reply to this message.`;
+To cancel ride, reply 3`;
 
     return await this.sendSMS(rider.phone, message);
   }
