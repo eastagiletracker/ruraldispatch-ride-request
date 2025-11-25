@@ -315,6 +315,7 @@ Thank you for using our service! If you have any feedback, please contact us.`;
           messageBody: message,
           twilioMessageSid: result.messageSid || result.messageId || null,
           twilioStatus: result.status || undefined,
+          isScheduled: false, // Immediate message, not scheduled
           sentAt: result.timestamp,
           deliveredAt: null,
           errorMessage: result.error || null,

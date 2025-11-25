@@ -41,6 +41,9 @@ export interface Notification {
   messageBody: string;
   twilioMessageSid?: string;
   twilioStatus: TwilioStatus;
+  isScheduled?: boolean;
+  scheduledSendAt?: Date | string;
+  scheduledMessageSid?: string;
   errorMessage?: string;
   sentAt: Date | string;
   deliveredAt?: Date | string;

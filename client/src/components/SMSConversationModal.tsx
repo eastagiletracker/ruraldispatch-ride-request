@@ -345,7 +345,7 @@ const SMSConversationModal: React.FC<SMSConversationModalProps> = ({
             <div className="space-y-4">
               {notifications.map((notif, index) => {
                 const isInbound = notif.direction === 'inbound';
-                const isScheduled = notif.twilioStatus === 'scheduled' || notif.twilioStatus === 'accepted';
+                const isScheduled = notif.isScheduled === true;
                 const prevNotif = index > 0 ? notifications[index - 1] : null;
                 const showDateDivider =
                   !prevNotif || formatDate(notif.sentAt) !== formatDate(prevNotif.sentAt);
