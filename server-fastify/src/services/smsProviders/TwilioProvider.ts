@@ -117,6 +117,11 @@ export class TwilioProvider {
    * @returns SMS result with scheduled message SID
    */
   async scheduleScheduledSMS(to: string, message: string, sendAt: string): Promise<SMSResult> {
+    console.log('\n📅 ===== SCHEDULING SMS VIA TWILIO =====');
+    console.log(`📱 To: ${to}`);
+    console.log(`📝 Message: ${message.substring(0, 50)}...`);
+    console.log(`⏰ Send at (ISO): ${sendAt}`);
+
     try {
       if (!this.client) {
         throw new Error('Twilio client is not configured');
@@ -135,6 +140,11 @@ export class TwilioProvider {
       const sendAtDate = new Date(sendAt);
       const now = new Date();
       const maxScheduleDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+      console.log(`⏰ Current time: ${now.toISOString()}`);
+      console.log(`⏰ Scheduled time: ${sendAtDate.toISOString()}`);
+      console.log(`⏰ Max allowed: ${maxScheduleDate.toISOString()}`);
+      console.log(`⏰ Minutes until send: ${Math.round((sendAtDate.getTime() - now.getTime()) / 60000)}`);
 
       if (sendAtDate <= now) {
         throw new Error('sendAt must be in the future');
@@ -163,14 +173,27 @@ export class TwilioProvider {
       // Add status callback if configured and not disabled
       if (this.statusCallbackUrl && !this.disableStatusCallback) {
         messageOptions.statusCallback = this.statusCallbackUrl;
-        console.log(`📅 Status callback set to: ${this.statusCallbackUrl}`);
+        console.log(`📞 Status callback set to: ${this.statusCallbackUrl}`);
+      } else {
+        console.log('⚠️  No status callback configured');
       }
+
+      console.log('\n📤 Calling Twilio API to schedule message...');
+      console.log('📋 Message options:', JSON.stringify({
+        to: messageOptions.to,
+        messagingServiceSid: messageOptions.messagingServiceSid,
+        scheduleType: messageOptions.scheduleType,
+        sendAt: messageOptions.sendAt.toISOString(),
+        hasStatusCallback: !!messageOptions.statusCallback,
+      }, null, 2));
 
       const result = await this.client.messages.create(messageOptions);
 
-      console.log(`📅 SMS scheduled successfully via Twilio for ${sendAtDate.toISOString()}`);
-      console.log(`   Message SID: ${result.sid}`);
-      console.log(`   Status: ${result.status}`);
+      console.log('\n✅ SMS SCHEDULED SUCCESSFULLY!');
+      console.log(`📋 Message SID: ${result.sid}`);
+      console.log(`📊 Status: ${result.status}`);
+      console.log(`⏰ Scheduled for: ${sendAtDate.toISOString()}`);
+      console.log(`🔗 Twilio Console: https://console.twilio.com/us1/monitor/logs/sms/${result.sid}`);
 
       return {
         success: true,

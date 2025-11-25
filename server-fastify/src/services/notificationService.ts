@@ -567,9 +567,15 @@ Thank you for using our service! If you have any feedback, please contact us.`;
       };
     }
 
-    console.log(`📅 Scheduling driver arrival check for ride #${ride.uuid}`);
-    console.log(`   Driver: ${driver.fullName} (${driverPhone})`);
-    console.log(`   Send at: ${sendAt}`);
+    console.log('\n📅 ===== SCHEDULING DRIVER ARRIVAL CHECK =====');
+    console.log(`🎫 Ride UUID: ${ride.uuid}`);
+    console.log(`👤 Driver: ${driver.fullName} (${driverPhone})`);
+    console.log(`⏰ Pickup Requested Time: ${ride.pickupRequestedTime}`);
+    console.log(`⏰ Send at (parameter): ${sendAt}`);
+    console.log(`⏰ Send at (parsed): ${new Date(sendAt).toISOString()}`);
+    console.log(`⏰ Current server time: ${new Date().toISOString()}`);
+    console.log(`⏰ Server timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}`);
+    console.log(`⏰ Minutes until send: ${Math.round((new Date(sendAt).getTime() - Date.now()) / 60000)}`);
 
     // Schedule via Twilio
     const result = await this.smsProvider.scheduleScheduledSMS(driverPhone, messageBody, sendAt);
@@ -577,7 +583,7 @@ Thank you for using our service! If you have any feedback, please contact us.`;
     if (result.success && result.messageSid && this.api) {
       // Save notification record to database
       try {
-        await this.api.addNotification({
+        const notificationData = {
           uuid: randomUUID(),
           rideUuid: ride.uuid,
           notificationType: 'driver_arrival_check',
@@ -593,11 +599,21 @@ Thank you for using our service! If you have any feedback, please contact us.`;
           isScheduled: true,
           sentAt: new Date(sendAt),
           sessionActive: true,
-        });
+        };
 
-        console.log(`✅ Scheduled driver arrival check saved to database`);
+        console.log('\n💾 Saving scheduled message to database...');
+        console.log(`📋 Notification UUID: ${notificationData.uuid}`);
+        console.log(`📋 Twilio Message SID: ${result.messageSid}`);
+        console.log(`📋 Status: ${result.status}`);
+        console.log(`📋 Scheduled Send At: ${new Date(sendAt).toISOString()}`);
+        console.log(`📋 Is Scheduled: true`);
+
+        await this.api.addNotification(notificationData);
+
+        console.log('✅ Scheduled driver arrival check saved to database');
       } catch (error) {
         console.error('❌ Failed to save scheduled notification to database:', error);
+        console.error('❌ Error details:', error instanceof Error ? error.stack : error);
       }
 
       return {

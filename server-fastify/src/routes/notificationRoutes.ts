@@ -249,6 +249,13 @@ const notificationRoutes: FastifyPluginAsync = async (fastify) => {
 
       // Process interactive SMS response
       if (activeRide && senderRole !== 'unknown') {
+        fastify.log.info('\n🔄 ===== PROCESSING SMS RESPONSE =====');
+        fastify.log.info(`📋 Ride UUID: ${activeRide.uuid}`);
+        fastify.log.info(`📋 Current Ride Status: ${activeRide.rideStatus}`);
+        fastify.log.info(`📋 Current Request Status: ${activeRide.rideRequestStatus}`);
+        fastify.log.info(`📱 Sender: ${senderPhone} (${senderRole})`);
+        fastify.log.info(`💬 Message Body: "${Body}"`);
+
         const action = await notificationService.processIncomingSMS(
           senderPhone,
           Body,
@@ -256,7 +263,13 @@ const notificationRoutes: FastifyPluginAsync = async (fastify) => {
           senderRole
         );
 
-        fastify.log.info(action, '🔄 Processing result');
+        fastify.log.info('\n✅ SMS RESPONSE PROCESSING COMPLETE');
+        fastify.log.info(`🎯 Action Success: ${action.success}`);
+        fastify.log.info(`🎯 New Ride Status: ${action.newRideStatus ?? 'unchanged'}`);
+        fastify.log.info(`🎯 New Request Status: ${action.newRequestStatus ?? 'unchanged'}`);
+        fastify.log.info(`🎯 Notifications to send: ${action.notifications?.length ?? 0}`);
+        fastify.log.info(`🎯 Has scheduled notification: ${!!action.scheduleNotification}`);
+        fastify.log.info(`🎯 Has scheduled status change: ${!!action.scheduleStatusChange}`);
 
         if (action.success) {
           // Execute status updates
