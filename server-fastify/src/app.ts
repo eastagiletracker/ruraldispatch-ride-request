@@ -64,6 +64,25 @@ export async function buildApp(): Promise<FastifyInstance> {
     }
   );
 
+  // Parse application/x-www-form-urlencoded for webhooks (Twilio, Vonage)
+  app.addContentTypeParser(
+    'application/x-www-form-urlencoded',
+    { parseAs: 'string' },
+    (_req, body: string, done) => {
+      try {
+        const params = new URLSearchParams(body);
+        const parsed: Record<string, string> = {};
+        for (const [key, value] of params.entries()) {
+          parsed[key] = value;
+        }
+        done(null, parsed);
+      } catch (err: any) {
+        err.statusCode = 400;
+        done(err, undefined);
+      }
+    }
+  );
+
   // Global error handler
   app.setErrorHandler((error: FastifyError, _request, reply) => {
     app.log.error(error);
