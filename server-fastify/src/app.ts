@@ -122,6 +122,12 @@ export async function buildApp(): Promise<FastifyInstance> {
         return;
       }
 
+      // Allow Twilio and Vonage webhooks
+      if (origin && (origin.includes('twilio.com') || origin.includes('vonage.com'))) {
+        cb(null, true);
+        return;
+      }
+
       // Check if origin is in allowed list
       if (allowedOrigins.includes(origin)) {
         cb(null, true);
