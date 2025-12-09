@@ -196,29 +196,35 @@ Thank you for using our service! If you have any feedback, please contact us.`;
         try {
           console.log('=📭 Sending case manager notification...');
           if (ride.caseManagerPhone) {
-            // Create case manager user object with data from ride
-            const caseManagerUser = {
-              uuid: 'case-manager', // Placeholder UUID
-              fullName: ride.caseManagerName || 'Case Manager',
-              phone: ride.caseManagerPhone,
-              email: null,
-              address: null,
-              role: 'case_manager',
-              smsConsentGiven: true,
-              smsConsentTimestamp: null,
-              smsConsentIpAddress: null,
-              createdAt: new Date(),
-              updatedAt: new Date(),
-            };
+            // Skip if case manager phone is same as rider phone (avoid duplicate SMS)
+            const riderPhone = userData.rider.phone;
+            if (ride.caseManagerPhone === riderPhone) {
+              console.log('⚠️ Case manager phone same as rider phone - skipping duplicate SMS');
+            } else {
+              // Create case manager user object with data from ride
+              const caseManagerUser = {
+                uuid: 'case-manager', // Placeholder UUID
+                fullName: ride.caseManagerName || 'Case Manager',
+                phone: ride.caseManagerPhone,
+                email: null,
+                address: null,
+                role: 'case_manager',
+                smsConsentGiven: true,
+                smsConsentTimestamp: null,
+                smsConsentIpAddress: null,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+              };
 
-            const caseManagerNotif = await this.notifyRideAccepted(
-              ride,
-              caseManagerUser,
-              userData.driver,
-              userData.vehicle || null
-            );
-            notifications.push({ type: 'case_manager_accepted', ...caseManagerNotif });
-            console.log('✅ Case manager notification result:', caseManagerNotif.success ? 'SUCCESS' : 'FAILED');
+              const caseManagerNotif = await this.notifyRideAccepted(
+                ride,
+                caseManagerUser,
+                userData.driver,
+                userData.vehicle || null
+              );
+              notifications.push({ type: 'case_manager_accepted', ...caseManagerNotif });
+              console.log('✅ Case manager notification result:', caseManagerNotif.success ? 'SUCCESS' : 'FAILED');
+            }
           } else {
             console.log('⚠️ No case manager phone number available');
           }

@@ -31,29 +31,50 @@ type SenderRole = 'rider' | 'driver' | 'case_manager' | 'unknown';
 type RecipientRole = 'driver' | 'rider' | 'case_manager';
 
 /**
+ * Normalize phone number by removing spaces, dashes, and ensuring + prefix
+ * This handles various formats like "+1 8777804236", "+1-877-780-4236", "18777804236"
+ */
+function normalizePhone(phone: string | null | undefined): string {
+  if (!phone) return '';
+  // Remove spaces, dashes, parentheses, and dots
+  const cleaned = phone.replace(/[-\s().]/g, '');
+  // Ensure + prefix for international format
+  return cleaned.startsWith('+') ? cleaned : `+${cleaned}`;
+}
+
+/**
+ * Compare two phone numbers after normalization
+ */
+function phonesMatch(phone1: string | null | undefined, phone2: string | null | undefined): boolean {
+  return normalizePhone(phone1) === normalizePhone(phone2);
+}
+
+/**
  * Helper function to determine sender role based on phone number
  */
 function determineSenderRole(ride: any, phoneNumber: string): SenderRole {
+  const normalizedSender = normalizePhone(phoneNumber);
+  
   // Check if sender is rider (registered user)
-  if (ride.rider && ride.rider.phone === phoneNumber) {
+  if (ride.rider && phonesMatch(ride.rider.phone, normalizedSender)) {
     return 'rider';
   }
 
   // Check if sender is rider (non-registered service user)
-  if (ride.riderPhone === phoneNumber || ride.serviceUserPhone === phoneNumber) {
+  if (phonesMatch(ride.riderPhone, normalizedSender) || phonesMatch(ride.serviceUserPhone, normalizedSender)) {
     return 'rider';
   }
 
   // Check if sender is driver
   if (ride.driver) {
     const driverPhone = ride.driver.mobilePhone || ride.driver.phone;
-    if (driverPhone === phoneNumber) {
+    if (phonesMatch(driverPhone, normalizedSender)) {
       return 'driver';
     }
   }
 
   // Check if sender is case manager (creator)
-  if (ride.createdBy?.phone === phoneNumber) {
+  if (phonesMatch(ride.createdBy?.phone, normalizedSender)) {
     return 'case_manager';
   }
 
@@ -196,8 +217,8 @@ const notificationRoutes: FastifyPluginAsync = async (fastify) => {
       const { From, To, Body, MessageSid } = request.body;
       fastify.log.info({ From, To, Body, MessageSid }, '📨 Parsed webhook data');
 
-      const senderPhone = From;
-      fastify.log.info({ senderPhone }, '🔍 Looking for active ride from sender');
+      const senderPhone = normalizePhone(From);
+      fastify.log.info({ senderPhone, originalFrom: From }, '🔍 Looking for active ride from sender (normalized)');
 
       // Find active rides involving this phone number
       const allRides = await api.getRideRequests();
@@ -212,14 +233,14 @@ const notificationRoutes: FastifyPluginAsync = async (fastify) => {
 
         // Check if sender is rider (registered or non-registered)
         const isRider =
-          (ride.rider && ride.rider.phone === senderPhone) ||
-          ride.riderPhone === senderPhone ||
-          ride.serviceUserPhone === senderPhone;
+          (ride.rider && phonesMatch(ride.rider.phone, senderPhone)) ||
+          phonesMatch(ride.riderPhone, senderPhone) ||
+          phonesMatch(ride.serviceUserPhone, senderPhone);
 
         // Check if sender is driver
         const isDriver =
           ride.driver &&
-          (ride.driver.mobilePhone === senderPhone || ride.driver.phone === senderPhone);
+          (phonesMatch(ride.driver.mobilePhone, senderPhone) || phonesMatch(ride.driver.phone, senderPhone));
 
         return isRider || isDriver;
       });
@@ -501,8 +522,8 @@ const notificationRoutes: FastifyPluginAsync = async (fastify) => {
       const { msisdn, to, messageId, text, 'message-timestamp': timestamp } = request.body;
       fastify.log.info({ from: msisdn, to, messageId, text }, '📨 Parsed webhook data');
 
-      const senderPhone = msisdn.startsWith('+') ? msisdn : `+${msisdn}`;
-      fastify.log.info({ senderPhone }, '🔍 Looking for active ride from sender');
+      const senderPhone = normalizePhone(msisdn);
+      fastify.log.info({ senderPhone, originalMsisdn: msisdn }, '🔍 Looking for active ride from sender (normalized)');
 
       const allRides = await api.getRideRequests();
       const activeRides = allRides.filter((ride: any) => {
@@ -511,10 +532,10 @@ const notificationRoutes: FastifyPluginAsync = async (fastify) => {
           ride.rideStatus !== RIDE_STATUSES.ROUNDTRIP_COMPLETE;
         if (!isActive) return false;
 
-        const isRider = ride.rider && ride.rider.phone === senderPhone;
+        const isRider = ride.rider && phonesMatch(ride.rider.phone, senderPhone);
         const isDriver =
           ride.driver &&
-          (ride.driver.mobilePhone === senderPhone || ride.driver.phone === senderPhone);
+          (phonesMatch(ride.driver.mobilePhone, senderPhone) || phonesMatch(ride.driver.phone, senderPhone));
 
         return isRider || isDriver;
       });
@@ -524,11 +545,11 @@ const notificationRoutes: FastifyPluginAsync = async (fastify) => {
       if (activeRide) {
         fastify.log.info(`✅ Found active ride: #${activeRide.uuid}`);
 
-        const isRider = activeRide.rider && activeRide.rider.phone === senderPhone;
+        const isRider = activeRide.rider && phonesMatch(activeRide.rider.phone, senderPhone);
         const isDriver =
           activeRide.driver &&
-          (activeRide.driver.mobilePhone === senderPhone ||
-            activeRide.driver.phone === senderPhone);
+          (phonesMatch(activeRide.driver.mobilePhone, senderPhone) ||
+            phonesMatch(activeRide.driver.phone, senderPhone));
 
         let senderRole: SenderRole = 'unknown';
 

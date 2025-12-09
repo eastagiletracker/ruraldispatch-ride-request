@@ -96,20 +96,7 @@ export const rideRequestFormSchema = z
         { message: 'Drop-off location is required' }
       ),
     roundtrip: z.boolean().optional(),
-    pickupRequestedDate: z
-      .string()
-      .min(1, 'Pickup date is required')
-      .refine(
-        (date) => {
-          if (!date) return false;
-          // Compare date strings directly to avoid timezone issues
-          const selectedDateStr = date; // Format: YYYY-MM-DD
-          const today = new Date();
-          const todayStr = today.toISOString().split('T')[0]; // Format: YYYY-MM-DD
-          return selectedDateStr >= todayStr;
-        },
-        { message: 'Pickup date cannot be in the past' }
-      ),
+    pickupRequestedDate: z.string().min(1, 'Pickup date is required'),
     pickupRequestedTime: z.string().min(1, 'Pickup time is required'),
     estimatedWaitTime: z.string().optional(),
     estimatedTravelTime: z.string().optional(),
@@ -123,23 +110,7 @@ export const rideRequestFormSchema = z
     // Purpose and Notes
     purposeOfTrip: z.string().min(1, 'Purpose of trip is required').trim(),
     notesComments: z.string().optional(),
-  })
-  .refine(
-    (data) => {
-      // Validate pickup date/time is at least 5 minutes from now
-      if (!data.pickupRequestedDate || !data.pickupRequestedTime) return true; // Let individual field validations handle empty fields
-
-      const pickupDateTime = new Date(`${data.pickupRequestedDate}T${data.pickupRequestedTime}`);
-      const now = new Date();
-      const minAllowedTime = new Date(now.getTime() + 5 * 60 * 1000); // 5 minutes from now
-
-      return pickupDateTime >= minAllowedTime;
-    },
-    {
-      message: 'Pickup time must be at least 5 minutes from now',
-      path: ['pickupRequestedTime'], // Show error on the time field
-    }
-  );
+  });
 
 /**
  * Inferred TypeScript Types
