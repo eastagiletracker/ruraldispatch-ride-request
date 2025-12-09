@@ -77,8 +77,46 @@ const rideRequestRoutes: FastifyPluginAsync = async (fastify) => {
    */
   fastify.post('/', async (request, reply) => {
     try {
+      const body = request.body as any;
+      
+      // Log ride request creation details
+      fastify.log.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      fastify.log.info('📝 NEW RIDE REQUEST RECEIVED');
+      fastify.log.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      fastify.log.info({
+        caseManagerName: body.caseManagerName || body.caseManagerFullName,
+        caseManagerPhone: body.caseManagerPhone,
+        riderName: body.riderName || body.riderFullName,
+        riderPhone: body.riderPhone || body.riderMobilePhone,
+        pickupAddress: body.pickupAddress || body.pickupLocation?.formattedAddress || body.pickupLocation,
+        dropOffAddress: body.dropOffAddress || body.dropoffLocation?.formattedAddress || body.dropoffLocation,
+        pickupRequestedDate: body.pickupRequestedDate,
+        pickupRequestedTime: body.pickupRequestedTime,
+        roundTrip: body.roundTrip || body.roundtrip,
+        purpose: body.purpose || body.purposeOfTrip,
+      }, '📋 Ride request details');
+      
+      // Log server time for timezone debugging
+      const serverNow = new Date();
+      fastify.log.info({
+        serverTimeUTC: serverNow.toISOString(),
+        serverTimeLocal: serverNow.toString(),
+        pickupDateTime: body.pickupRequestedDate && body.pickupRequestedTime 
+          ? `${body.pickupRequestedDate}T${body.pickupRequestedTime}` 
+          : 'N/A',
+      }, '⏰ Time debugging info');
+
       // Validation handled by frontend Zod schema
-      const newRideRequest = await api.addRideRequest(request.body as any);
+      const newRideRequest = await api.addRideRequest(body);
+      
+      fastify.log.info({
+        rideUuid: newRideRequest.uuid,
+        displayId: newRideRequest.displayId,
+        rideStatus: newRideRequest.rideStatus,
+        rideRequestStatus: newRideRequest.rideRequestStatus,
+      }, '✅ Ride request created successfully');
+      fastify.log.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      
       return newRideRequest;
     } catch (error) {
       fastify.log.error(error, 'Error creating ride request');
