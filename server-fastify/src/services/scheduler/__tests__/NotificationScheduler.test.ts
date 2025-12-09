@@ -123,8 +123,8 @@ describe('NotificationScheduler', () => {
 
       scheduler.scheduleDriverArrivalCheck(mockRide, mockDriver);
 
-      // Wait for the async operation to complete
-      await new Promise(resolve => setTimeout(resolve, 10));
+      // Advance timers to allow async operations to complete
+      await vi.advanceTimersByTimeAsync(100);
 
       // Verify task was added (with message SID as the task value)
       const tasks = taskManager.getRideTasks(mockRide.uuid);
