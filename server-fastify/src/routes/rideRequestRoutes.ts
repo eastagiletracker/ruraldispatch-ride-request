@@ -98,12 +98,19 @@ const rideRequestRoutes: FastifyPluginAsync = async (fastify) => {
       
       // Log server time for timezone debugging
       const serverNow = new Date();
+      const pickupTime = body.pickupRequestedTime ? new Date(body.pickupRequestedTime) : null;
+      const timeDiffMinutes = pickupTime ? Math.round((pickupTime.getTime() - serverNow.getTime()) / 60000) : null;
       fastify.log.info({
         serverTimeUTC: serverNow.toISOString(),
-        serverTimeLocal: serverNow.toString(),
-        pickupDateTime: body.pickupRequestedDate && body.pickupRequestedTime 
-          ? `${body.pickupRequestedDate}T${body.pickupRequestedTime}` 
-          : 'N/A',
+        pickupTimeUTC: body.pickupRequestedTime,
+        pickupTimeReadable: pickupTime?.toISOString() || 'N/A',
+        timeDiffMinutes: timeDiffMinutes,
+        isInPast: timeDiffMinutes !== null ? timeDiffMinutes < 0 : null,
+        note: timeDiffMinutes !== null 
+          ? (timeDiffMinutes < 0 
+            ? `⚠️ Pickup is ${Math.abs(timeDiffMinutes)} minutes in the PAST` 
+            : `✓ Pickup is ${timeDiffMinutes} minutes in the future`)
+          : 'No pickup time provided',
       }, '⏰ Time debugging info');
 
       // Validation handled by frontend Zod schema

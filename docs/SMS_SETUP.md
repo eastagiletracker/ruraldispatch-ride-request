@@ -68,14 +68,17 @@ VONAGE_WEBHOOK_URL=https://yourdomain.com/api/notifications/webhook/vonage
    - Select a number with SMS capability
 3. **Get Credentials**:
    - Account SID and Auth Token from dashboard
-4. **Configure Webhooks** (Optional - for two-way SMS):
-   - Go to your phone number settings
-   - SMS Configuration:
-     - Webhook URL: `https://yourdomain.com/api/notifications/webhook` (or `/webhook/twilio`)
-     - HTTP Method: POST
-     - Status Callback URL: `https://yourdomain.com/api/notifications/status` (or `/status/twilio`)
+4. **Configure Messaging Service** (Required for two-way SMS):
+   - Go to "Messaging" → "Services" → Create or select your service
+   - Add your phone number to the Messaging Service
+   - Under **SMS Handlers** (Integration tab), configure:
+     - **A message comes in**: Webhook
+     - **URL**: `https://api-ruraldispatch.swarmnyc.com/api/notifications/webhook/twilio`
+     - **HTTP Method**: POST
 
-**Note**: For Twilio Messaging Service SID, go to Messaging → Services and create/copy your service SID. This is an alternative to using a phone number.
+⚠️ **CRITICAL**: The webhook URL MUST point to your **API server** (e.g., `api-ruraldispatch.swarmnyc.com`), NOT your frontend domain (e.g., `ruraldispatch.swarmnyc.com`). If you use the wrong URL, incoming SMS replies will not be processed.
+
+**Note**: For Twilio Messaging Service SID, go to Messaging → Services and create/copy your service SID. This is required when using a Messaging Service instead of a direct phone number.
 
 ### 2. Vonage Setup (Optional Fallback)
 

@@ -69,7 +69,7 @@ export class NotificationService {
    */
   async notifyRideAccepted(
     ride: Ride,
-    rider: User,
+    recipient: User,
     driver: ServiceProvider,
     vehicle: Vehicle | null
   ): Promise<SMSResult> {
@@ -90,7 +90,7 @@ Pickup: ${ride.pickupAddress}
 Time: ${pickupTime}
 To cancel ride, reply 3`;
 
-    return await this.sendSMS(rider.phone, message);
+    return await this.sendSMS(recipient.phone, message);
   }
 
   /**
@@ -454,7 +454,8 @@ Thank you for using our service! If you have any feedback, please contact us.`;
   ): Promise<string | null> {
     switch (recipient) {
       case 'rider':
-        return data.rider?.phone || null;
+        // Check rider user object first, then fall back to ride's direct riderPhone field
+        return data.rider?.phone || (data.ride as any)?.riderPhone || (data.rideRequest as any)?.riderPhone || null;
 
       case 'driver':
         return data.driver?.mobilePhone || data.driver?.phone || null;
