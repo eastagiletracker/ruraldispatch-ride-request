@@ -247,15 +247,16 @@ export function processSMSResponse(
         };
       }
       if (responseCode === 2) {
-        // Rider not dropped off
+        // Rider not yet dropped off - ask again in 5 minutes
+        // Don't change status, just reschedule the check
         return {
           success: true,
-          newRideStatus: RIDE_STATUSES.RIDER_NOT_DROPPED_OFF,
-          newRequestStatus: RIDE_REQUEST_STATUSES.ALL_RIDE_REQUEST_CLOSED.code,
-          notifications: [
-            { recipient: 'dispatcher', template: RIDE_STATUSES.RIDER_NOT_DROPPED_OFF },
-          ],
-          metadata: { requiresIntervention: true },
+          scheduleNotification: {
+            recipient: 'driver',
+            template: 'DROPOFF_CHECK',
+            delayMinutes: 5,
+          },
+          metadata: { dropoffPending: true, checkScheduled: true },
         };
       }
       break;

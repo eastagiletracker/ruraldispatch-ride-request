@@ -45,8 +45,9 @@ describe('SMS Flow Integration Tests', () => {
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.newRideStatus).toBe(RIDE_STATUSES.RIDER_PICKED_UP); // 300
-        expect(result.scheduleStatusChange?.status).toBe(RIDE_STATUSES.RIDE_STARTED);
-        expect(result.scheduleStatusChange?.delayMinutes).toBe(5);
+        // NOTE: No scheduleStatusChange - ride stays at RIDER_PICKED_UP (300)
+        // Dropoff check is scheduled separately by RideScheduler.schedulePickupTasks
+        expect(result.scheduleStatusChange).toBeUndefined();
         expect(result.metadata?.riderPickedUp).toBe(true);
       }
 

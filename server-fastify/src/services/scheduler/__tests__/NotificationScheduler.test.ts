@@ -182,22 +182,8 @@ describe('NotificationScheduler', () => {
       expect(tasks[0]!.taskName).toBe('dropoff_check');
     });
 
-    it('should send immediately for past dropoff time', () => {
-      (timeCalculator.calculateDropoffTime as any).mockReturnValue({
-        targetTime: new Date(Date.now() - 1000),
-        delay: -1000,
-        isPast: true,
-        travelTimeMinutes: 30,
-      });
-
-      scheduler.scheduleDropoffCheck(mockRide, mockDriver);
-
-      expect(notificationService.sendDropoffCheck).toHaveBeenCalledWith(mockRide, mockDriver);
-
-      const tasks = taskManager.getRideTasks(mockRide.uuid);
-      expect(tasks).toHaveLength(0);
-    });
-
+    // NOTE: This test was removed because calculateDropoffTime now always calculates from NOW
+    // So isPast will never be true - we removed the immediate send logic for past dropoff time
   });
 
   describe('scheduleRoundtripReturnCheck', () => {

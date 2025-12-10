@@ -75,18 +75,24 @@ class TimeCalculator {
 
   /**
    * Calculate estimated dropoff time
+   * NOTE: This calculates from NOW (when rider is picked up), not from pickupRequestedTime
+   * This is because the actual pickup may happen at a different time than requested
    */
   calculateDropoffTime(ride: RideWithSchedulingFields): DropoffTimeCalculation {
-    const pickupTime = new Date(ride.pickupRequestedTime);
-    const travelTimeMinutes = ride.estimatedTravelTime || 30; // Default 30 min if not set
-    const targetTime = new Date(pickupTime.getTime() + travelTimeMinutes * 60 * 1000);
     const now = new Date();
-    const delay = targetTime.getTime() - now.getTime();
+    const travelTimeMinutes = ride.estimatedTravelTime || 30; // Default 30 min if not set
+    const targetTime = new Date(now.getTime() + travelTimeMinutes * 60 * 1000);
+    const delay = travelTimeMinutes * 60 * 1000; // delay is the travel time from now
+
+    console.log(`📍 Dropoff time calculation:`);
+    console.log(`   Current time: ${now.toISOString()}`);
+    console.log(`   Estimated travel time: ${travelTimeMinutes} minutes`);
+    console.log(`   Target dropoff time: ${targetTime.toISOString()}`);
 
     return {
       targetTime,
       delay,
-      isPast: delay <= 0,
+      isPast: false, // Never past since we calculate from now
       travelTimeMinutes,
     };
   }

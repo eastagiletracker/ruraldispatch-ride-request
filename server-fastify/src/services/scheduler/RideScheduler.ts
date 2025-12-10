@@ -1,4 +1,3 @@
-import { RIDE_STATUSES } from '../../constants/rideStatuses.js';
 import type { Ride, ServiceProvider, User } from '../../types/database.types.js';
 import NotificationScheduler from './NotificationScheduler.js';
 import type { ScheduledTask } from './TaskManager.js';
@@ -61,26 +60,25 @@ class RideScheduler {
 
   /**
    * Schedule tasks when rider is picked up
+   * NOTE: Called when ride transitions to RIDER_PICKED_UP (300)
+   * Only schedules dropoff check - no status change needed
    */
   schedulePickupTasks(
     ride: Ride,
     driver: ServiceProvider,
-    apiUpdateFunction: ApiUpdateFunction
+    _apiUpdateFunction: ApiUpdateFunction
   ): void {
-    console.log(`=� Scheduling pickup tasks for ride #${ride.uuid}`);
+    console.log(`=📦 Scheduling pickup tasks for ride #${ride.uuid}`);
 
-    // Schedule status change to RIDE_STARTED after 5 minutes
-    this.notificationScheduler.scheduleStatusChange(
-      ride,
-      RIDE_STATUSES.RIDE_STARTED,
-      5,
-      apiUpdateFunction
-    );
+    // NOTE: We removed the status change to RIDE_STARTED here because:
+    // - The ride is already at RIDER_PICKED_UP (300) when this is called
+    // - Scheduling a change back to RIDE_STARTED (200) would be moving backwards
+    // - The status flow is: CONFIRMED(100) -> STARTED(200) -> PICKED_UP(300) -> DROPPED_OFF(400)
 
-    // Schedule dropoff check
+    // Schedule dropoff check based on estimated trip duration
     this.notificationScheduler.scheduleDropoffCheck(ride, driver);
 
-    console.log(` Pickup tasks scheduled for ride #${ride.uuid}`);
+    console.log(`✅ Pickup tasks scheduled for ride #${ride.uuid}`);
   }
 
   /**

@@ -92,17 +92,11 @@ class NotificationScheduler {
   }
 
   /**
-   * Schedule dropoff check at estimated dropoff time
+   * Schedule dropoff check at estimated dropoff time (after ride pickup)
+   * NOTE: This is called when rider is picked up, so dropoff time is calculated from NOW
    */
   scheduleDropoffCheck(ride: Ride, driver: ServiceProvider): void {
     const timeInfo = timeCalculator.calculateDropoffTime(ride);
-
-    if (timeInfo.isPast) {
-      // Send immediately if dropoff time has passed
-      console.log(`[WARN] Dropoff time has passed for ride #${ride.uuid}, sending check immediately`);
-      notificationService.sendDropoffCheck(ride, driver);
-      return;
-    }
 
     const { timeString, delayMinutes } = timeCalculator.formatTimeInfo(
       timeInfo.targetTime,
@@ -110,6 +104,7 @@ class NotificationScheduler {
     );
 
     console.log(`[SCHEDULE] Dropoff check for ride #${ride.uuid}`);
+    console.log(`   Estimated travel time: ${timeInfo.travelTimeMinutes} minutes`);
     console.log(`   Estimated dropoff: ${timeString}`);
     console.log(`   Delay: ${delayMinutes} minutes`);
 

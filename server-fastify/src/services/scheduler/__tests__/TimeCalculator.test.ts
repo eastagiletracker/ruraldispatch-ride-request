@@ -76,8 +76,9 @@ describe('TimeCalculator', () => {
   });
 
   describe('calculateDropoffTime', () => {
-    it('should calculate dropoff time with provided travel time', () => {
-      const pickupTime = new Date(Date.now() + 60 * 60 * 1000); // 1 hour from now
+    it('should calculate dropoff time from NOW with provided travel time', () => {
+      const now = Date.now();
+      const pickupTime = new Date(Date.now() + 60 * 60 * 1000); // 1 hour from now (not used anymore)
       const ride = {
         pickupRequestedTime: pickupTime,
         estimatedTravelTime: 45, // 45 minutes
@@ -85,13 +86,16 @@ describe('TimeCalculator', () => {
 
       const result = TimeCalculator.calculateDropoffTime(ride);
 
-      expect(result.targetTime.getTime()).toBe(pickupTime.getTime() + 45 * 60 * 1000);
+      // Should calculate from NOW, not from pickupTime
+      expect(result.targetTime.getTime()).toBeGreaterThanOrEqual(now + 45 * 60 * 1000 - 1000); // Allow 1s tolerance
+      expect(result.targetTime.getTime()).toBeLessThanOrEqual(now + 45 * 60 * 1000 + 1000);
       expect(result.travelTimeMinutes).toBe(45);
-      expect(result.delay).toBeGreaterThan(0);
-      expect(result.isPast).toBe(false);
+      expect(result.delay).toBe(45 * 60 * 1000); // delay is travel time from now
+      expect(result.isPast).toBe(false); // Never past since we calculate from now
     });
 
     it('should use default 30 minutes when travel time not provided', () => {
+      const now = Date.now();
       const pickupTime = new Date(Date.now() + 60 * 60 * 1000);
       const ride: Partial<RideWithSchedulingFields> & { pickupRequestedTime: Date } = {
         pickupRequestedTime: pickupTime,
@@ -101,10 +105,13 @@ describe('TimeCalculator', () => {
       const result = TimeCalculator.calculateDropoffTime(ride as RideWithSchedulingFields);
 
       expect(result.travelTimeMinutes).toBe(30);
-      expect(result.targetTime.getTime()).toBe(pickupTime.getTime() + 30 * 60 * 1000);
+      // Should calculate from NOW, not from pickupTime
+      expect(result.targetTime.getTime()).toBeGreaterThanOrEqual(now + 30 * 60 * 1000 - 1000);
+      expect(result.targetTime.getTime()).toBeLessThanOrEqual(now + 30 * 60 * 1000 + 1000);
     });
 
-    it('should mark as past when dropoff time has passed', () => {
+    it('should never mark as past since dropoff time is calculated from now', () => {
+      // Even with past pickup time, dropoff is calculated from NOW
       const pastPickupTime = new Date(Date.now() - 60 * 60 * 1000); // 1 hour ago
       const ride = {
         pickupRequestedTime: pastPickupTime,
@@ -113,7 +120,9 @@ describe('TimeCalculator', () => {
 
       const result = TimeCalculator.calculateDropoffTime(ride);
 
-      expect(result.isPast).toBe(true);
+      // isPast should always be false since we calculate from NOW
+      expect(result.isPast).toBe(false);
+      expect(result.delay).toBe(30 * 60 * 1000); // 30 minutes from now
     });
   });
 
@@ -244,6 +253,7 @@ describe('TimeCalculator', () => {
     });
 
     it('should handle very long travel times', () => {
+      const now = Date.now();
       const pickupTime = new Date(Date.now() + 60 * 60 * 1000);
       const ride = {
         pickupRequestedTime: pickupTime,
@@ -253,7 +263,9 @@ describe('TimeCalculator', () => {
       const result = TimeCalculator.calculateDropoffTime(ride);
 
       expect(result.travelTimeMinutes).toBe(240);
-      expect(result.targetTime.getTime()).toBe(pickupTime.getTime() + 240 * 60 * 1000);
+      // Should calculate from NOW, not from pickupTime
+      expect(result.targetTime.getTime()).toBeGreaterThanOrEqual(now + 240 * 60 * 1000 - 1000);
+      expect(result.targetTime.getTime()).toBeLessThanOrEqual(now + 240 * 60 * 1000 + 1000);
     });
 
     it('should handle very long waiting times in roundtrip', () => {
