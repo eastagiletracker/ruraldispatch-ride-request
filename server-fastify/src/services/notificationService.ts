@@ -3,6 +3,7 @@ import { RIDE_REQUEST_STATUSES } from '../constants/rideRequestStatuses.js';
 import type { DatabaseAPI } from '../database/api.js';
 import type { Ride, ServiceProvider, SystemUser, User, Vehicle } from '../types/database.types.js';
 import type { SMSResult } from '../types/sms.types.js';
+import { phonesMatch } from '../utils/phoneUtils.js';
 import { SMSProviderManager } from './smsProviders/SMSProviderManager.js';
 import { processSMSResponse, type SMSResponseResult } from './smsResponseHandler.js';
 import * as smsTemplates from './smsTemplates.js';
@@ -198,7 +199,8 @@ Thank you for using our service! If you have any feedback, please contact us.`;
           if (ride.caseManagerPhone) {
             // Skip if case manager phone is same as rider phone (avoid duplicate SMS)
             const riderPhone = userData.rider.phone;
-            if (ride.caseManagerPhone === riderPhone) {
+            console.log(`📞 Phone comparison: caseManagerPhone="${ride.caseManagerPhone}" vs riderPhone="${riderPhone}"`);
+            if (phonesMatch(ride.caseManagerPhone, riderPhone)) {
               console.log('⚠️ Case manager phone same as rider phone - skipping duplicate SMS');
             } else {
               // Create case manager user object with data from ride
