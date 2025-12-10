@@ -199,14 +199,11 @@ export function processSMSResponse(
 
     case 'DRIVER_PICKUP_CHECK':
       if (responseCode === 1) {
-        // Rider picked up
+        // Rider picked up - status changes to RIDER_PICKED_UP (300)
+        // No scheduled status change needed - we wait for dropoff check
         return {
           success: true,
           newRideStatus: RIDE_STATUSES.RIDER_PICKED_UP,
-          scheduleStatusChange: {
-            status: RIDE_STATUSES.RIDE_STARTED,
-            delayMinutes: 5,
-          },
           metadata: { riderPickedUp: true },
         };
       }
