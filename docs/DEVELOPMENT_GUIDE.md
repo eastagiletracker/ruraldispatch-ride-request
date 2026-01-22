@@ -578,6 +578,40 @@ console.log('API Key:', import.meta.env.VITE_GOOGLE_MAPS_API_KEY);
 bunx prisma db pull --preview-feature
 ```
 
+#### Google Maps Server-Side API Key Issues
+```bash
+# Error: RefererNotAllowedMapError or API key restrictions
+# The issue is that your API key has HTTP referrer restrictions 
+# which only work in browsers. The Distance Matrix API needs 
+# to be called from the server.
+
+# Solution 1: Remove Restrictions Temporarily (for testing)
+1. Go to Google Cloud Credentials
+2. Click on your API key
+3. Under "API restrictions", select "Don't restrict key"
+4. Click Save
+5. Wait 5 minutes for changes to propagate
+6. Restart your server: bun run dev
+
+# Solution 2: Create a Separate Server-Side API Key (recommended)
+1. Go to Google Cloud Credentials
+2. Click "+ CREATE CREDENTIALS" → "API key"
+3. Click "RESTRICT KEY"
+4. Under "Application restrictions":
+   - Select "IP addresses"
+   - Add your server IP (or 0.0.0.0/0 for development)
+5. Under "API restrictions":
+   - Select "Restrict key"
+   - Check: Distance Matrix API, Directions API
+6. Click Save
+7. Copy the new key
+8. Update .env: GOOGLE_MAPS_SERVER_API_KEY='your-new-key'
+9. Restart server: bun run dev
+
+# The server code uses GOOGLE_MAPS_SERVER_API_KEY first, 
+# falling back to the client key.
+```
+
 ### Getting Help
 
 1. **Check Logs**:

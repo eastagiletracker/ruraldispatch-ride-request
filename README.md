@@ -66,13 +66,16 @@ For detailed setup, development, and deployment instructions:
 ### 🔧 Configuration Guides
 - **[SMS Setup](./docs/SMS_SETUP.md)** - Twilio and Vonage configuration
 - **[Database Seeding](./docs/SEEDING.md)** - Populate demo data
-- **[Deployment Guide](./docs/DEPLOYMENT.md)** - Deploy to Railway or Render
+- **[Deployment Guide](./docs/DEPLOYMENT.md)** - Deploy to Railway or Render (staging + production)
+
+### 🧪 Testing & Quality
+- **[Testing Guide](./docs/TESTING_GUIDE.md)** - Test setup and best practices
 
 ### 📖 Additional Resources
 - **[CLAUDE.md](./CLAUDE.md)** - Project architecture overview for AI assistants
 - **[Toll-Free Verification](./docs/TOLL_FREE_VERIFICATION.md)** - SMS compliance setup
-- **[Shared Schemas](./docs/SHARED_SCHEMAS.md)** - Zod validation schemas
 - **[UI Design System](./docs/UI_DESIGN_SYSTEM.md)** - shadcn/ui components
+- **[Zod Validation](./docs/ZOD_VALIDATION.md)** - Form validation patterns
 
 ---
 
