@@ -40,7 +40,7 @@ Features:
 - ✅ Terms & Privacy links
 
 ### 2. Backend Implementation
-- MongoDB storage for consent records
+- PostgreSQL storage for consent records
 - Tracks: consent status, timestamp, IP address
 - API endpoint: `POST /api/users/sms-consent`
 
@@ -85,13 +85,13 @@ const handleSubmit = async (e: React.FormEvent) => {
 
 ### Backend: Consent Storage
 
-**Location**: `server/routes/router.js`
+**Location**: `server-fastify/src/routes/`
 
-```javascript
+```typescript
 // POST /api/users/sms-consent
-router.post('/users/sms-consent', async (req, res) => {
+fastify.post('/users/sms-consent', async (request, reply) => {
   try {
-    const { phoneNumber, consentGiven, timestamp, ipAddress } = req.body;
+    const { phoneNumber, consentGiven, timestamp, ipAddress } = request.body;
 
     // Store consent in database
     const consentRecord = {
@@ -102,24 +102,22 @@ router.post('/users/sms-consent', async (req, res) => {
       createdAt: new Date()
     };
 
-    // Update user record with SMS consent
-    await usersCollection.updateOne(
-      { phone: phoneNumber },
-      {
-        $set: {
-          'smsConsent': {
-            given: consentGiven,
-            timestamp,
-            ipAddress
-          }
+    // Update user record with SMS consent using Prisma
+    await prisma.user.update({
+      where: { phone: phoneNumber },
+      data: {
+        smsConsent: {
+          given: consentGiven,
+          timestamp,
+          ipAddress
         }
       }
-    );
+    });
 
-    res.json({ success: true, message: 'Consent recorded' });
+    return { success: true, message: 'Consent recorded' };
   } catch (error) {
     console.error('Error recording SMS consent:', error);
-    res.status(500).json({ success: false, error: error.message });
+    reply.status(500).send({ success: false, error: error.message });
   }
 });
 ```
@@ -143,13 +141,13 @@ smsConsent: {
 
 ```bash
 # 1. Start development server
-npm run dev
+bun run dev
 
 # 2. Navigate to consent page
 open http://localhost:3001/sms-consent
 
 # 3. Test consent submission
-curl -X POST http://localhost:5000/api/users/sms-consent \
+curl -X POST http://localhost:5001/api/users/sms-consent \
   -H "Content-Type: application/json" \
   -d '{
     "phoneNumber": "+12025550123",
@@ -158,30 +156,30 @@ curl -X POST http://localhost:5000/api/users/sms-consent \
     "ipAddress": "127.0.0.1"
   }'
 
-# 4. Verify in MongoDB
-# Check users collection for smsConsent field
+# 4. Verify in PostgreSQL
+# Check users table for smsConsent field
 ```
 
 ### Opt-Out Implementation
 
-**Location**: `server/services/notificationService.js`
+**Location**: `server-fastify/src/services/notificationService.ts`
 
-```javascript
+```typescript
 // Handle incoming "STOP" keyword
-async handleIncomingSMS(from, body) {
+async handleIncomingSMS(from: string, body: string) {
   const message = body.trim().toUpperCase();
 
   if (message === 'STOP' || message === 'UNSUBSCRIBE') {
-    // Mark user as opted out
-    await usersCollection.updateOne(
-      { phone: from },
-      {
-        $set: {
-          'smsConsent.optedOut': true,
-          'smsConsent.optOutTimestamp': new Date()
+    // Mark user as opted out using Prisma
+    await prisma.user.update({
+      where: { phone: from },
+      data: {
+        smsConsent: {
+          optedOut: true,
+          optOutTimestamp: new Date()
         }
       }
-    );
+    });
 
     // Send confirmation
     await this.sendSMS({
@@ -194,13 +192,13 @@ async handleIncomingSMS(from, body) {
   }
 
   if (message === 'START' || message === 'SUBSCRIBE') {
-    // Re-subscribe user
-    await usersCollection.updateOne(
-      { phone: from },
-      {
-        $set: {
-          'smsConsent.optedOut': false,
-          'smsConsent.timestamp': new Date()
+    // Re-subscribe user using Prisma
+    await prisma.user.update({
+      where: { phone: from },
+      data: {
+        smsConsent: {
+          optedOut: false,
+          timestamp: new Date()
         }
       }
     });
@@ -220,11 +218,13 @@ async handleIncomingSMS(from, body) {
 
 ### Checking Opt-Out Status Before Sending
 
-```javascript
-// Before sending any SMS, check opt-out status
-async sendSMS({ to, message, rideUuid }) {
+```typescript
+// Before sending any SMS, check opt-out status using Prisma
+async sendSMS({ to, message, rideUuid }: { to: string; message: string; rideUuid?: string }) {
   // Check if user has opted out
-  const user = await usersCollection.findOne({ phone: to });
+  const user = await prisma.user.findUnique({
+    where: { phone: to }
+  });
 
   if (user?.smsConsent?.optedOut) {
     console.log(`User ${to} has opted out. Skipping SMS.`);
@@ -320,7 +320,7 @@ async sendSMS({ to, message, rideUuid }) {
 
 ```bash
 # Check if user has given consent
-curl http://localhost:5000/api/users/phone/+12025550123 | jq '.smsConsent'
+curl http://localhost:5001/api/users/phone/+12025550123 | jq '.smsConsent'
 
 # Response:
 {
@@ -335,36 +335,34 @@ curl http://localhost:5000/api/users/phone/+12025550123 | jq '.smsConsent'
 
 ```bash
 # Simulate receiving STOP keyword
-curl -X POST http://localhost:5000/api/notifications/webhook/twilio \
+curl -X POST http://localhost:5001/api/notifications/webhook/twilio \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "From=+12025550123&Body=STOP"
 
 # Check opt-out status
-curl http://localhost:5000/api/users/phone/+12025550123 | jq '.smsConsent.optedOut'
+curl http://localhost:5001/api/users/phone/+12025550123 | jq '.smsConsent.optedOut'
 # Should return: true
 ```
 
 ### Monitor Consent Records
 
 ```javascript
-// MongoDB query to check consent records
-db.users.find(
-  { "smsConsent.given": true },
-  { fullName: 1, phone: 1, "smsConsent": 1 }
-).pretty()
+// PostgreSQL/Prisma query to check consent records
+SELECT fullName, phone, smsConsent 
+FROM users 
+WHERE smsConsent->>'given' = 'true';
 
 // Find users who opted out
-db.users.find(
-  { "smsConsent.optedOut": true },
-  { fullName: 1, phone: 1, "smsConsent.optOutTimestamp": 1 }
-).pretty()
+SELECT fullName, phone, smsConsent->>'optOutTimestamp' as optOutTimestamp 
+FROM users 
+WHERE smsConsent->>'optedOut' = 'true';
 ```
 
 ### Verify Webhook Integration
 
 ```bash
 # Test Twilio webhook locally with ngrok
-ngrok http 5000
+ngrok http 5001
 
 # Update Twilio webhook URL to ngrok URL
 # Send test message from your phone with "STOP"

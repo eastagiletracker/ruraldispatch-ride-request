@@ -1,6 +1,6 @@
 # Rural Dispatch - System Design Document
 
-> **Version**: 1.0  
+> **Version**: 1.1  
 > **Last Updated**: January 2026  
 > **Status**: Production Ready
 
@@ -25,16 +25,16 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                              CLIENTS                                     │
+│                              CLIENTS                                    │
 ├─────────────────────────────────────────────────────────────────────────┤
-│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────────────┐  │
-│  │   Web Browser   │  │   SMS (Twilio)  │  │   SMS (Vonage/Backup)   │  │
-│  │   React SPA     │  │   Inbound/Out   │  │   Fallback Provider     │  │
-│  └────────┬────────┘  └────────┬────────┘  └────────────┬────────────┘  │
-└───────────┼────────────────────┼────────────────────────┼───────────────┘
-            │                    │                        │
-            │ HTTPS              │ Webhooks               │ Webhooks
-            ▼                    ▼                        ▼
+│  ┌────────────────────────────┐  ┌───────────────────────────────────┐  │
+│  │   Web Browser              │  │   SMS (Twilio)                    │  │
+│  │   React SPA                │  │   Inbound/Out                     │  │
+│  └───────────────────┬────────┘  └──────────────────────┬────────────┘  │
+└───────────┼─────────────────────────────────────────────┼────────────────┘
+            │                    │
+            │ HTTPS              │ Webhooks
+            ▼                    ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                           API GATEWAY                                    │
 │                     (Render/Railway + HTTPS)                            │
@@ -47,17 +47,17 @@
 ├─────────────────────────────────────────────────────────────────────────┤
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌─────────────┐  │
 │  │    Routes    │  │  Middleware  │  │   Services   │  │  Scheduler  │  │
-│  │  (REST API)  │  │ (Auth/RBAC)  │  │ (SMS/Notif)  │  │  (Cron)     │  │
+│  │  (REST API)  │  │ (Auth/RBAC)  │  │ (SMS/Notif)  │  │(In-Memory)  │  │
 │  └──────────────┘  └──────────────┘  └──────────────┘  └─────────────┘  │
 └────────────────────────────────┬────────────────────────────────────────┘
                                  │
                                  ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                         DATA LAYER                                       │
+│                         DATA LAYER                                      │
 ├─────────────────────────────────────────────────────────────────────────┤
 │  ┌─────────────────────────┐        ┌─────────────────────────────────┐ │
-│  │   Prisma ORM (v7)       │───────▶│   PostgreSQL Database           │ │
-│  │   Type-safe queries     │        │   (Render/Railway/Supabase)     │ │
+│  │   Prisma ORM (v7)       │───────▶│   PostgreSQL Database          │ │
+│  │   Type-safe queries     │        │   (Render/Railway/Flyio/VPS)    │ │
 │  └─────────────────────────┘        └─────────────────────────────────┘ │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
@@ -69,8 +69,8 @@
 │   Dispatcher │────▶│  Create Ride │────▶│ Assign Driver│────▶│  Send SMS    │
 │   (Web UI)   │     │   Request    │     │  + Vehicle   │     │ Notification │
 └──────────────┘     └──────────────┘     └──────────────┘     └──────┬───────┘
-                                                                       │
-                                                                       ▼
+                                                                      │
+                                                                      ▼
 ┌──────────────┐     ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
 │   Complete   │◀────│ Update Status│◀────│ Driver Reply │◀────│   Driver     │
 │    Ride      │     │  via Webhook │     │  (SMS: "1")  │     │ Receives SMS │
@@ -92,7 +92,7 @@
 | **shadcn/ui** | Latest | Pre-built accessible components |
 | **React Router** | 6.x | Client-side routing |
 | **React Hook Form** | 7.x | Form state management |
-| **Zod** | 3.x | Schema validation |
+| **Zod** | 4.x | Schema validation |
 | **Axios** | 1.x | HTTP client |
 
 ### Backend
@@ -104,8 +104,8 @@
 | **TypeScript** | 5.x | Type safety |
 | **Prisma** | 7.x | ORM with type-safe database access |
 | **PostgreSQL** | 15.x+ | Relational database |
-| **Zod** | 3.x | Request/response validation |
-| **bcryptjs** | 2.x | Password hashing |
+| **Zod** | 4.x | Request/response validation |
+| **bcryptjs** | 3.x | Password hashing |
 | **Pino** | 9.x | High-performance logging |
 
 ### Infrastructure & DevOps
@@ -120,9 +120,8 @@
 
 | Service | Purpose |
 |---------|---------|
-| **Twilio** | Primary SMS provider |
-| **Vonage** | Fallback SMS provider |
-| **Google Maps API** | Address autocomplete, geocoding, distance matrix |
+| **Twilio** | SMS provider |
+| **Google Maps API** | Distance Matrix, geocoding |
 
 ---
 
@@ -136,12 +135,14 @@
 ├─────────────────────┤       ├─────────────────────┤
 │ uuid (PK)           │       │ uuid (PK)           │
 │ username            │       │ fullName            │
-│ password (hashed)   │       │ phone               │
+│ passwordHash        │       │ phone               │
 │ role                │       │ email               │
-│ isActive            │       │ address             │
-│ createdAt           │       │ smsConsent          │
-│ updatedAt           │       │ serviceUserRole[]   │
-└─────────────────────┘       │ createdAt           │
+│ fullName            │       │ address             │
+│ isActive            │       │ role                │
+│ createdAt           │       │ smsConsentGiven     │
+│ updatedAt           │       │ smsConsentTimestamp │
+└─────────────────────┘       │ smsConsentIpAddress │
+                              │ createdAt           │
                               │ updatedAt           │
                               └──────────┬──────────┘
                                          │
@@ -151,17 +152,21 @@
 │  service_providers  │       │       rides         │       │      vehicles       │
 ├─────────────────────┤       ├─────────────────────┤       ├─────────────────────┤
 │ uuid (PK)           │       │ uuid (PK)           │       │ uuid (PK)           │
-│ fullName            │       │ displayId           │       │ make                │
-│ phone               │◀──────│ riderUuid (FK)      │──────▶│ model               │
-│ email               │   N:1 │ driverUuid (FK)     │ N:1   │ year                │
-│ organization        │       │ vehicleUuid (FK)    │       │ licensePlate        │
-│ isActive            │       │ pickupAddress       │       │ accessibility[]     │
-│ createdAt           │       │ dropOffAddress      │       │ isActive            │
-└─────────────────────┘       │ pickupRequestedTime │       │ createdAt           │
-                              │ rideStatus          │       └─────────────────────┘
-                              │ rideRequestStatus   │
-                              │ createdAt           │
-                              └──────────┬──────────┘
+│ fullName            │       │ displayId           │       │ displayName         │
+│ phone               │◀──────│ riderUuid (FK)      │       │ fleetId             │
+│ mobilePhone         │   N:1 │ driverUuid (FK)     │ N:1   │ model               │
+│ title               │       │ vehicleUuid (FK)    │ N:1   │ year                │
+│ organizationId (FK) │       │ pickupAddress       │       │ color               │
+│ role                │       │ dropOffAddress      │       │ licensePlate        │
+│ createdAt           │       │ pickupRequestedTime │       │ capacity            │
+│ updatedAt           │       │ rideStatus          │       │ serviceArea         │
+└─────────────────────┘       │ rideRequestStatus   │       │ walkerAccessible    │
+                              │ roundTrip           │       │ wheelchairAccessible│
+                              │ notes               │       │ serviceAnimalFriendly│
+                              │ estimatedTravelTime │       │ oxygenTankAccessible│
+                              │ createdAt           │       │ isActive            │
+                              │ updatedAt           │       │ createdAt           │
+                              └──────────┬──────────┘       └─────────────────────┘
                                          │
                                          │ 1:N
                                          ▼
@@ -170,13 +175,35 @@
                               ├─────────────────────┤
                               │ uuid (PK)           │
                               │ rideUuid (FK)       │
+                              │ notificationType    │
+                              │ direction           │
                               │ recipientPhone      │
-                              │ message             │
-                              │ messageType         │
-                              │ provider            │
-                              │ status              │
+                              │ recipientName       │
+                              │ recipientRole       │
+                              │ messageBody         │
+                              │ twilioMessageSid    │
+                              │ twilioStatus        │
+                              │ scheduledMessageSid │
+                              │ scheduledSendAt     │
+                              │ isScheduled         │
+                              │ sessionActive       │
+                              │ sessionClosedAt     │
+                              │ sentAt              │
                               │ createdAt           │
                               └─────────────────────┘
+
+┌─────────────────────┐
+│   organizations     │
+├─────────────────────┤
+│ id (PK)             │
+│ name                │
+│ description         │
+│ contactEmail        │
+│ contactPhone        │
+│ address             │
+│ createdAt           │
+│ updatedAt           │
+└─────────────────────┘
 ```
 
 ### Key Tables
@@ -186,6 +213,7 @@
 | `system_users` | ~50 | Admin, dispatcher, driver login accounts |
 | `users` | ~500-5,000 | Riders, caregivers, case managers |
 | `service_providers` | ~50-200 | Driver profiles |
+| `organizations` | ~10-50 | Organization grouping for providers |
 | `vehicles` | ~20-100 | Fleet management |
 | `rides` | ~1,000-50,000 | Ride history and active rides |
 | `notifications` | ~10,000-500,000 | SMS history for compliance |
@@ -199,7 +227,6 @@
 ```
 Authentication
   POST   /api/auth/login              # User authentication
-  POST   /api/auth/register           # Create new user
   GET    /api/auth/me                 # Get current user
 
 Users (Riders)
@@ -219,6 +246,7 @@ Ride Requests
 
 Service Providers (Drivers)
   GET    /api/providers               # List all providers
+  GET    /api/service-providers       # Alias for providers
   POST   /api/providers               # Create provider
   DELETE /api/providers/:uuid         # Delete provider
 
@@ -228,14 +256,14 @@ Vehicles
   DELETE /api/vehicles/:uuid          # Delete vehicle
 
 Notifications
-  GET    /api/notifications           # List notifications
-  POST   /api/notifications/send      # Send SMS
-  POST   /api/notifications/webhook/twilio   # Twilio inbound
-  POST   /api/notifications/webhook/vonage   # Vonage inbound
-  POST   /api/notifications/status/twilio    # Delivery status
+  GET    /api/notifications                    # List notifications
+  POST   /api/notifications/send               # Send SMS
+  POST   /api/notifications/webhook/twilio     # Twilio inbound webhook
+  POST   /api/notifications/status/twilio      # Delivery status callback
 
 Maps
-  POST   /api/maps/calculate-travel-time     # Distance Matrix
+  GET    /api/maps/autocomplete       # Address autocomplete (client-side)
+  POST   /api/maps/calculate-travel-time  # Distance Matrix API
 
 Health
   GET    /health                      # Health check
@@ -288,15 +316,15 @@ Role Permissions:
 │                    SMS SERVICE LAYER                         │
 ├─────────────────────────────────────────────────────────────┤
 │                                                              │
-│  ┌─────────────┐         ┌─────────────┐                    │
-│  │   Twilio    │ Primary │   Vonage    │ Fallback           │
-│  │   Provider  │────────▶│   Provider  │                    │
-│  └──────┬──────┘         └──────┬──────┘                    │
-│         │                       │                            │
-│         ▼                       ▼                            │
+│  ┌─────────────┐                                            │
+│  │   Twilio    │ SMS Provider                               │
+│  │   Provider  │                                            │
+│  └──────┬──────┘                                            │
+│         │                                                    │
+│         ▼                                                    │
 │  ┌─────────────────────────────────────────────────────┐    │
-│  │              Unified Message Queue                   │    │
-│  │  • Automatic failover on provider errors             │    │
+│  │              Notification Service                    │    │
+│  │  • Message templating                                │    │
 │  │  • Delivery status tracking                          │    │
 │  │  • Message history for compliance                    │    │
 │  └─────────────────────────────────────────────────────┘    │
@@ -307,46 +335,185 @@ Role Permissions:
 ### Interactive SMS Flow
 
 ```
-Driver Assignment
+Driver Assignment (Dispatcher assigns driver in dashboard)
       │
       ▼
-┌─────────────────┐    SMS: "You have been assigned to pick up
-│  Send Initial   │          John at 123 Main St at 10:00 AM"
-│  Notification   │
-└────────┬────────┘
+┌─────────────────┐    SMS to Rider & Case Manager:
+│  Ride Confirmed │    "Ride Confirmed!
+│  Notification   │     Driver: [Name]
+│                 │     Vehicle: [Name]
+│                 │     [Date/Time]
+│                 │     Pickup: [Address]
+│                 │     Drop off: [Address]
+└────────┬────────┘     To Cancel ride, type 3"
          │
          ▼ (1 hour before pickup)
-┌─────────────────┐    SMS: "Reminder: Pickup in 1 hour"
-│  1-Hour Reminder│
+┌─────────────────┐    SMS to Rider:
+│  1-Hour Prior   │    "Your driver will arrive in 1 hour.
+│    Reminder     │     Reply 1 to confirm ride.
+│                 │     Reply 2 to cancel ride."
+└────────┬────────┘
+         │
+    ┌────┴────┐
+    │  "1"    │         (Rider replies)
+    ▼         ▼
+┌─────────┐  ┌─────────┐
+│Confirm  │  │ Cancel  │
+│  Ride   │  │  Ride   │
+└────┬────┘  └────┬────┘
+     │            │
+     ▼            ▼
+┌─────────────────┐
+│Continue to      │
+│Pickup Time      │
 └────────┬────────┘
          │
          ▼ (at pickup time)
-┌─────────────────┐    SMS: "Have you arrived? Reply:
-│  Arrival Check  │          1=Yes, 2=Running Late"
+┌─────────────────┐    SMS to Driver:
+│  Arrival Check  │    "Have you arrived at pick up location?
+│                 │     Reply 1 for yes, 2 for no."
 └────────┬────────┘
          │
     ┌────┴────┐
     │  "1"    │         (Driver replies)
     ▼         ▼
 ┌─────────┐  ┌─────────┐
-│ Notify  │  │  Wait   │
-│ Rider   │  │  5 min  │
+│ Arrived │  │En Route │
 └────┬────┘  └────┬────┘
      │            │
      ▼            ▼
-┌─────────────────┐    SMS: "Did you pick up the rider?
-│  Pickup Check   │          1=Yes, 2=No Show"
+┌─────────────────┐    SMS to Rider & Case Manager:
+│Status: 200      │    "Driver has arrived"
+│RIDE_STARTED     │
 └────────┬────────┘
          │
-         ▼ (at drop-off time)
-┌─────────────────┐    SMS: "Did you complete the drop-off?
-│  Dropoff Check  │          1=Yes, 2=Issue"
+         ▼ (immediately after arrival confirmation)
+┌─────────────────┐    SMS to Driver:
+│  Pickup Check   │    "Have you picked up the rider and
+│                 │     started the ride? 1-yes, 2-no"
 └────────┬────────┘
          │
-         ▼
-┌─────────────────┐
-│  Ride Complete  │
-└─────────────────┘
+    ┌────┴────┐
+    │  "1"    │         (Driver replies)
+    ▼         ▼
+┌─────────┐  ┌─────────┐
+│ Picked  │  │ Waiting │
+│   Up    │  │         │
+└────┬────┘  └────┬────┘
+     │            │
+     ▼            ▼
+┌─────────────────┐    SMS to Rider & Case Manager:
+│Status: 300      │    "Driver is waiting. Driver will wait up
+│RIDER_PICKED_UP  │     to 5 minute before canceling ride.
+│                 │     To cancel ride reply 2."
+└────────┬────────┘
+         │
+         ▼ (at estimated dropoff time)
+┌─────────────────┐    SMS to Driver:
+│  Dropoff Check  │    "Have you dropped off rider? 1-yes, 2-no"
+└────────┬────────┘
+         │
+    ┌────┴────┐
+    │  "1"    │         (Driver replies)
+    ▼         ▼
+┌─────────┐  ┌─────────┐
+│Dropped  │  │ Ask     │
+│  Off    │  │ Again   │
+│         │  │(5 min)  │
+└────┬────┘  └────┬────┘
+     │            │
+     ▼            ▼
+┌─────────────────┐    SMS to Rider & Case Manager:
+│Status: 400      │    "You have been dropped off"
+│RIDER_DROPPED_OFF│
+└────────┬────────┘
+         │
+    ┌────┴────┐
+    │Not      │         Roundtrip?
+    │Roundtrip│    ┌─────────────────┐
+    ▼         ▼    ▼                 │
+┌─────────┐  ┌─────────────────┐     │
+│ Status: │  │ Roundtrip       │     │
+│  500    │  │ Return Check    │◀────┘
+│COMPLETE │  │                 │
+└─────────┘  │ SMS to Driver:  │
+             │ "Have you picked│
+             │  up the rider   │
+             │  and started    │
+             │  the return     │
+             │  ride? 1-yes,   │
+             │  2-no"          │
+             └────────┬────────┘
+                      │
+                 ┌────┴────┐
+                 │  "1"    │
+                 ▼         ▼
+            ┌────────┐  ┌────────┐
+            │Return  │  │Waiting │
+            │Started │  │        │
+            └───┬────┘  └───┬────┘
+                │           │
+                ▼           ▼
+        ┌─────────────────────────┐
+        │ Status: 450             │
+        │ ROUNDTRIP_RETURNING     │
+        └───────────┬─────────────┘
+                    │
+                    ▼ (at return dropoff time)
+            ┌─────────────────┐
+            │ Return Dropoff  │
+            │    Check        │
+            │                 │
+            │ SMS to Driver:  │
+            │ "Have you       │
+            │  dropped off    │
+            │  rider? 1-yes,  │
+            │  2-no"          │
+            └────────┬────────┘
+                     │
+                ┌────┴────┐
+                │  "1"    │
+                ▼         ▼
+           ┌────────┐  ┌────────┐
+           │Complete│  │Interr. │
+           │ Status:│  │ Status:│
+           │  475   │  │  479   │
+           └────────┘  └────────┘
+```
+
+### Status Code Reference
+
+| Code | Status | Description |
+|------|--------|-------------|
+| 0 | Request in Progress | Just created |
+| 100 | Ride Confirmed | Driver assigned, ride scheduled |
+| 109 | Canceled by Rider | Rider/case mgr canceled |
+| 200 | Ride Started | Driver confirmed arrival |
+| 300 | Rider Picked Up | Driver confirmed pickup |
+| 400 | Rider Dropped Off | Driver confirmed dropoff |
+| 450 | Roundtrip Returning | Return trip started |
+| 475 | Roundtrip Complete | Return trip completed |
+| 479 | Roundtrip Interrupted | Return ride had issue |
+| 500 | Ride Complete | Final status (non-roundtrip) |
+
+### Scheduler Implementation
+
+The scheduling system uses a **hybrid approach** combining two mechanisms:
+
+1. **In-Memory Timeouts** (`TaskManager`)
+   - Used for immediate/short-term scheduled actions
+   - Manages ride status transitions and notifications
+   - Auto-cleanup after task execution
+
+2. **Twilio Scheduled Messages**
+   - Used for SMS delivery at specific times
+   - Messages scheduled via Twilio's API
+   - Stored in database with `scheduledMessageSid`
+
+```javascript
+// Example: Scheduling a driver arrival check
+scheduler.scheduleDriverArrivalCheck(ride, driver);
+// This schedules a Twilio message + in-memory timeout
 ```
 
 ---
@@ -397,7 +564,7 @@ Driver Assignment
 
 ### TCPA Compliance (SMS)
 
-- **Consent Tracking**: Explicit opt-in recorded per user
+- **Consent Tracking**: Explicit opt-in recorded per user (`smsConsentGiven`, `smsConsentTimestamp`, `smsConsentIpAddress`)
 - **Opt-Out Handling**: STOP keyword processed automatically
 - **Message History**: All SMS logged for compliance audits
 - **Terms of Service**: Required acceptance before SMS enrollment
@@ -422,14 +589,14 @@ services:
     name: ride-request-fastify
     runtime: node
     rootDir: server-fastify
-    buildCommand: npm install && npx prisma generate && npm run build
-    startCommand: npm run start:prod
+    buildCommand: bun install && npx prisma generate && npm run build
+    startCommand: bun run start:prod
     
   - type: web
     name: ride-request-client
     runtime: static
     rootDir: client
-    buildCommand: npm install && npm run build
+    buildCommand: bun install && bun run build
     staticPublishPath: ./dist
 
 databases:
@@ -493,8 +660,37 @@ bun run dev
 
 # Access application
 # Frontend: http://localhost:3001
-# Backend:  http://localhost:5000
+# Backend:  http://localhost:5001
 ```
+
+---
+
+## Key Design Decisions
+
+### Display ID Format
+
+Rides use a human-readable format `RIDE-XXXX` (e.g., `RIDE-X7K9`) stored in the `displayId` field. This provides:
+- Easy reference for dispatchers and drivers
+- Case-insensitive alphanumeric format
+- Unique constraint in database
+
+### UUID Strategy
+
+All primary keys use Prisma's `uuid(7)` function:
+- 7-character time-sortable UUIDs
+- Format: `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`
+- Better than auto-increment for distributed systems
+
+### Timezone Handling
+
+**Backend**: Always runs in UTC
+- Server validates UTC timezone on startup
+- All database timestamps stored in UTC
+- All API responses use ISO 8601 UTC format
+
+**Frontend**: Displays in user's local timezone
+- Conversion happens in the browser
+- `dateUtils.ts` utilities handle timezone math
 
 ---
 

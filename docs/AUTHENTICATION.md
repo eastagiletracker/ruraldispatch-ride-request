@@ -5,9 +5,9 @@
 Rural Dispatch uses a **two-layer authentication system** with role-based access control (RBAC):
 
 1. **Portal Password** (`hackct25`) - Shared password for initial access
-2. **User Credentials** (username/password) - Individual login from `system-users` collection
+2. **User Credentials** (username/password) - Individual login from `system_users` table
 
-The application authenticates users via the `system-users` collection. Service providers (drivers) have **profile data** in `service-providers` with email/password fields, but these are **NOT used for authentication**.
+The application authenticates users via the `system_users` table. Service providers (drivers) have **profile data** in `service_providers` with email/password fields, but these are **NOT used for authentication**.
 
 ---
 
@@ -22,8 +22,8 @@ The application authenticates users via the `system-users` collection. Service p
    ↓
 3. Redirected to /signin
    - Enter USERNAME and password (not email!)
-   - POST to /api/auth/login
-   - Authenticates against system-users collection
+    - POST to /api/auth/login
+    - Authenticates against system_users table
    ↓
 4. Role-based redirect:
    - admin → /dashboard
@@ -102,7 +102,7 @@ The application authenticates users via the `system-users` collection. Service p
 - **Cannot** assign rides
 - **Cannot** access System Manager
 
-**Demo Drivers** (from service-providers):
+**Demo Drivers** (from service_providers):
 - Michael Chen | +16465551234
 - Patricia Smith | +12125555678
 - David Martinez | +13105559999
@@ -143,23 +143,23 @@ The application authenticates users via the `system-users` collection. Service p
 
 The System Manager has 6 tabs for managing data:
 
-| Tab | Manages | Collection | Description |
+| Tab | Manages | Table | Description |
 |-----|---------|------------|-------------|
 | **Riders** | People who need rides | `users` | Service users requesting transportation |
-| **Providers** | Drivers & staff | `service-providers` | Driver profiles assigned to rides |
+| **Providers** | Drivers & staff | `service_providers` | Driver profiles assigned to rides |
 | **Vehicles** | Fleet vehicles | `vehicles` | Cars, vans, accessible vehicles |
-| **Case Managers** | Case manager accounts | `system-users` (role='case_manager') | Login credentials for case managers |
-| **Drivers** | Driver management | `service-providers` | Drivers available for assignment |
-| **Admins** | Other admin accounts | `system-users` (role='admin') | Admin team members |
+| **Case Managers** | Case manager accounts | `system_users` (role='case_manager') | Login credentials for case managers |
+| **Drivers** | Driver management | `service_providers` | Drivers available for assignment |
+| **Admins** | Other admin accounts | `system_users` (role='admin') | Admin team members |
 
 ---
 
-## Database Collections
+## Database Tables
 
-### 1. system-users (Authentication)
+### 1. system_users (Authentication)
 **Purpose**: User login credentials and authorization
 **Authentication**: YES - this is what `/api/auth/login` checks
-**Collections**:
+**Tables**:
 ```javascript
 {
   uuid: number,
@@ -182,7 +182,7 @@ The System Manager has 6 tabs for managing data:
 
 ---
 
-### 2. service-providers (Driver Profiles & Assignment)
+### 2. service_providers (Driver Profiles & Assignment)
 **Purpose**: Driver/staff profiles and ride assignments
 **Authentication**: NO - drivers currently managed via service-provider records
 **Fields**:
@@ -206,11 +206,11 @@ The System Manager has 6 tabs for managing data:
 - David Martinez - Medical appointments, Bilingual
 - Lisa Anderson - Fleet Manager
 
-**Note**: Email/password in service-providers are **NOT currently used for authentication**. Future enhancement will allow drivers to log in directly.
+**Note**: Email/password in service_providers are **NOT currently used for authentication**. Future enhancement will allow drivers to log in directly.
 
 ---
 
-### 3. users Collection (Riders & Caregivers)
+### 3. users Table (Riders & Caregivers)
 **Purpose**: Service users requesting and managing rides
 **Authentication**: NO - riders/caregivers don't log in
 **Fields**:
@@ -249,7 +249,7 @@ The System Manager has 6 tabs for managing data:
 
 ---
 
-### 4. vehicles Collection
+### 4. vehicles Table
 **Purpose**: Fleet vehicles available for assignment
 **Authentication**: NO
 **Fields**:
@@ -268,7 +268,7 @@ The System Manager has 6 tabs for managing data:
 
 ---
 
-### 5. ride-requests Collection
+### 5. rides Table
 **Purpose**: Ride requests with rider, driver, and status
 **Authentication**: NO
 **Fields**:
@@ -325,14 +325,14 @@ The System Manager has 6 tabs for managing data:
 - Accessed via SMS or case manager creation
 - View ride status via SMS or web link
 
-**Drivers** (via service-providers):
+**Drivers** (via service_providers):
 - Future enhancement: Direct web login
 - Currently managed via System Manager → Drivers tab
 - Can be activated/deactivated by admins
 
 ### Permission Checks
 
-**Backend** (`server/middleware/permissions.js`):
+**Backend** (`server-fastify/src/middleware/permissions.ts`):
 - `/admin/*` routes: Requires admin role
 - `/manager` routes: Requires admin role
 - `/service-provider` routes: Requires admin role
@@ -437,31 +437,17 @@ If they need web app access, add to system-users:
 
 ## Seeding Demo Users
 
-The system uses organized seed scripts for demo data - **one file per role**:
+The system uses a single seed command to populate all demo data:
 
 ```bash
-# System Users (Authentication)
-npm run seed:admins              # Creates 3 admin users
-npm run seed:dispatchers        # Creates 1 dispatcher user
-npm run seed:case-managers      # Creates 1 case manager user
+# Run all seeds
+bun run seed                    # Seeds all demo data (users, providers, vehicles, rides)
 
-# Service Users (Riders & Caregivers)
-npm run seed:riders             # Creates 2 rider users
-npm run seed:caregivers         # Creates 2 caregiver users
-
-# Service Providers
-npm run seed:drivers            # Creates 3 drivers + 1 fleet manager
-
-# Infrastructure
-npm run seed:vehicles           # Creates fleet vehicles
-npm run seed:rides              # Creates 9 demo rides
-
-# Run All in Sequence
-npm run seed                    # Runs all seeds in order (default)
-npm run seed:all                # Same as above
+# Reset and reseed
+bun run seed:reset              # Clear database and reseed from scratch
 ```
 
-For detailed seed file documentation, see `SEED_FILES.md`
+For detailed setup instructions, see the [README.md](../README.md)
 
 ### System Users (Authentication)
 - **Admins (3)**: natecooper, cassiebrinen, dominiquemorris
@@ -659,19 +645,18 @@ For detailed seed file documentation, see `SEED_FILES.md`
 ## Troubleshooting
 
 ### "Invalid username or password"
-- Verify credentials are from system-users collection
+- Verify credentials are from system_users table
 - Check username is correct (use "natecooper", NOT "nate.cooper" or email)
-- Ensure seed script has been run: `npm run seed`
+- Ensure seed script has been run: `bun run seed`
 - Verify database connection and seed completion
 
 ### "Insufficient permissions" or "Unauthorized"
-- Verify your user role in system-users collection
+- Verify your user role in system_users table
 - Admins: Check that you can access `/admin/manager`
 - Case Managers: Can only access `/ride-request`, not System Manager
-- Check permissions middleware in `server/middleware/permissions.js`
+- Check permissions middleware in `server-fastify/src/middleware/permissions.ts`
 
 ### "Cannot find user" when creating ride request
-- Service users must be seeded first: `npm run seed:users`
 - Search for exact name: "Maria Rodriguez" (case-sensitive)
 - Verify user exists in database via System Manager → Riders tab
 
@@ -682,7 +667,6 @@ For detailed seed file documentation, see `SEED_FILES.md`
 - Re-enter password: `hackct25`
 
 ### System Manager shows "No drivers found"
-- Drivers must be seeded in service-providers: `npm run seed:providers`
 - Verify seed completed successfully
 - Drivers tab should show: Michael Chen, Patricia Smith, David Martinez, Lisa Anderson
 

@@ -37,7 +37,6 @@ Complete documentation for the interactive SMS notification system in Rural Disp
 | ⏰ | Driver Arrival | At pickup time | Driver |
 | 📅 | Dropoff Check | At estimated dropoff | Driver |
 | 🔄 | Roundtrip Return | After waiting period | Driver |
-| ⏱️ | Status Change | 5 min after pickup | Automatic |
 
 ---
 
@@ -75,22 +74,22 @@ Complete documentation for the interactive SMS notification system in Rural Disp
 
 ### Components
 
-1. **SMS Templates** (`/server/services/smsTemplates.js`)
+1. **SMS Templates** (`/server-fastify/src/services/smsTemplates.ts`)
    - All message templates
    - Dynamic content insertion
    - Multi-recipient support
 
-2. **Response Handler** (`/server/services/smsResponseHandler.js`)
+2. **Response Handler** (`/server-fastify/src/services/smsResponseHandler.ts`)
    - Parses incoming SMS
    - Determines context
    - Returns actions to take
 
-3. **Scheduler** (`/server/services/scheduler.js`)
+3. **Scheduler** (`/server-fastify/src/services/scheduler/`)
    - Time-based notifications
    - Auto-cleanup after execution ✨ NEW
    - Status change scheduling
 
-4. **Notification Service** (`/server/services/notificationService.js`)
+4. **Notification Service** (`/server-fastify/src/services/notificationService.ts`)
    - Provider abstraction (Twilio/Vonage)
    - Bulk sending
    - Delivery tracking
@@ -99,32 +98,7 @@ Complete documentation for the interactive SMS notification system in Rural Disp
 
 ## Complete Flow
 
-### 1. Driver Assignment
-
-**Trigger**: Dispatcher assigns driver to ride
-
-**SMS to Driver**:
-```
-New ride assigned to you!
-Rider: John Doe
-Pickup: 123 Main St
-11/13, 2:00 PM
-Drop off: 456 Park Ave
-
-Accept? 1=Yes, 2=No
-```
-
-**Driver Options**:
-- **Reply "1"** → Ride Confirmed (Status 100)
-  - Rider & case manager notified
-  - Schedules: 1-hour prior, arrival check
-- **Reply "2"** → Driver Declined
-  - Status: Driver Needed (200)
-  - Dispatcher notified
-
----
-
-### 2. One Hour Before Pickup
+### 1. One Hour Before Pickup
 
 **Trigger**: Scheduled 1 hour before pickup time
 
@@ -145,7 +119,7 @@ Reply 1 to confirm or 2 to cancel
 
 ---
 
-### 3. At Pickup Time
+### 2. At Pickup Time
 
 **Trigger**: Scheduled at exact pickup time
 
@@ -166,7 +140,7 @@ Reply 1 for yes, 2 for no.
 
 ---
 
-### 4. Pickup Confirmation
+### 3. Pickup Confirmation
 
 **Trigger**: After driver confirms arrival
 
@@ -179,7 +153,6 @@ Reply 1 for yes, 2 for no.
 **Driver Options**:
 - **Reply "1"** → Rider Picked Up (Status 300)
   - All parties notified
-  - **After 5 minutes**: Auto-change to Ride Started (Status 200)
   - Dropoff check scheduled
 
 - **Reply "2"** → Waiting for Rider
@@ -188,7 +161,7 @@ Reply 1 for yes, 2 for no.
 
 ---
 
-### 5. Dropoff Confirmation
+### 4. Dropoff Confirmation
 
 **Trigger**: At estimated dropoff time (pickup + travel time)
 
@@ -204,14 +177,13 @@ Reply 1 for yes, 2 for no.
   - **If not roundtrip**: Ride Complete (Status 500)
   - **If roundtrip**: Schedule return check
 
-- **Reply "2"** → Issue at Dropoff
-  - Status: Rider Not Dropped Off (Status 409)
-  - Dispatcher alerted
-  - Request auto-closed
+- **Reply "2"** → Still En Route
+  - Dropoff check rescheduled (5 min)
+  - Dispatcher notified if persistent issues
 
 ---
 
-### 6. Roundtrip (If Applicable)
+### 5. Roundtrip (If Applicable)
 
 **Trigger**: After waiting period at destination
 
@@ -270,7 +242,6 @@ Tasks are scheduled automatically when:
    - Driver arrival check
 
 2. **Rider Picked Up** (Status 300)
-   - Status change (5 min delay)
    - Dropoff check
 
 3. **Roundtrip Dropoff** (Status 400, roundtrip=true)
@@ -299,7 +270,7 @@ Tasks automatically disappear after:
 ### Example Timeline
 
 ```
-9:00 AM - Driver accepts ride
+9:00 AM - Dispatcher assigns driver
           → Tasks: 1 Hour Prior, Driver Arrival
 
 10:00 AM - 1 Hour Prior executes
@@ -311,11 +282,7 @@ Tasks automatically disappear after:
           ✅ Task removed from dashboard
 
 11:05 AM - Driver confirms pickup
-          → Tasks: Status Change, Dropoff Check
-
-11:10 AM - Status Change executes
-          → Ride status updated
-          ✅ Task removed from dashboard
+          → Task: Dropoff Check
 
 11:30 AM - Dropoff Check executes
           → SMS sent to driver
@@ -364,7 +331,7 @@ DISPATCHER_PHONE=+1234567890
 
 **Note**: Use ngrok for local testing:
 ```bash
-ngrok http 5000
+ngrok http 5001
 # Use ngrok URL for webhooks: https://xxxxx.ngrok.io/api/...
 ```
 
@@ -377,14 +344,14 @@ For detailed setup instructions, see [SMS_SETUP.md](./SMS_SETUP.md).
 ### 1. Test Driver Assignment
 
 ```bash
-# 1. Create a ride and assign driver
-# 2. Driver receives: "Accept? 1=Yes, 2=No"
-# 3. Send SMS from driver's phone: "1"
+# 1. Create a ride
+# 2. Dispatcher assigns driver in dashboard
+# 3. Ride status → 100 (Confirmed)
 
 # Expected:
-# - Ride status → 100 (Confirmed)
+# - Driver receives confirmation SMS
 # - Rider/case manager receive confirmation
-# - Dashboard shows 2 tasks scheduled
+# - Dashboard shows 2 tasks scheduled (1 Hour Prior, Driver Arrival)
 ```
 
 ### 2. Test 1-Hour Prior
@@ -409,14 +376,13 @@ For detailed setup instructions, see [SMS_SETUP.md](./SMS_SETUP.md).
 # - Driver: "Have you picked up rider?"
 # - Driver replies "1"
 # - Status: 300 (Rider Picked Up)
-# - After 5 min: Status auto-changes to 200
 ```
 
 ### 4. Test Auto-Close
 
 ```bash
 # Update ride status to 109 (Canceled)
-curl -X PUT http://localhost:5000/api/riderequests/123 \
+curl -X PUT http://localhost:5001/api/riderequests/123 \
   -H "Content-Type: application/json" \
   -d '{"rideStatus": 109}'
 
@@ -454,7 +420,7 @@ curl -X PUT http://localhost:5000/api/riderequests/123 \
 **Test**:
 ```bash
 # Check notification service
-curl http://localhost:5000/api/notifications/scheduler-status
+curl http://localhost:5001/api/notifications/scheduler-status
 
 # Look for errors in console
 # Should see: "📨 SMS sent to +1234567890"
@@ -474,7 +440,7 @@ curl http://localhost:5000/api/notifications/scheduler-status
 **Debug**:
 ```bash
 # Check scheduler status
-curl http://localhost:5000/api/notifications/scheduler-status
+curl http://localhost:5001/api/notifications/scheduler-status
 
 # Expected response:
 {
@@ -598,12 +564,12 @@ Content-Type: application/json
 
 | File | Purpose |
 |------|---------|
-| `/server/services/smsTemplates.js` | All SMS message templates |
-| `/server/services/smsResponseHandler.js` | Parse and handle SMS replies |
-| `/server/services/scheduler.js` | Time-based notifications + auto-cleanup |
-| `/server/services/notificationService.js` | Provider abstraction (Twilio/Vonage) |
-| `/server/routes/router.js` | Webhook endpoints, ride updates |
-| `/server/constants/rideStatuses.js` | Ride status constants |
+| `/server-fastify/src/services/smsTemplates.ts` | All SMS message templates |
+| `/server-fastify/src/services/smsResponseHandler.ts` | Parse and handle SMS replies |
+| `/server-fastify/src/services/scheduler/` | Time-based notifications + auto-cleanup |
+| `/server-fastify/src/services/notificationService.ts` | Provider abstraction (Twilio/Vonage) |
+| `/server-fastify/src/routes/` | Webhook endpoints, ride updates |
+| `/server-fastify/src/constants/rideStatuses.ts` | Ride status constants |
 
 ### Frontend
 

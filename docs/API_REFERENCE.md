@@ -4,7 +4,7 @@
 
 ## Base URL
 ```
-Development: http://localhost:5000/api
+Development: http://localhost:5001/api
 Production: https://your-domain.com/api
 ```
 
@@ -14,6 +14,7 @@ Production: https://your-domain.com/api
 - [Ride Requests](#ride-requests)
 - [Service Providers (Drivers)](#service-providers)
 - [Vehicles](#vehicles)
+- [Maps](#maps)
 - [Notifications (SMS)](#notifications)
 - [System Users](#system-users)
 - [Health Check](#health-check)
@@ -168,6 +169,90 @@ POST /api/users
 }
 ```
 
+### Update User
+```http
+PUT /api/users/:uuid
+```
+
+**Parameters**:
+- `uuid` (path) - User UUID
+
+**Request Body** (partial update supported):
+```json
+{
+  "fullName": "Updated Name",
+  "phone": "+12025550199",
+  "dob": "1990-03-20",
+  "residence": {
+    "current": "789 Elm St, City, State 12345",
+    "currentPlaceId": "ChIJ..."
+  },
+  "serviceUserRole": ["rider", "caregiver"]
+}
+```
+
+**Response** (200 OK):
+```json
+{
+  "success": true,
+  "message": "User updated successfully",
+  "user": { ... }
+}
+```
+
+### Get User by Phone
+```http
+GET /api/users/phone/:phone
+```
+
+**Parameters**:
+- `phone` (path) - Phone number (with country code)
+
+**Example**:
+```http
+GET /api/users/phone/+12025550123
+```
+
+**Response** (200 OK): Single user object or 404 if not found
+
+### Get User Fields
+```http
+GET /api/users/:id/:fields
+```
+
+**Parameters**:
+- `id` (path) - User UUID
+- `fields` (path) - Comma-separated field names
+
+**Example**:
+```http
+GET /api/users/user-123/fullName,phone,email
+```
+
+**Response** (200 OK):
+```json
+{
+  "fullName": "John Doe",
+  "phone": "+12025550123",
+  "email": "john@example.com"
+}
+```
+
+### Get Users by Fields
+```http
+GET /api/users/fields/:fields
+```
+
+**Parameters**:
+- `fields` (path) - Comma-separated field names to retrieve for all users
+
+**Example**:
+```http
+GET /api/users/fields/fullName,phone
+```
+
+**Response** (200 OK): Array of users with only specified fields
+
 ### Update SMS Consent
 ```http
 POST /api/users/sms-consent
@@ -312,6 +397,22 @@ PUT /api/riderequests/:uuid
 
 **Note**: Updating ride status triggers SMS notifications automatically
 
+### Delete Ride Request
+```http
+DELETE /api/riderequests/:id
+```
+
+**Parameters**:
+- `id` (path) - Ride request UUID
+
+**Response** (200 OK):
+```json
+{
+  "success": true,
+  "message": "Ride request deleted successfully"
+}
+```
+
 ---
 
 ## Service Providers
@@ -377,6 +478,33 @@ POST /api/providers
   "uuid": "provider-790",
   "fullName": "Sarah Driver",
   ...
+}
+```
+
+### Update Provider
+```http
+PUT /api/providers/:uuid
+```
+
+**Request Body** (partial update):
+```json
+{
+  "fullName": "Updated Driver Name",
+  "mobilePhone": "+12025550188",
+  "email": "updated@example.com",
+  "title": "Senior Driver",
+  "organization": "EASTCONN",
+  "serviceProviderRole": "Driver",
+  "specializations": "Wheelchair accessible, Medical appointments"
+}
+```
+
+**Response** (200 OK):
+```json
+{
+  "success": true,
+  "message": "Provider updated successfully",
+  "provider": { ... }
 }
 ```
 
@@ -457,10 +585,80 @@ POST /api/vehicles
 }
 ```
 
+### Update Vehicle
+```http
+PUT /api/vehicles/:uuid
+```
+
+**Request Body** (partial update):
+```json
+{
+  "displayName": "Updated Van Name",
+  "fleetId": "FLEET-001",
+  "make": "Ford",
+  "model": "Transit",
+  "year": 2023,
+  "licensePlate": "ABC-1234",
+  "vin": "1FTBW3XM0NKA12345",
+  "color": "blue",
+  "capacity": 8,
+  "wheelchairAccessible": true,
+  "walkerAccessible": true,
+  "serviceAnimalFriendly": true,
+  "oxygenTankAccessible": true,
+  "serviceArea": "Northeast Connecticut"
+}
+```
+
+**Response** (200 OK):
+```json
+{
+  "success": true,
+  "message": "Vehicle updated successfully",
+  "vehicle": { ... }
+}
+```
+
 ### Delete Vehicle
 ```http
 DELETE /api/vehicles/:uuid
 ```
+
+---
+
+## Maps
+
+### Calculate Travel Time
+```http
+POST /api/maps/calculate-travel-time
+```
+
+**Description**: Calculate travel time between two addresses using Google Maps Distance Matrix API
+
+**Request Body**:
+```json
+{
+  "origin": "123 Main St, New York, NY",
+  "destination": "456 Medical Center Dr, New York, NY"
+}
+```
+
+**Response** (200 OK):
+```json
+{
+  "durationMinutes": 25,
+  "durationText": "25 mins",
+  "durationSeconds": 1500,
+  "distanceText": "12.5 mi",
+  "distanceMeters": 20117,
+  "origin": "123 Main St, New York, NY",
+  "destination": "456 Medical Center Dr, New York, NY"
+}
+```
+
+**Error Responses**:
+- `400 Bad Request` - No route found between addresses
+- `500 Internal Server Error` - Google Maps API not configured
 
 ---
 
@@ -553,6 +751,59 @@ GET /api/notifications/provider-status
 }
 ```
 
+### Get Scheduler Status
+```http
+GET /api/notifications/scheduler-status
+```
+
+**Description**: Get scheduler status for debugging scheduled SMS tasks
+
+**Response** (200 OK):
+```json
+{
+  "success": true,
+  "scheduler": {
+    "isRunning": true,
+    "scheduledTasksCount": 5,
+    "tasks": [
+      {
+        "rideUuid": "ride-123",
+        "type": "one_hour_prior",
+        "scheduledTime": "2025-01-15T09:00:00Z"
+      }
+    ]
+  },
+  "timestamp": "2025-01-15T08:30:00Z"
+}
+```
+
+### Send SMS
+```http
+POST /api/notifications/send
+```
+
+**Description**: Send an SMS message manually
+
+**Request Body**:
+```json
+{
+  "to": "+12025550123",
+  "message": "Your driver will arrive in 10 minutes",
+  "rideUuid": "ride-123",
+  "messageType": "manual_notification"
+}
+```
+
+**Response** (200 OK):
+```json
+{
+  "success": true,
+  "messageSid": "SM...",
+  "status": "queued",
+  "to": "+12025550123"
+}
+```
+
 ### Close SMS Session
 ```http
 POST /api/notifications/close-session/:rideUuid
@@ -639,6 +890,44 @@ GET /api/auth/users
     "createdAt": "2025-01-01T00:00:00Z"
   }
 ]
+```
+
+### Get System Users by Role
+```http
+GET /api/auth/system-users?role=:role
+```
+
+**Query Parameters**:
+- `role` (query) - Filter by role: `admin`, `dispatcher`, `driver`, `case_manager`
+
+**Example**:
+```http
+GET /api/auth/system-users?role=dispatcher
+```
+
+**Response** (200 OK): Array of system users with specified role
+
+### Toggle User Status
+```http
+PATCH /api/auth/system-users/:uuid/toggle-status
+```
+
+**Parameters**:
+- `uuid` (path) - System user UUID
+
+**Description**: Toggle user between active/inactive status
+
+**Response** (200 OK):
+```json
+{
+  "success": true,
+  "message": "User status toggled",
+  "user": {
+    "uuid": "system-user-1",
+    "isActive": false,
+    "updatedAt": "2025-01-10T12:00:00Z"
+  }
+}
 ```
 
 ### Get System User by UUID
@@ -776,7 +1065,7 @@ All errors follow this format:
 ### Authentication
 ```bash
 # Login
-curl -X POST http://localhost:5000/api/auth/login \
+curl -X POST http://localhost:5001/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username":"admin","password":"admin123"}' | jq
 ```
@@ -784,10 +1073,10 @@ curl -X POST http://localhost:5000/api/auth/login \
 ### Users
 ```bash
 # Get all users
-curl http://localhost:5000/api/users | jq
+curl http://localhost:5001/api/users | jq
 
 # Create user
-curl -X POST http://localhost:5000/api/users \
+curl -X POST http://localhost:5001/api/users \
   -H "Content-Type: application/json" \
   -d '{
     "fullName": "Test User",
@@ -806,7 +1095,7 @@ curl -X POST http://localhost:5000/api/users \
 ### Ride Requests
 ```bash
 # Create ride request
-curl -X POST http://localhost:5000/api/riderequests \
+curl -X POST http://localhost:5001/api/riderequests \
   -H "Content-Type: application/json" \
   -d '{
     "serviceUserUuid": "user-123",
@@ -818,7 +1107,7 @@ curl -X POST http://localhost:5000/api/riderequests \
   }' | jq
 
 # Update ride status
-curl -X PUT http://localhost:5000/api/riderequests/1001 \
+curl -X PUT http://localhost:5001/api/riderequests/1001 \
   -H "Content-Type: application/json" \
   -d '{"rideStatus": 200}' | jq
 ```
@@ -900,7 +1189,7 @@ function validateVonageSignature(req) {
 
 ## Additional Resources
 
-- [Development Guide](./DEVELOPMENT_GUIDE.md)
+- [System Design](./SYSTEM_DESIGN.md) - Architecture and technical overview
 - [SMS Setup](./SMS_SETUP.md)
 - [Authentication](./AUTHENTICATION.md)
 - [Deployment](./DEPLOYMENT.md)

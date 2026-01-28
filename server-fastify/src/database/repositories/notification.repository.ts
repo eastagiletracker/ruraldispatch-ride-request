@@ -127,11 +127,23 @@ export function createNotificationRepository(prisma: PrismaClient) {
 
     /**
      * Update notification delivery status
+     * Returns null if notification not found (instead of throwing)
      */
     updateNotificationStatus: async (
       twilioMessageSid: string,
       statusData: NotificationStatusUpdate
-    ): Promise<Notification> => {
+    ): Promise<Notification | null> => {
+      // First check if the notification exists
+      const existing = await prisma.notification.findUnique({
+        where: { twilioMessageSid },
+      });
+
+      if (!existing) {
+        // Notification not found - this can happen for canceled scheduled messages
+        // or messages that were never saved to our database
+        return null;
+      }
+
       return await prisma.notification.update({
         where: { twilioMessageSid },
         data: {

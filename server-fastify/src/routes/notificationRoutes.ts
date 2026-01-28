@@ -648,10 +648,15 @@ const notificationRoutes: FastifyPluginAsync = async (fastify) => {
       const { MessageSid, MessageStatus } = request.body;
       fastify.log.info({ MessageSid, MessageStatus }, 'Twilio SMS status update');
 
-      await api.updateNotificationStatus(MessageSid, {
+      const updated = await api.updateNotificationStatus(MessageSid, {
         status: MessageStatus,
         deliveredAt: MessageStatus === 'delivered' ? new Date() : undefined,
       });
+
+      if (!updated) {
+        // Notification not found - this is OK, can happen for canceled scheduled messages
+        fastify.log.info({ MessageSid }, 'Status update for unknown message (possibly canceled)');
+      }
 
       return reply.status(200).send();
     } catch (error) {

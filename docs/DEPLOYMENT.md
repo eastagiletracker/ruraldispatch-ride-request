@@ -117,8 +117,8 @@ Render provides excellent free tier options and good PostgreSQL support.
      - **Name**: `ride-request-fastify`
      - **Root Directory**: `server-fastify` ⚠️ Important for monorepo
      - **Environment**: Node
-     - **Build Command**: `npm install && npx prisma generate && npm run build`
-     - **Start Command**: `npm run start:prod`
+- **Build Command**: `bun install && npx prisma generate && npm run build`
+    - **Start Command**: `bun run start:prod`
 
 3. **Create Static Site (Frontend)**
    - Click "New +" → "Static Site"
@@ -126,7 +126,7 @@ Render provides excellent free tier options and good PostgreSQL support.
    - Configure:
      - **Name**: `ride-request-client`
      - **Root Directory**: `client`
-     - **Build Command**: `npm install && npm run build`
+     - **Build Command**: `bun install && bun run build`
      - **Publish Directory**: `dist`
 
 4. **Add PostgreSQL Database**
@@ -201,7 +201,7 @@ The client uses relative URLs (`/api/...`) which work in development via Vite pr
 
 **Development (.env.local)**:
 ```bash
-# Leave empty - uses Vite proxy to localhost:5000
+# Leave empty - uses Vite proxy to localhost:5001
 VITE_API_URL=
 VITE_GOOGLE_MAPS_API_KEY=your_key_here
 ```
@@ -234,7 +234,7 @@ This ensures all routes (e.g., `/dashboard`, `/rides/123`) are handled by React 
 
 The build command includes Prisma generation:
 ```bash
-npm install && npx prisma generate && npm run build
+bun install && npx prisma generate && npm run build
 ```
 
 ### Manual Migration (if needed)
@@ -245,7 +245,7 @@ cd server-fastify
 npx prisma migrate deploy
 
 # Optional: Seed database
-npm run db:seed
+bun run seed
 ```
 
 ### Database Access

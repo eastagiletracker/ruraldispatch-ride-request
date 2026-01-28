@@ -9,44 +9,23 @@
 Our system automatically sends SMS messages to riders and drivers at key moments. **No manual SMS needed!**
 
 **Simple Rules**:
-- Reply **1** = Yes/Confirm/Accept
-- Reply **2** = No/Decline/Waiting
-- Reply **3** = Cancel
+- Reply **1** = Yes/Confirm
+- Reply **2** = No/Waiting/Cancel
+- Reply **3** = Cancel (rider only)
 
 ---
 
 ## 📱 Complete Flow (Step by Step)
 
-### Step 1: Driver Gets Assignment
+### Step 1: Ride Confirmed
 
 **When**: Dispatcher assigns driver in dashboard
-
-**SMS to Driver**:
-```
-New ride assigned to you!
-Rider: Johan Guse
-Pickup: State Island St
-11/7, 2:45:00 PM
-Drop off: 5193 Windsome Ave
-
-Accept? 1=Yes, 2=No
-```
-
-**What Happens**:
-- Driver replies **1** → Go to Step 2 ✅
-- Driver replies **2** → Dispatcher notified, assigns new driver 🔄
-
----
-
-### Step 2: Ride Confirmed
-
-**When**: Driver accepted (replied 1)
 
 **SMS to Rider & Case Manager**:
 ```
 Ride Confirmed!
-Driver: Guse
-Vehicle: Sedan
+Driver: [Driver Name]
+Vehicle: [Vehicle Name]
 11/7, 2:55:00 PM
 Pickup: State Island St
 Drop off: 5193 Windsome Ave
@@ -55,13 +34,13 @@ To Cancel ride, type 3
 ```
 
 **What Happens**:
+- Status: **100 - Ride Confirmed** ✅
 - System schedules 1-hour reminder
 - System schedules pickup check
-- Ride status: **100 - Ride Confirmed** ✅
 
 ---
 
-### Step 3: One Hour Before Pickup
+### Step 2: One Hour Before Pickup
 
 **When**: Automatically 1 hour before pickup time
 
@@ -78,7 +57,7 @@ Reply 2 to cancel ride.
 
 ---
 
-### Step 4: At Pickup Time
+### Step 3: At Pickup Time - Driver Arrival
 
 **When**: At exact scheduled pickup time
 
@@ -91,9 +70,10 @@ Reply 1 for yes, 2 for no.
 **What Happens**:
 
 #### If Driver replies **1** (Arrived):
+- Status: **200 - Ride Started**
 - **Rider & Case Manager get**: "Driver has arrived"
 - **Driver immediately gets**: "Have you picked up the rider and started the ride? 1-yes, 2-no"
-- Go to Step 5 ✅
+- Go to Step 4 ✅
 
 #### If Driver replies **2** (Not yet):
 - **Rider & Case Manager get**: "Driver is en route"
@@ -101,11 +81,11 @@ Reply 1 for yes, 2 for no.
 
 ---
 
-### Step 5: Pickup Confirmation
+### Step 4: Pickup Confirmation
 
 **When**: After driver confirms arrival
 
-**SMS to Driver** (already sent in Step 4):
+**SMS to Driver**:
 ```
 Have you picked up the rider and started the ride?
 1-yes, 2-no
@@ -114,23 +94,21 @@ Have you picked up the rider and started the ride?
 **What Happens**:
 
 #### If Driver replies **1** (Picked Up):
-- Status: **300 - Rider Pickup** ✅
-- After 5 minutes → Auto-change to **200 - Ride Started**
+- Status: **300 - Rider Picked Up** ✅
 - System schedules dropoff check
-- Go to Step 6 ✅
+- Go to Step 5 ✅
 
 #### If Driver replies **2** (Waiting):
 - **Rider & Case Manager get**:
   ```
-  Driver is waiting. Driver will wait up to 5 minutes
-  before canceling ride. To cancel ride reply 2.
+  Driver is waiting. Driver will wait up to 5 minute before canceling ride. To cancel ride reply 2.
   ```
 - After 5 minutes, ask again
-- If driver replies **2** again → Ride canceled ❌
+- If driver replies **2** again → Continue asking (does not auto-cancel)
 
 ---
 
-### Step 6: Dropoff Check
+### Step 5: Dropoff Check
 
 **When**: At estimated dropoff time (pickup time + travel time)
 
@@ -143,21 +121,21 @@ Have you dropped off rider?
 **What Happens**:
 
 #### If Driver replies **1** (Dropped Off):
+- Status: **400 - Rider Dropped Off** ✅
 - **Rider & Case Manager get**: "You have been dropped off"
-- Status: **400 - Rider Dropoff** ✅
-- **If NOT roundtrip** → Ride Complete! 🎉
-- **If roundtrip** → Go to Step 7 🔄
+- **If NOT roundtrip** → Go to Step 7 (Complete) 🎉
+- **If roundtrip** → Go to Step 6 🔄
 
 #### If Driver replies **2** (Issue):
-- Status: **409 - Rider Not Dropped Off** ⚠️
-- **Dispatcher gets alert** - requires intervention
-- Ride closes ❌
+- System will **ask again in 5 minutes** 🔄
+- Status stays at 300
+- No immediate alert to dispatcher (keeps asking)
 
 ---
 
-### Step 7: Roundtrip Return (If Applicable)
+### Step 6: Roundtrip Return (If Applicable)
 
-**When**: After waiting time at destination
+**When**: After dropoff on roundtrip rides
 
 **SMS to Driver**:
 ```
@@ -170,7 +148,7 @@ Have you picked up the rider and started the return ride?
 #### If Driver replies **1** (Return Started):
 - Status: **450 - Roundtrip Returning** ✅
 - System schedules return dropoff check
-- Go to Step 8 ✅
+- Go to Step 7 ✅
 
 #### If Driver replies **2** (Waiting):
 - **Rider & Case Manager get**:
@@ -180,11 +158,11 @@ Have you picked up the rider and started the return ride?
   To cancel return ride, reply 2-Cancel.
   ```
 - After 15 minutes, ask driver again
-- If driver still replies **2** → Return canceled ❌
+- If driver still replies **2** → Goes to Step 8 (Interrupted) ❌
 
 ---
 
-### Step 8: Roundtrip Dropoff
+### Step 7: Roundtrip Dropoff Check
 
 **When**: At estimated return dropoff time
 
@@ -197,12 +175,12 @@ Have you dropped off rider?
 **What Happens**:
 
 #### If Driver replies **1** (Completed):
+- Status: **475 - Roundtrip Complete** 🎉
 - **Rider & Case Manager get**:
   ```
   Your roundtrip is completed.
   Thank you for riding with EastConn
   ```
-- Status: **475 - Roundtrip Completed** 🎉
 - Ride closes automatically ✅
 
 #### If Driver replies **2** (Issue):
@@ -212,28 +190,51 @@ Have you dropped off rider?
 
 ---
 
+### Step 8: Non-Roundtrip Complete
+
+**When**: After dropoff on non-roundtrip rides
+
+**What Happens**:
+- Status: **500 - Ride Complete** 🎉
+- **Rider & Case Manager get**:
+  ```
+  Your ride is complete.
+  Thank you for riding with EastConn
+  ```
+- Ride closes automatically ✅
+
+---
+
 ## 🎯 Quick Decision Tree
 
 ```
-Driver Assigned
-    ├── Accept (1) → Ride Confirmed
-    │       ├── 1 Hour Prior → Rider confirms
+Dispatcher Assigns Driver
+    │
+    ├── Rider gets "Ride Confirmed"
+    │       ├── 1 Hour Prior → Rider gets reminder
     │       │       ├── Confirm (1) → Continue
     │       │       └── Cancel (2) → CANCELED
     │       │
-    │       ├── At Pickup Time → Driver arrival
-    │       │       ├── Arrived (1) → Pickup check
+    │       ├── At Pickup Time → Driver gets arrival check
+    │       │       ├── Arrived (1) → Status: 200
+    │       │       │       ├── Rider gets "Driver has arrived"
+    │       │       │       └── Driver gets pickup check
+    │       │       │
     │       │       └── En route (2) → Wait 5min, ask again
     │       │
     │       ├── Pickup Check → Driver confirms
-    │       │       ├── Picked up (1) → Ride Started
+    │       │       ├── Picked up (1) → Status: 300
     │       │       └── Waiting (2) → Ask again in 5min
     │       │
     │       └── Dropoff Check → Driver confirms
-    │               ├── Dropped off (1) → COMPLETE/Roundtrip
-    │               └── Issue (2) → ALERT DISPATCHER
+    │               ├── Dropped off (1) → Status: 400
+    │               │       ├── NOT roundtrip → Status: 500 (Complete)
+    │               │       └── Roundtrip → Return check
+    │               └── Issue (2) → Ask again in 5min
     │
-    └── Decline (2) → Back to dispatcher
+    └── Roundtrip Return → Driver confirms
+            ├── Return started (1) → Status: 450 → Dropoff check
+            └── Waiting (2) → Wait 15min → Status: 479 (Interrupted)
 ```
 
 ---
@@ -242,31 +243,38 @@ Driver Assigned
 
 | When | Who Gets SMS | Purpose |
 |------|--------------|---------|
-| **Immediately** | Driver | Assignment notification |
-| **Immediately** | Rider + Case Mgr | Ride confirmed |
+| **Immediately** | Rider + Case Manager | Ride confirmed notification |
 | **1 hour before** | Rider | Reminder + last chance to cancel |
 | **At pickup time** | Driver | Arrival check |
+| **After arrival (1)** | Rider + Case Manager | Driver has arrived |
+| **After arrival (2)** | Driver | Pickup confirmation |
 | **At dropoff time** | Driver | Dropoff confirmation |
-| **After waiting** | Driver | Roundtrip return check |
-| **At return dropoff** | Driver | Final dropoff check |
+| **After waiting** | Driver | Roundtrip return check (if applicable) |
+| **At return dropoff** | Driver | Return dropoff check |
 
 ---
 
 ## 📊 Status Codes Quick Reference
 
-| Code | Status | Meaning |
-|------|--------|---------|
-| **0** | Request in Progress | Just created |
-| **100** | Ride Confirmed | Driver accepted |
-| **109** | Canceled by Rider | Rider/case mgr canceled |
-| **200** | Ride Started | Actually in progress |
-| **300** | Rider Pickup | Driver confirmed pickup |
-| **400** | Rider Dropoff | Dropped off at destination |
-| **409** | Not Dropped Off | Problem - dispatcher alert |
-| **450** | Roundtrip Returning | Return trip started |
-| **475** | Roundtrip Complete | All done! |
-| **479** | Roundtrip Interrupted | Problem - dispatcher alert |
-| **500** | Ride Complete | Final status |
+| Code | Status | Meaning | Description |
+|------|--------|---------|-------------|
+| **0** | Request in Progress | Just created | Initial state |
+| **100** | Ride Confirmed | Driver assigned | Ready to go |
+| **109** | Canceled by Rider | Rider/case mgr canceled | Ride cancelled |
+| **200** | Ride Started | Driver arrived | Driver confirmed arrival |
+| **209** | Ride Interrupted | Problem during ride | Requires intervention |
+| **300** | Rider Picked Up | In transit | Driver confirmed pickup |
+| **309** | Rider Not Picked Up | Pickup failed | Driver couldn't pickup |
+| **400** | Rider Dropped Off | At destination | Driver confirmed dropoff |
+| **409** | Not Dropped Off | Dropoff issue | Problem at destination |
+| **450** | Roundtrip Returning | Return started | Return trip in progress |
+| **459** | Roundtrip Return Interrupted | Return issue | Return trip failed |
+| **475** | Roundtrip Complete | All done! | Return trip completed |
+| **479** | Roundtrip Completion Interrupted | Return issue | Return dropoff failed |
+| **500** | Ride Complete | Final status | Non-roundtrip completed |
+| **509** | Ride Incomplete | Could not complete | Problem ended ride |
+
+**Note**: Statuses marked with * in code auto-close the ride request.
 
 ---
 
@@ -283,7 +291,7 @@ Driver Assigned
 - Clear options
 
 ### ✅ Smart
-- Auto-cancels if issues
+- Keeps asking if no response
 - Reschedules checks if needed
 - Closes automatically when done
 
@@ -300,10 +308,7 @@ Driver Assigned
 
 ```
 12:30 PM  Dispatcher assigns Mike (driver)
-          → Mike gets: "Accept? 1=Yes, 2=No"
-          → Mike replies: "1"
-
-12:31 PM  Sarah gets: "Ride Confirmed! Driver: Mike..."
+          → Sarah gets: "Ride Confirmed! Driver: Mike..."
           → System schedules 1pm reminder + 2pm check
 
 1:00 PM   Sarah gets: "Your driver will arrive in 1 hour..."
@@ -311,83 +316,87 @@ Driver Assigned
 
 2:00 PM   Mike gets: "Have you arrived?"
           → Mike replies: "1" (yes)
+          → Status changes to 200 (Ride Started)
 
 2:01 PM   Sarah gets: "Driver has arrived"
           Mike gets: "Have you picked up rider?"
           → Mike replies: "1"
-
-2:06 PM   Status auto-changes to "Ride Started"
+          → Status changes to 300 (Rider Picked Up)
 
 2:45 PM   Mike gets: "Have you dropped off rider?"
           → Mike replies: "1"
+          → Status changes to 400 (Rider Dropped Off)
+          → Status changes to 500 (Ride Complete)
 
 2:46 PM   Sarah gets: "You have been dropped off"
           → Ride complete! ✅
 ```
 
-**Total manual work by dispatcher**: 0 minutes
-**Total SMS sent automatically**: 7 messages
-**Time saved**: ~15 minutes per ride
+**Total manual work by dispatcher**: 1 assignment
+**Total SMS sent automatically**: 6-8 messages
+**Time saved**: ~10-15 minutes per ride
 
 ---
 
 ## ❓ Common Questions
 
 **Q: What if driver doesn't respond?**
-> A: System waits 10 minutes, then alerts dispatcher
+> A: System waits and asks again in 5 minutes. Keeps asking.
 
 **Q: Can they send custom messages?**
-> A: Yes! Any message except 1/2/3 forwards to the other person
+> A: Yes! Any message except 1/2/3 can be forwarded.
 
 **Q: What if rider cancels last minute?**
-> A: Reply "2" or "3" anytime before pickup
+> A: Reply "2" or "3" anytime before pickup.
 
 **Q: How reliable is SMS delivery?**
-> A: 95%+ (we use Twilio + Vonage backup)
+> A: 95%+ via Twilio
 
 **Q: What if wrong person replies?**
-> A: System only accepts responses from registered driver/rider phones
+> A: System only accepts responses from registered driver/rider phones.
 
 **Q: Can we change the message text?**
-> A: Yes! All templates are customizable
+> A: Yes! All templates are in `/server-fastify/src/services/smsTemplates.ts`
+
+**Q: What happens if driver says they haven't dropped off rider (reply 2)?**
+> A: System asks again in 5 minutes. Does not alert dispatcher immediately.
 
 ---
 
 ## 🎓 For Dispatchers
 
 **Your new workflow**:
-1. Create ride request (same as before)
-2. Assign driver (same as before)
+1. Create ride request
+2. Assign driver
 3. **Everything else is automatic!** ✨
 
 **When you get alerts**:
-- Driver declined → Assign different driver
-- Rider not picked up → Call to investigate
-- Dropoff issue → Call to resolve
+- Roundtrip interrupted (479) → Call to investigate
+- Ride interrupted (209) → Call to resolve
+- Rider not picked up (309) → Follow up
+- Rider not dropped off (409) → Check status
 
 **Dashboard shows**:
-- What SMS will send and when
-- All scheduled notifications
-- Real-time status updates
+- Current ride status
+- Scheduled notifications
+- SMS conversation history
 
 ---
 
 ## 🎓 For Drivers
 
 **Your new workflow**:
-1. Get SMS: "New ride assigned..."
-2. Reply **1** to accept
-3. Show up at pickup time
-4. Reply **1** when arrived
-5. Reply **1** when picked up rider
-6. Reply **1** when dropped off rider
-7. **Done!** ✨
+1. Show up at pickup time
+2. Reply **1** when arrived
+3. Reply **1** when picked up rider
+4. Reply **1** when dropped off rider
+5. **Done!** ✨
 
 **Tips**:
 - Keep phone handy
-- Reply quickly (within 10 min)
-- Can send custom messages if needed
-- "1" = yes for everything
+- Reply within a few minutes
+- Reply "1" for yes to everything
+- Reply "2" if still en route or waiting
 
 ---
 
@@ -396,14 +405,14 @@ Driver Assigned
 **Test ride**:
 1. Create ride with pickup in 10 minutes
 2. Assign yourself as driver (use your phone)
-3. Accept the assignment (reply 1)
-4. Watch the dashboard scheduler
-5. See tasks disappear after they execute
+3. Wait for arrival check SMS
+4. Reply "1" when it arrives
+5. Reply "1" to pickup check
+6. Reply "1" to dropoff check
 
 **You'll see**:
-- SMS arrive instantly
-- Dashboard update in real-time
-- Tasks schedule automatically
+- SMS arrive at scheduled times
+- Status updates automatically
 - System handle everything
 
 ---
@@ -411,7 +420,7 @@ Driver Assigned
 ## 🎉 Benefits
 
 **For Dispatchers**:
-- Save 15 min per ride
+- Save 10-15 min per ride
 - Less phone calls
 - Fewer errors
 - Better accountability
@@ -419,7 +428,7 @@ Driver Assigned
 **For Drivers**:
 - Clear instructions
 - Know what to expect
-- Easy responses
+- Easy responses (just "1")
 - Can focus on driving
 
 **For Riders**:
