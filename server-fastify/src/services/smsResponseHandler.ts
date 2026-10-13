@@ -63,16 +63,16 @@ export function parseResponse(messageBody: string): ResponseCode | null {
 
   const trimmed = messageBody.trim().toLowerCase();
 
-  // Check for numeric responses
-  if (trimmed === '1' || trimmed.startsWith('1')) return 1;
-  if (trimmed === '2' || trimmed.startsWith('2')) return 2;
-  if (trimmed === '3' || trimmed.startsWith('3')) return 3;
+  // Check for numeric responses - a leading 1/2/3 that isn't part of a longer
+  // number, so "2 - cancel" counts but "10 minutes away" doesn't
+  const numeric = /^([123])(?!\d)/.exec(trimmed);
+  if (numeric) return Number(numeric[1]) as ResponseCode;
 
-  // Check for text responses
-  if (trimmed.includes('yes') || trimmed.includes('accept') || trimmed.includes('confirm'))
-    return 1;
-  if (trimmed.includes('no') || trimmed.includes('decline') || trimmed.includes('reject')) return 2;
-  if (trimmed.includes('cancel')) return 3;
+  // Check for text responses - whole words only, so free-text messages like
+  // "ready now" or "I know" aren't read as "no" and get forwarded instead
+  if (/\b(yes|accept\w*|confirm\w*)\b/.test(trimmed)) return 1;
+  if (/\b(no|nope|decline\w*|reject\w*)\b/.test(trimmed)) return 2;
+  if (/\bcancel\w*\b/.test(trimmed)) return 3;
 
   return null;
 }

@@ -42,6 +42,32 @@ describe('SMS Response Handler', () => {
       expect(parseResponse('4')).toBe(null);
       expect(parseResponse('')).toBe(null);
     });
+
+    it('should not match keywords inside other words', () => {
+      expect(parseResponse('I know, see you then')).toBe(null);
+      expect(parseResponse('Ok, ready now')).toBe(null);
+      expect(parseResponse('See you at noon')).toBe(null);
+      expect(parseResponse('Can you bring another seat?')).toBe(null);
+      expect(parseResponse('My eyes are bad, please call')).toBe(null);
+    });
+
+    it('should not treat a longer number as a response code', () => {
+      expect(parseResponse('10 minutes away')).toBe(null);
+      expect(parseResponse('25 min')).toBe(null);
+      expect(parseResponse('300 Main St')).toBe(null);
+    });
+
+    it('should still match keywords and codes inside a sentence', () => {
+      expect(parseResponse('1.')).toBe(1);
+      expect(parseResponse('2 - cancel')).toBe(2);
+      expect(parseResponse('3!')).toBe(3);
+      expect(parseResponse('Yes, I am here')).toBe(1);
+      expect(parseResponse('confirmed')).toBe(1);
+      expect(parseResponse('No thanks')).toBe(2);
+      expect(parseResponse('nope')).toBe(2);
+      expect(parseResponse('Please cancel my ride')).toBe(3);
+      expect(parseResponse('cancelled')).toBe(3);
+    });
   });
 
   describe('determineContext', () => {
@@ -159,6 +185,24 @@ describe('SMS Response Handler', () => {
       if (!result.success) {
         expect(result.error).toContain('Invalid response');
         expect(result.requiresResponse).toBe(true);
+      }
+    });
+
+    it('should not cancel a confirmed ride on a free-text rider reply', () => {
+      const result = processSMSResponse(ride as any, 'rider', 'Ok, ready now');
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error).toContain('Invalid response');
+      }
+    });
+
+    it('should not mark the driver arrived on "10 minutes away"', () => {
+      const result = processSMSResponse(ride as any, 'driver', '10 minutes away');
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error).toContain('Invalid response');
       }
     });
   });
